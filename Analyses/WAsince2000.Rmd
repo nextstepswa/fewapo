@@ -1,0 +1,787 @@
+---
+title: "Homicides by Police in WA since 2000"
+subtitle: "Next Steps Washington"
+author: "Everyone Comes Home Alive"
+date: "Last report update: `r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+    includes:
+       in_header: gtag.2000.html
+---
+
+<base target="_top"/>
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE)
+```
+
+```{r prelim}
+library(ggplot2)
+library(plotly)
+library(kableExtra)
+library(dplyr)
+library(forcats)
+library(here)
+library(leaflet)
+library(RColorBrewer)
+
+# FE Data only for this range of years
+load(file = here("data-outputs", "CleanData.rda"))
+last.data.update = max(fe_clean$date)
+
+startmo = 1  # Jan 2000
+startyr = 2000
+
+finaldata_2000 <- fe_clean %>% 
+  filter(year >= startyr & st == "WA")
+
+# Lots of "Unknowns" in the FE homicide indicator
+
+# Select homicides
+# Remove suicides 
+## note we don't remove the usual 3 cases:
+## the deputy who ran into someone while having a stroke &
+## 25804-5 the Tad Norman case in Lake City. 
+## these are not victims of police violence,
+## but we can't clean the entire series to be
+## consistent so we leave them in
+
+homicides <- finaldata_2000 %>% 
+  filter(homicide==1) %>%
+  arrange(date)
+
+# for geocoded LDs
+with(homicides, write.csv(cbind(feID,latitude,longitude),
+                          here::here("data-outputs",
+                                     "geocodes2000.csv")))
+
+all.cases <- dim(finaldata_2000)[1]
+last.case <- dim(homicides)[1]
+
+last.date <- max(homicides$date)
+last.name <- ifelse(homicides$lname[last.case] == "Unknown", 
+                    "(Name not released)",        
+                  paste(homicides$fname[last.case],
+                        homicides$lname[last.case]))
+last.age <- ifelse(is.na(homicides$age[last.case]), 
+                         "not released",
+                         homicides$age[last.case])
+last.agency <- homicides$agency[last.case]
+last.cod <- homicides$cod[last.case]
+tot.by.yr <- table(homicides$year)
+tot.this.yr <- tot.by.yr[[length(tot.by.yr)]]
+num.suffix <- ifelse(tot.this.yr == 1, "st",
+                     ifelse(tot.this.yr == 2, "nd",
+                            ifelse(tot.this.yr == 3, "rd", "th")))
+
+# Indices for plotting by time
+
+curr_mo <- lubridate::month(Sys.Date())
+curr_yr = lubridate::year(Sys.Date())
+
+endyr = curr_yr-1 # last complete year
+endmo = lubridate::month(last.data.update) -1 # respect last data update
+numyrs = endyr - startyr + 1
+
+month = month.abb[startmo:12]
+year = rep(startyr, length(month))
+for(i in 1:(numyrs-1)) {
+  #print(i)
+  thisyr = startyr+i
+  #print(thisyr)
+  year <- c(year, rep(thisyr, 12))
+  month <- c(month, month.abb)
+}
+year <- c(year, rep(curr_yr, endmo))
+month <- c(month, month.abb[1:endmo])
+
+## Month index for date plotting
+
+index <- data.frame(year = year,
+                    month = month,
+                    mo.yr = paste0(month, ".", year))
+
+## Indicator for lag in data updates
+data.update.flag = ifelse(Sys.Date() - last.data.update > 30, 
+                          "(note: last data update is more than 1 month ago)", "")
+
+```
+
+# Introduction {.tabset}
+
+This report tracks the number of persons killed by police in WA state from 2000 until the last complete month of the current year.
+
+Two sets of legislative reforms have happened during the later part of this period.  On December 6, 2018, Initiative 940 was passed into WA state law after winning over 60% of the statewide vote.  In 2021, a package of 13 additional bills focused on police reform were passed by the state Legislature.  
+
+Tracking the trends in persons killed by police, before and after the legal reforms, can help provide insight into the context and motivation for these reforms, and to assess whether they are having an impact.
+
+
+## MOST RECENT DATA UPDATE 
+
+* __Last FE project data update:  `r last.data.update` __ 
+`r data.update.flag`
+
+* __Total homicides by police since 2000: 
+`r last.case`__
+
+* __Last reported case in WA: 
+`r last.name`, age `r last.age`, on `r last.date` by `r last.agency`__
+
+    `r ifelse(last.name == "(Name not released)", "This", last.name)` is the `r paste0(tot.this.yr, num.suffix)` person killed by police in `r as.numeric(names(tot.by.yr[length(tot.by.yr)]))`.  The cause of death is reported as `r last.cod`.
+
+From 2010-20 roughly one out of every 5 persons killed in Washington state was killed by a law enforcement officer.  (About 250 homicide deaths are recorded each year in WA State.  You can find the state's death data
+<a href="https://www.doh.wa.gov/DataandStatisticalReports/HealthDataVisualization/MortalityDashboards/ACHInjuryDeathsDashboards" target="_top">here</a>).
+
+___
+
+## Where the data come from
+
+The data in this report are updated at least once each week, by pulling from the Fatal Encounters project (https://fatalencounters.org/). Fatal Encounters includes all deaths during encounters with police; it does not include deaths in custody after booking.  
+
+There is typically a 1-2 week lag in the Fatal Encounters dataset, but it can sometimes be longer.  The date shown in the "most recent data update" is an indication of the current lag.
+
+This report is restricted to the cases that can be classified as homicides by police, it excludes cases identified in the Fatal Encounters dataset as suicides.
+
+___
+
+## What is a homicide?
+
+The deadly force incidents in this report are homicides.  A homicide is simply defined as the killing of one person by another.  In the context of this report it refers to any encounter with law enforcement officers that results in a fatality.  Homicides normally result in a criminal investigation or inquest, but the word does not imply a crime has been committed.
+
+* The word homicide means only that the death was caused in some way by the officer.  
+
+* It does not not mean the officer's actions that led to the death were justified, or that they were unjustified.
+
+The law then defines different types of homicides, in order to distinguish levels of intention and criminal culpability.  In the U.S., these types and definitions are broadly similar across states, but do vary somewhat in the the how many different types are specified, and what names are used for each type.
+
+The definitions below are taken from a useful online summary found [here](https://www.steinandmarkuslaw.com/whats-the-difference-between-homicide-murder-and-manslaughter), based on California State laws.
+
+
+**Homicide**  
+Homicide is the killing of one person by another. This is a broad term that includes both legal and illegal killings. For example, a soldier may kill another soldier in battle, but that is not a crime. The situation in which the killing happened determines whether it is a crime. 
+
+* **Murder** is the illegal and intentional killing of another person. Under California Penal Code Section 187, for example, murder is defined as one person killing another person with malice aforethought. Malice is defined as the knowledge and intention or desire to do evil. Malice aforethought is found when one person kills another person with the intention to do so.  
+
+    In California, for example, a defendant may be charged with first-degree murder, second-degree murder, or capital murder.
+
+    * *First-degree murder* is the most serious and includes capital murder -- first-degree murder with “special circumstances” that make the crime even more egregious. These cases can be punishable by life in prison without the possibility of parole, or death. 
+
+    * *Second-degree murder* is murder without premeditation, but with intent that is typically rooted in pre-existing circumstances. The penalty for second-degree murder may be up to 15 years to life in prison in California.
+
+    * *Felony murder* is a subset of first-degree murder and is charged when a person is killed during the commission of a felony, such as a robbery or rape.
+
+* **Manslaughter** is the illegal killing of another person without premeditation, and in some cases without the intent to kill. These cases are treated as less severe crimes than murder. Manslaughter can also be categorized as voluntary or involuntary.
+
+    * *Voluntary manslaughter* occurs when a person kills another without premeditation, typically in the heat of passion. The provocation must be such that a reasonable person under the same circumstances would have acted the same way. Penalties for voluntary manslaughter include up to 11 years in prison in California.
+
+    * *Involuntary manslaughter* is when a person is killed by actions that involve a wanton disregard for life by another. Involuntary manslaughter is committed without premeditation and without the true intent to kill, but the death of another person still occurs as a result. Penalties for involuntary manslaughter include up to four years in prison in California.
+
+    * *Vehicular manslaughter* occurs when a person dies in a car accident due to another driver’s gross negligence or even simple negligence, in certain circumstances.
+
+___
+
+
+# Interactive Map
+
+You can click the numbered circles to reach the individual map pointers for each person killed by police.  
+
+* _Hovering_ over the pointer brings up the name of the person killed and agency of the officer who killed them; 
+
+* _Clicking_ the pointer will bring up a url to a news article on the case (if available).
+
+```{r map1}
+map1 <- leaflet(data = homicides, width = "100%") %>% 
+  addTiles() %>%
+  addMarkers( ~ longitude,
+              ~ latitude,
+              popup = ~ url_click,
+              label = ~ as.character(paste(name, "by", agency)),
+              clusterOptions = markerClusterOptions())
+map1
+```
+
+
+
+```{r map2, eval=F}
+agencynum <- homicides %>%
+  group_by(agency) %>%
+  count() %>%
+  rename(agency_num = n)
+
+homicides <- right_join(homicides, agencynum)
+
+map2 <- leaflet(data = homicides, width = "100%") %>% 
+  addTiles() %>%
+  addCircles(~longitude, ~latitude, 
+             weight = 1, radius = ~sqrt(agency_num) * 5000, 
+             label = ~ as.character(agency),
+             popup = ~agency_num)
+
+map2
+```
+
+
+```{r map3, eval=F}
+map3 <- leaflet(data = homicides, width = "100%") %>% 
+  addTiles() %>%
+  addMarkers( ~ longitude,
+              ~ latitude,
+              popup = ~ url_click,
+              label = ~ as.character(name))
+map3
+```
+
+# Breakdowns
+
+## Race {.tabset}
+
+### Table
+
+The race of the victim is missing in 
+`r scales::percent(prop.table(table(homicides$raceOrig, 
+useNA = "al"))[["Unknown"]])`
+of the original data.  Fatal Encounters employs an algorithm to try to impute these cases.  Over half of the missing values are successfully imputed.  These imputations are included in the analysis here.
+```{r racetab}
+
+tab <- homicides %>%
+  mutate(raceImp = recode(raceImp,
+    "API" = "Asian/Pacific Islander",
+    "BAA" = "Black/African American",
+    "HL" = "Hispanic/Latinx",
+    "NAA" = "Native American/Indigenous",
+    "WEA" = "White/European American")
+  ) %>%
+group_by(raceImp) %>%
+  summarize(Number = n(),
+            Percent = round(100*Number/nrow(homicides), 1)
+  ) %>%
+  bind_rows(data.frame(raceImp="Total", 
+                       Number = sum(.$Number), 
+                       Percent = sum(.$Percent))) %>%
+  rename(Race = raceImp) 
+
+tab %>%
+  kable(caption = "Breakdown by Race") %>%
+  kable_styling(bootstrap_options = c("striped","hover")) %>%
+  row_spec(row=dim(tab)[1], bold = T) %>%
+  add_footnote(label = "Percents may not sum to 100 due to rounding",
+               notation = "symbol")
+```
+
+### Plots
+```{r raceplots, message=F}  
+homicides %>%
+  mutate(raceImp = recode(raceImp,
+    "API" = "Asian",
+    "BAA" = "Black",
+    "HL" = "Latinx",
+    "NA" = "Native",
+    "WEA" = "White")
+  ) %>%
+  count(raceImp) %>%
+  mutate(perc = n / nrow(homicides)) %>%
+  ggplot(aes(x=raceImp, 
+             y = perc, 
+             label = n)) +
+  # label = round(100*perc, 1))) +
+  geom_bar(stat="identity", fill="blue", alpha=.5) +
+  geom_text(aes(y = perc), size = 3, nudge_y = .025) +
+  labs(title = "Fatalities by Race",
+       caption = "WA State since 2000; y-axis=pct, bar label=count") +
+         xlab("Reported Race") +
+         ylab("Percent of Total")
+
+homicides %>%
+  mutate(raceb = case_when(raceImp == "WEA" ~ "White",
+                           raceImp == "Unknown" ~ "Unknown",
+                           TRUE ~ "BIPOC"),
+         raceb = fct_relevel(raceb, "Unknown", 
+                             after = Inf)) %>%
+  count(raceb) %>%
+  mutate(perc = n / nrow(homicides)) %>%
+  ggplot(aes(x=raceb, 
+             y = perc, 
+             label = n)) +
+  geom_text(aes(y = perc), size = 3, nudge_y = .025) +
+  geom_bar(stat="identity", fill="blue", alpha=.5) +
+  labs(title = "Fatalities by Race",
+       caption = "WA State since 2000; y-axis=pct, bar label=count") +
+  xlab("Reported Race") +
+  ylab("Percent of Total")
+```
+
+### Discussion
+
+Racial disparities in the risk of being killed by police are one of the most important factors driving the public demand for police accountability and reform.  For that reason it is important to understand how these numbers can, and cannot be used.
+
+**TL;DR** There are many uncertainties in the data that make it difficult/impossible to estimate exact values, but there are still some conclusions we can draw with confidence.
+
+____
+
+#### Many case reports are missing data on race
+
+These cases are denoted "Unknown" in the tables and plots in this report. 
+
+For the Fatal Encounters dataset, about
+`r scales::percent(prop.table(table(homicides$raceOrig, 
+useNA = "al"))[["Unknown"]])`
+of the cases for WA State do not have information that explicitly identifies the race of the person killed.  It's worth remembering that the Fatal Encounters project relies primarily on media reports (and some public records requests) to find these cases, so they are limited by the information provided in those sources.  The Fatal Encounters team uses an "imputation" model to try to predict race for the missing cases.  A brief description of the methodology is online [here](https://docs.google.com/spreadsheets/d/1dKmaV_JiWcG8XBoRgP8b4e9Eopkpgt7FL7nyspvzAsE/edit#gid=1359780841&range=A9).  They are able to impute just over half of the missing cases with reasonable confidence, and we include these imputations in the breakdowns we report.  After imputation, about 
+`r scales::percent(prop.table(table(homicides$raceImp))[["Unknown"]])`
+of cases in WA are still missing race.
+
+*Bottom line:* This makes it impossible to say exactly how many people killed by police are in each racial group.
+
+____
+
+#### We are reporting the raw counts in this report, not per capita rates
+
+Breaking the total count down by race, the largest single group of persons killed by police are identified as White/European-American: `r scales::percent(prop.table(table(homicides$raceImp))[["WEA"]])`
+
+So, does this mean that we can say: "There aren't any racial disparities in persons killed by police?".  
+  
+No. This raw count can not be used to assess racial disparities, because the word disparity implies the risk is "disproportionate" -- that is, higher (or lower) than proportional.  Proportional is a comparative term: it compares the proportion of fatalities by race, to the proportion of the population by race.  If the two proportions are the same, then we can say there are no disparities.  In this case, if `r scales::percent(prop.table(table(homicides$raceImp))[["WEA"]])` of the WA population is White, then we can say that their risk of being killed by police is proportional to their share of the population.
+
+The population of Washington State overwhelmingly identifies as White -- almost 80% as of 2020 [source: WA State OFM](https://www.ofm.wa.gov/washington-data-research/statewide-data/washington-trends/population-changes/population-race).  If we exclude Hispanics (which the Census treats as ethnicity, not race), non-Hispanic Whites comprise 70% of the WA state population [source: Statistical Atlas of the US](https://statisticalatlas.com/state/Washington/Race-and-Ethnicity).  
+
+So there is a disparity in the risk of being killed by police -- for non-Hispanic Whites, their share of fatalities is *lower* than their population share.  
+  
+The "risk ratio" is a common way to combine this information into a single number that is easy to understand:  the ratio of the fatality share, to the population share.  When the two shares are the same, the risk ratio equals 1.  When it is less than one, this means the share of fatalities is lower than the population share; they are disproportionately low.  When the risk ratio is greater than one it means the share of fatalities is larger than the population share; they are disproportionately high.  Then, taking 100*(risk ratio-1) tells you the percent lower (or higher) the ratio is than expected, if the risk was proportional to their share of population. 
+
+```{r include=F}
+prop.wea <- prop.table(table(homicides$raceImp))[["WEA"]]
+prop.baa <- prop.table(table(homicides$raceImp))[["BAA"]]
+rr.wea <- round(prop.wea/.7, 2)
+rr.baa <- round(prop.baa/.04, 2)
+
+```
+
+  * The risk ratio for non-Hispanic whites is `r paste(scales::percent(prop.wea), "/ 70% =", rr.wea)` -- their risk of being killed by police is `r scales::percent(1-rr.wea)` lower than expected. 
+  
+  * By contrast, only 4% of the WA population identifies as Black/African American, but `r paste(scales::percent(prop.baa))` of the persons killed by police in WA are identified as being in this racial group.  So their risk ratio is
+`r paste(scales::percent(prop.baa), "/ 4% =", rr.baa)` -- their risk of being killed by police is `r scales::percent(rr.baa-1)` higher than expected.
+
+Note that the number of "unknown race" cases is not enough to change the direction of these disparities.  Even if we assume that all of the "unknown race" cases are White, their share of incidents would still be below their share in the population. 
+
+So, even though we can't be certain of the exact value of the risk ratio, we can say with some confidence that there *are* racial disparities in the risk of being killed by police, and that these disparities indicate that non-Hispanic Whites are *less* likely than other racial groups to be killed. 
+
+*Bottom line:* while the majority of persons killed by police in WA are identified as White, the risk ratio for this group, which adjusts for their share of the population, shows they are disproportionately less likely to be killed than other groups.
+
+____
+
+#### So why don't we calculate standardized per capita rates?
+
+Because the classification of cases by race, in both the Fatal Encounters and WaPo datasets, is not consistent with the classification of race in population data provided by the US Census.  
+
+The calculation of per capita rates takes the ratio of the fatality count (in the numerator) to the population count (in the denominator).  To break this down by race we need a consistent measure of race to use for the numerator and denominator for all groups.  And we don't have that.
+
+* About 5% of people in WA state report two or more races in the US Census.  This multiple-race classification does not exist in the datasets on persons killed by police.
+
+* Hispanic/Latinx is an ethnicity that crosses several racial groups, primarily White, Black and Native American.  In the US Census data, race is measured separately from ethnicity, so you can see these overlaps.  But in the Fatal Encounters and WaPo datasets, "Hispanic" is coded as a racial group, rather than as a separate ethnicity classification.
+
+____
+
+#### Perceived vs. self-identified race
+
+The race classifications in all of our data (including the US Census) do not represent what the officer perceived the person's race to be.  It is likely that there is a strong correlation between these two, but we can't use these data to answer the question of the officer's intention, or implicit bias, with certainty.
+
+___
+
+
+## Cause of death {.tabset}
+
+### Plot
+
+```{r codplot}
+homicides %>%
+  mutate(codb = case_when(cod == "Gunshot" ~ "Gunshot",
+                          TRUE ~ "Other")
+         ) %>%
+  count(codb) %>%
+  mutate(perc = n / nrow(homicides)) %>%
+  ggplot(aes(x=codb, 
+             y = perc, 
+             label = n)) +
+  geom_text(aes(y = perc), size = 3, nudge_y = .025) +
+  geom_bar(stat="identity", fill="blue", alpha=.5) +
+  labs(title = "Fatalities by Cause of Death",
+       caption = "WA State since 2000; y-axis=pct, bar label=count") +
+  xlab("Reported Weapon Used by Police") +
+  ylab("Percent of Total")
+```
+
+### Table
+```{r codtab}
+tab <- homicides %>%
+  group_by(cod) %>%
+  summarize(Number = n(),
+            Percent = round(100*Number/nrow(homicides), 1)
+  ) %>%
+  arrange(desc(Number)) %>%
+  bind_rows(data.frame(cod ="Total", 
+                       Number = sum(.$Number), 
+                       Percent = sum(.$Percent))) 
+
+tab %>%
+  kable(caption = "Breakdown by Cause of Death",
+        col.names = c("Cause of Death", "Number", "Percent")) %>%
+  kable_styling(bootstrap_options = c("striped","hover")) %>%
+  row_spec(row=dim(tab)[1], bold = T)  %>%
+  add_footnote(label = "Percents may not sum to 100 due to rounding",
+               notation = "symbol")
+```
+
+
+## Victim armed {.tabset}
+
+This information is in the process of being coded by the Fatal Encounters project.  It is not available yet for 2021, or prior to 2013, so all cases in those years are coded "Unknown".  
+
+Note that the media often rely on the law enforcement narrative when reporting this information, so the validity of these data are unknown.
+
+
+### Plot
+
+```{r armedplot}
+homicides %>%
+  count(weapon) %>%
+  mutate(perc = n / nrow(homicides)) %>%
+  ggplot(aes(reorder(weapon, perc),
+             y = perc, 
+             label = n)) +
+  geom_text(aes(y = perc), size = 3, nudge_y = .025) +
+  geom_bar(stat="identity", fill="blue", alpha=.5) +
+  labs(title = "Fatalities by Report of Victim Weapon",
+       caption = "WA State since 2000; y-axis=pct, bar label=count") +
+  xlab("Reported Weapon Used by Victim") +
+  ylab("Percent of Total")
+```
+
+### Table
+
+```{r armed}
+tab <- homicides %>%
+  group_by(weapon) %>%
+  summarize(Number = n(),
+            Percent = round(100*Number/nrow(homicides), 1)
+  ) %>%
+  arrange(desc(Number)) %>%
+  bind_rows(data.frame(weapon ="Total", 
+                       Number = sum(.$Number), 
+                       Percent = sum(.$Percent)))
+
+tab %>%
+  kable(caption = "Breakdown by Report of Victim Weapon (incomplete data)",
+        col.names = c("Weapon", "Number", "Percent")) %>%
+  kable_styling(bootstrap_options = c("striped","hover")) %>%
+  row_spec(row=dim(tab)[1], bold = T)  %>%
+  add_footnote(label = "Percents may not sum to 100 due to rounding",
+               notation = "symbol")
+```
+
+
+## County {.tabset}
+
+```{r countycount}
+counties.obs <- unique(homicides$county)
+```
+
+Of the 39 counties in Washington state, `r counties.obs` have had at least one person killed by police since 2000 that we know of.  It is worth reiterating that our data source may not be incomplete.  If the data include no fatalities from police use of force, the county is not included in the plot or table below.
+
+### Plot
+
+```{r countyplot}
+
+homicides %>%
+  group_by(county) %>%
+  summarize(n = n(),
+            perc = n / nrow(homicides)) %>%
+  ggplot(aes(reorder(county, perc),
+             y = perc, 
+             label = n)) +
+  geom_text(aes(y = perc), size = 3, nudge_y = .025) +
+  geom_bar(stat="identity", fill="blue", alpha=.5) +
+  labs(title = "County",
+       caption = "WA State since 2000; y-axis=pct, bar label=count") +
+  xlab("County where fatal encounter happened") +
+  ylab("Percent of Total") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+### Table
+```{r countytab}
+
+homicides %>%
+  group_by(county) %>%
+  summarize(Number = n(),
+            Percent = round(100*Number/nrow(homicides), 1)
+  ) %>%
+  DT::datatable(rownames = F,
+                caption = "Breakdown by County")
+
+```
+
+## Agency/PD involved
+
+WA State has about 260 Law Enforcement agencies, at the State, County, Local, Tribal and College/University levels 
+([see this Wikipedia page for a list](https://en.wikipedia.org/wiki/List_of_law_enforcement_agencies_in_Washington)).  Only those with a known officer-involved homicide are listed in the plot and table here. 
+
+```{r agency}
+
+homicides %>%
+  group_by(agency) %>%
+  summarize(Number = n(),
+            Percent = round(100*Number/nrow(homicides), 1)
+  ) %>%
+  DT::datatable(rownames = F,
+                caption = "Breakdown by Agency/PD of Involved Officer")
+
+```
+
+## Online information availability
+
+This information comes from Fatal Encounters.  It takes the form of a single url to a news article that is available online.  There are often multiple news articles available online, and they may report the conflicting details of the event, as well as conflicting perspectives on the justifiability of the use of lethal force.  
+
+The clickable urls are available in this report in the [Interactive Map](#interactive-map) and [Say their names](#say-their-names) sections.  They should be treated as a place to start research, not as the definitive description of the event.
+
+```{r info}
+
+tab <- homicides %>%
+  mutate(url_info = case_when(url_info == "" ~ "No",
+                               is.na(url_info) ~ "No",
+                               TRUE ~ "Yes")) %>%
+  group_by(url_info) %>%
+  summarize(Number = n(),
+            Percent = round(100*Number/nrow(homicides), 1)
+  ) %>%
+  bind_rows(data.frame(url_info ="Total", 
+                       Number = sum(.$Number), 
+                       Percent = sum(.$Percent))) 
+
+tab %>%
+  kable(caption = "URL for news article in Fatal Encounters",
+        col.names = c("Availability", "Number", "Percent")) %>%
+  kable_styling(bootstrap_options = c("striped","hover")) %>%
+  row_spec(row=dim(tab)[1], bold = T) %>%
+  add_footnote(label = "Percents may not sum to 100 due to rounding",
+               notation = "symbol")
+
+
+```
+
+
+## Date {.tabset}
+
+```{r}
+# Pop growth
+pop.growth.rate = (6724540 - 5894121)/5894121
+
+# FE by month
+dat <- homicides %>%
+  group_by(year, month) %>%
+  summarize(count = n()) %>%
+  left_join(index, ., by = c("year", "month")) %>%
+  mutate(count = tidyr::replace_na(count, 0),
+         seqlab = paste0(year, ".", match(month.abb, month.abb)),
+         sequence = 1:nrow(.),
+         tt.text = paste("n =", count, mo.yr))
+
+# Projected growth in fatalities based on pop growth
+# Will take average of 2000-2001 to reduce variability
+mean.fe.2000 <- mean(dat$count[dat$year < 2002])
+mean.fe.2020 <- mean(dat$count[dat$year==2020])
+fe.growth.rate = (mean.fe.2020 - mean.fe.2000)/mean.fe.2000
+
+pop.adj.fe.2020 <- mean.fe.2000 * (1+pop.growth.rate)
+proj.fe <- seq(from=mean.fe.2000, to=pop.adj.fe.2020, 
+               length.out=nrow(dat))
+proj.df <- data.frame(sequence=dat$sequence, proj=proj.fe)
+```
+
+### Monthly Totals By Year
+
+* The points show the monthly totals, the grey line shows the smoothed trend in fatalities by month, and the grey shaded ribbon shows the 95% confidence interval around the trend line. 
+
+* __The blue dotted reference line shows the relative rate of WA state population growth__ from 2000 to 2020, based on Census counts.  The WA State population grew by 
+`r scales::percent(pop.growth.rate)` over the two decades.  During the same period, the average monthly number of persons killed by police in WA State rose by 
+`r scales::percent(fe.growth.rate)` -- 
+`r round(fe.growth.rate/pop.growth.rate,1)-1` times faster than the state population growth rate.
+
+* We only plot months once the data are complete, so the plot will lag 1-2 months behind the current date.  
+
+* This is an interactive plot:  You can hover over points to get the exact values for the number of cases for that month and year.
+
+```{r series, warning=F}
+# we will only plot after current month has finished
+
+xaxis.ticks <- seq(0, length(dat$sequence), 12)+6 # x axis ticks
+p <- ggplot(dat, aes(x = sequence, 
+                     y = count,
+                     text = count))  +
+  geom_point(size=1, aes(color = factor(year))) +
+  geom_smooth(span=.5, col="grey")  +
+  geom_vline(xintercept = 12*1:numyrs+1, col="grey") +
+  geom_line(data=proj.df,
+            aes(x=sequence, y=proj, text=round(proj)), 
+            color="blue", lty=3) +
+  labs(title = paste("Monthly fatalities by Year:",
+                     month.abb[startmo], startyr, " - ",
+                     month.abb[endmo], curr_yr),
+       caption = "WA since 2000",
+       color = "Year") +
+  xlab("Month/Year") +
+  ylab("Number") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  scale_x_continuous(breaks = xaxis.ticks, 
+                     label = dat$year[xaxis.ticks])  + 
+  #scale_color_brewer(palette="spectral") +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        legend.position = "none")
+
+ggplotly(p, tooltip = "text")
+  
+```
+
+
+
+### Cumulative Totals by Month/Year
+
+* The lines show the cumulative total fatalities by month as the year progresses, for each year. 
+
+* We only plot months once the data are complete, so the plot will lag 1-2 months behind the current date.  
+
+* The first decade (2000-2009) is shown with blue lines, the second decade (2010-2020) with orange lines, and the current year to date is shown in black.
+
+* This is an interactive plot:  You can hover over points to get the exact values for the cumulative number of cases for that month and year.
+
+```{r cumulative, warning=F}
+
+# set colors for plot
+
+decade1 <- colorRampPalette(brewer.pal(9,"Blues"))(10)
+decade2 <- colorRampPalette(brewer.pal(9,"Oranges"))(11)
+mycolors <- c(decade1, decade2, "black")
+myalpha <- c(0.4, 1)
+
+df <- homicides %>%
+  group_by(year, month) %>%
+  summarize(count = n()) %>%
+  left_join(index, .) %>%
+  group_by(year) %>%
+  mutate(count = tidyr::replace_na(count, 0),
+         cumulative = cumsum(count),
+         month = factor(month, levels=month.abb),
+         this.yr = ifelse(year==2021, 1, 0))
+
+
+p <- ggplot(data=df, 
+            aes(x = month, 
+                y = cumulative,
+                group = year,
+                color = as.factor(year),
+                alpha = as.factor(this.yr),
+                text = paste('Total =', cumulative, '<br>', 
+                             month, year))) +
+  geom_line(size = 1.1) +
+  geom_point(size=1) +
+  
+  scale_color_manual(breaks = as.character(2000:2021),
+                     values = mycolors) +
+  scale_alpha_manual(breaks = as.character(c(0,1)),
+                     values = myalpha,
+                     labels = NULL) +
+  guides(alpha = FALSE) +
+  
+  labs(title = "WA since 2000:  Cumulative fatalities by month and year",
+       caption = "WA State since 2000",
+       color = "Year") +
+  xlab("Month") +
+  ylab("Number")
+
+ggplotly(p, tooltip = "text")
+  
+```
+
+
+### Year to date, by Year
+
+Here we plot the cumulative totals for year to date, up to the last complete complete month of the current year, for each year.
+
+* Since we only plot months once the data are complete, the plot will lag 1-2 months behind the current date.  
+
+* The bars represent totals for year-to-date for each year, divided by cause of death:  gunshot vs. all other causes.
+
+* This is an interactive plot:  You can hover over bar segments to get the exact values for that cause of death in that year.
+
+
+```{r annual, warning=F}
+p <-  homicides %>%
+  filter(match(month, month.abb) <= endmo) %>%
+  mutate(cod = ifelse(cod == "Gunshot", "shot", "other"),
+         cod = factor(cod, levels = c("shot", "other")),
+         year = as.character(year)) %>%
+  group_by(year, cod) %>%
+  summarize(n = n()) %>%
+  mutate(percent = round(100*n / sum(n), 1)) %>%
+  ggplot(aes(x = year,
+             y = n, 
+             label = percent,
+             fill = cod,
+             text = paste(cod, "=", n, '<br>', 
+                          year))) +
+  geom_bar(stat="identity", alpha=.5,
+           position = position_stack(reverse=T)) +
+  scale_fill_manual(values = c("cadetblue", "goldenrod")) +
+  labs(title = paste0("Fatalities Jan-", 
+                      month.abb[endmo], 
+                      " by Year"),
+       caption = "WA since 2000",
+       x = "Year",
+       y = "Number",
+       fill = "Cause of\nDeath") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+plotly::ggplotly(p, tooltip = "text")
+
+```
+
+# Say their names {.tabset}
+
+## Name known
+
+Of the `r last.case` persons killed by police, 
+`r table(homicides$name != "Unknown")[[2]]` 
+of the victim's names are known at this time.
+```{r names}
+
+homicides %>%
+  filter(name != "Unknown") %>%
+  select(name, date, age=age, county, agency, url = url_click) %>%
+  arrange(desc(date)) %>%
+  DT::datatable(rownames = F,
+                caption = paste("The Names We Know:  as of", scrape.date),
+                filter = 'top',
+                escape = FALSE)
+
+```
+
+## Name Unknown
+
+The remaining 
+`r (last.case-table(homicides$name != "Unknown")[[2]])` 
+of the victim's names are not known at this time.
+
+```{r namesUnk}
+homicides %>%
+  filter(name == "Unknown") %>%
+  select(name, date, age=age, county, agency, url = url_click) %>%
+  arrange(desc(date)) %>%
+  DT::datatable(rownames = F,
+                caption = paste("The Names We Don't Know:  as of", scrape.date),
+                filter = 'top',
+                escape = FALSE)
+```
+
