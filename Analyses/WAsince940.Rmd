@@ -648,11 +648,11 @@ tab %>%
 
 ```
 
-## Date {.tabset}
+# Trend over time {.tabset}
 
 For all of these plots, we exclude the December 2018 data.  Each plot is intended to allow monthly or annual comparisons.  But December 2018 is not comparable, because it includes cases for only the part of the month after December 6th, when the law passed, and also doesn't represent a full annual total.
 
-### Trend
+## By month
 
 This plot shows the number of people killed by police each month since the passage of I-940. 
 
@@ -711,7 +711,7 @@ ggplotly(p, tooltip = "text") %>%
   
 ```
 
-### Trend with key dates
+## With key dates
 
 This plot highlights key dates for subsequent legislation and legal actions. 
 
@@ -801,7 +801,7 @@ ggplotly(p, tooltip = "text") %>%
   
 ```
 
-### Typical monthly totals
+## This year vs. previous
 
 * The points show the monthly totals for each year. They are color coded to highlight the current year.
 
@@ -861,7 +861,7 @@ ggplotly(p, tooltip = "text")
 ```
 
 
-### Cumulative totals
+## Cumulative totals
 
 * The lines show the cumulative total fatalities by month as the year progresses, for each year. 
 
@@ -899,7 +899,7 @@ ggplotly(p, tooltip = "text")
 ```
 
 
-### Year to date by COD
+## Year to date by COD
 
 Here we plot the cumulative totals for year to date -- the count of total fatalities up to the *last complete month* of the current year, for each year.  
 

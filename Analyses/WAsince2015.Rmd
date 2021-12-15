@@ -647,9 +647,9 @@ tab %>%
 
 <a id="mydate"></a>
 
-## Date {.tabset}
+# Trend over time {.tabset}
 
-### Trend
+## By month
 
 * The points show the monthly totals, the grey line shows the smoothed average trend in monthly fatalities over time, and the grey shaded ribbon shows the 95% confidence interval around the trend line.
 
@@ -711,7 +711,7 @@ ggplotly(p, tooltip = "text") %>%
 
 
 
-### Trend with key dates
+## With key dates
 
 This plot highlights key dates for legislation and legal actions related to police practices and accountability. 
 
@@ -806,7 +806,7 @@ ggplotly(p, tooltip = "text") %>%
   
 ```
 
-### Typical monthly totals
+## This year vs. previous
 
 * The points show the monthly totals for each year. They are color coded to highlight the current year.
 
@@ -864,7 +864,7 @@ ggplotly(p, tooltip = "text")
   
 ```
 
-### Cumulative totals
+## Cumulative totals
 
 * The lines show the cumulative total fatalities by month as the year progresses, for each year. 
 
@@ -926,7 +926,7 @@ ggplot(data= df %>% filter(year != curr_yr),
 ```
 
 
-### Year to date by COD
+## Year to date by COD
 
 Here we plot the cumulative totals for year to date -- the count of total fatalities up to the *last complete month* of the current year, for each year.  
 
