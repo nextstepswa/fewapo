@@ -329,17 +329,24 @@ mergefull <- stringdist_full_join(fe_2015, wapo_2015,
                                   by = c("lname", "fname", "date", "gender", "cod"),
                                   max_dist = 2)
 
-## Check for unmatched WAPO records and update FE fields with WAPO info ----
-## missing 6618 (temporary, recent)
+## Check for unmatched WAPO records ----
+## WAPO is a subset of FE, so all WAPO cases should be in FE
+## Missing cases (so far) have all been due to delays in FE updating
+## So the fixes are temporary, until FE updates
+
+aaa <- mergefull %>% 
+    filter(is.na(feID)) %>% 
+    select("wapoID", "fname.y", "lname.y")
+print("Unmatched WAPO records:")
+print(aaa)
 
 ### START TEMPORARY FIXES #######################################
 
-aaa <- mergefull %>% filter(is.na(feID)) %>% select("wapoID", "fname.y", "lname.y")
+## For these cases, assign WAPO info to FE fields, since the FE fields
+## are used for some of the reports
+
 if (dim(aaa)[1] > 0) {
-    print("Unmatched WAPO records:")
-    print(aaa)
     
-    # For these cases, assign WAPO info to FE fields
     mergefull[is.na(mergefull$feID),] <- mergefull[is.na(mergefull$feID),] %>% 
         mutate(feID = ifelse(is.na(feID), 99999, feID),
                name.x = name.y,
@@ -360,11 +367,12 @@ if (dim(aaa)[1] > 0) {
                homicide = 1)
 }
 
-# temp fix for Rebischke
+## WaPo doesn't have all the info needed, so we fill in the rest manually if we have it
+
+# Rebischke
 target <- which(mergefull$wapoID==7345 & mergefull$feID==99999)
 if(length(target > 0)) {
     print("Fixing Rebischke case")
-    mergefull$city.x[target] <- "North Bend"
     mergefull$agency[target] <- "North Bend Police Department"
     mergefull$county[target] <- "King"
     mergefull$url_info[target] <- "https://www.seattletimes.com/seattle-news/law-justice/officer-who-fatally-shot-man-at-north-bend-park-is-identified/"
@@ -373,19 +381,7 @@ if(length(target > 0)) {
     print("Rebischke fix not needed anymore")
 }
 
-# temp fix for Karuo
-target <- which(mergefull$wapoID==7203 & mergefull$feID==99999)
-if(length(target > 0)) {
-    print("Fixing Karuo case")
-    mergefull$agency[target] <- "Clark Co Sheriff's Office"
-    mergefull$county[target] <- "Clark"
-    mergefull$url_info[target] <- "https://www.opb.org/article/2021/10/19/clark-county-sheriffs-deputies-shooting-kfin-karuo-death/"
-    mergefull$url_click[target] <- make_url(mergefull$url_info[target])
-    } else {
-    print("Karuo fix not needed anymore")
-    }
-
-# temp fix for unk Renton shooting
+# unk Renton shooting
 target <- which(mergefull$wapoID==7341 & mergefull$feID==99999)
 if(length(target > 0)) {
     print("Fixing UNK Renton case")
@@ -399,7 +395,8 @@ if(length(target > 0)) {
 
 ### END TEMPORARY FIXES #######################################
 
-# Checks ----
+# Checks for bad matches from the merge ----
+# these are relatively stable, and need to be fixed manually
 
 # Check for duplicate feIDs
 aaa <- table(mergefull$feID)
@@ -414,34 +411,30 @@ mergefull %>%
     filter(city.y != city.x & date.x != date.y) %>%
     select(feID, wapoID, city.x, city.y, date.x, date.y)
  
-## Spot fix and check
-# 
-## indices for wapo vars in mergefull
+## Spot fix these cases manually
+
+### indices for wapo vars in mergefull
 indices <- data.frame(colnames(mergefull))
 start <- as.numeric(row.names(indices)[indices=="wapoID"])
 end <- as.numeric(row.names(indices)[indices=="year.y"])
 len <- end-start+1
 
-# Fix incorrect matches
+### Fix incorrect matches
 mergefull[mergefull$feID==25615,start:end] <- rep(NA, len) # fixes wapoID 4568 (may not be a fatality, see below)
-# mergefull[mergefull$feID==28777,start:end] <- rep(NA, len) # fixes wapoID 5387 (not needed now)
 # 
-# fix for wapoID 5242
-# transfer from feID 26695 to 27067
+### fix for wapoID 5242
+### transfer from feID 26695 to 27067
 mergefull[mergefull$feID==27067,start:end] <- mergefull[mergefull$feID==26695,start:end]
 mergefull[mergefull$feID==27067,]$wapoID <- 5242
 mergefull[mergefull$feID==26695,start:end] <- rep(NA, len)
 mergefull[mergefull$feID==26695,]$wapoID <- NA
-# 
-# aaa <- table(mergefull$wapoID)
-# names(aaa[aaa==2])
 
-# Check for city/date mismatch
+# Recheck city/date mismatch
 mergefull %>%
     filter(city.y != city.x & date.x != date.y) %>%
     select(feID, wapoID, city.x, city.y, date.x, date.y)
 
-# Re-check for age mismatch
+# Re-check age mismatch
 mergefull %>% filter(age.x != age.y) %>% select(feID, wapoID, age.x, age.y)
 
 # Check that all wapoIDs are still in the merged dataset
@@ -456,12 +449,12 @@ if(table(!is.na(mergefull$wapoID))[[2]] != dim(wapo_2015)[1]) {
 # Have reported the case to FE.
 # https://www.kiro7.com/news/local/police-investigating-officer-involved-shooting-in-federal-way/930686522/
 
-# spotfix WA homicide designations. 
-## we don't do this b/c 
+# spotfix WA homicide designations: optional 
+## we don't currently do this b/c 
 ## we haven't looked at all cases, all years, so don't want to make
 ## one anomalous fix
 # mutate(homicide = ifelse(feID == 28698 | #deputy crash while having stroke
-#                              feID == 25804 | #next 2 killed by suspect, not police
+#                              feID == 25804 | #next 2 killed by suspect Tad Norman, not police
 #                              feID == 25805, 
 #                          0, homicide))
 
@@ -524,29 +517,3 @@ save(list = c("fe_940", "wapo_940", "finalmerge_940",
               "scrape.date", "last.fe.date", "last.wapo.date"),
      file = here("data-outputs", "WA940.rda"))
 
-
-
-#load(file = here("data-outputs", "WA940.rda"))
-
-# state_fips_df <- "https://en.wikipedia.org/wiki/" %>%
-#     str_c("Federal_Information_Processing_Standard_state_code") %>%
-#     GET() %>%
-#     content("text") %>%
-#     {readHTMLTable(doc=.)} %>%
-#     .[[1]] %>%
-#     as_tibble() %>%
-#     filter(V1 != "Name") %>%
-#     select(state_abb = V2, GEOID = V3) %>%
-#     mutate(state_abb = as.character(state_abb)) %>%
-#     mutate(State = state_translate(state_abb)) %>%
-#     filter(!is.na(State) & as.numeric(GEOID) <= 56)
-# 
-# county_fips_df <- county.fips %>%
-#     as_tibble() %>%
-#     mutate(GEOID = sprintf("%05d", fips)) %>%
-#     mutate(State = str_to_title(str_split_fixed(polyname, ",", 2)[,1])) %>%
-#     mutate(County = str_to_title(str_split_fixed(polyname, ",", 2)[,2])) %>%
-#     select(GEOID, State, County) %>%
-#     left_join(select(state_fips_df, -GEOID), by = c("State"))
-# 
-# use_data(fe_df, fe_df_clean, state_fips_df, county_fips_df, overwrite = TRUE)
