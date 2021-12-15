@@ -4,8 +4,10 @@
 .Ruserdata
 
 Downloads/
-data-outputs/
 data-raw/
+
+# Empty folder for storing script outputs
+data-outputs/*
 
 # Only some scripts are synced
 DataCleaningScripts/*
