@@ -152,7 +152,7 @@ There is typically a 1-2 week lag in the Fatal Encounters and WaPo datasets, but
 * `r last.wapo.date` for the Washington Post
 
 
-This report is restricted to the cases that can be classified as homicides by police, it excludes cases identified in the Fatal Encounters dataset as suicides, and a handful of other cases (see the [last section](#dataset-comparison) for details).
+This report is restricted to the cases that can be classified as homicides by police, it excludes cases identified in the Fatal Encounters dataset as suicides (see the [last section](#dataset-comparison) for details).
 
 ___
 
@@ -647,9 +647,13 @@ tab %>%
 
 <a id="mydate"></a>
 
-# Trend over time {.tabset}
+# Trend over time
 
-## By month
+There are two sets of plots here.  The first focuses on the monthly totals, and how they have changed over time.  The second focuses on the cumulative totals as the year progresses, and how this has changed over time.
+
+## Monthly totals {.tabset}
+
+### Trend
 
 * The points show the monthly totals, the grey line shows the smoothed average trend in monthly fatalities over time, and the grey shaded ribbon shows the 95% confidence interval around the trend line.
 
@@ -711,7 +715,7 @@ ggplotly(p, tooltip = "text") %>%
 
 
 
-## With key dates
+### With key dates
 
 This plot highlights key dates for legislation and legal actions related to police practices and accountability. 
 
@@ -806,7 +810,7 @@ ggplotly(p, tooltip = "text") %>%
   
 ```
 
-## This year vs. previous
+### This year vs. previous years
 
 * The points show the monthly totals for each year. They are color coded to highlight the current year.
 
@@ -864,7 +868,9 @@ ggplotly(p, tooltip = "text")
   
 ```
 
-## Cumulative totals
+## Annual totals {.tabset}
+
+### By month and year
 
 * The lines show the cumulative total fatalities by month as the year progresses, for each year. 
 
@@ -926,7 +932,7 @@ ggplot(data= df %>% filter(year != curr_yr),
 ```
 
 
-## Year to date by COD
+### By COD
 
 Here we plot the cumulative totals for year to date -- the count of total fatalities up to the *last complete month* of the current year, for each year.  
 
@@ -971,6 +977,63 @@ p <-  homicides %>%
 
 ggplotly(p, tooltip = "text")
 
+```
+
+### WA vs. all other states
+
+Cumulative totals, year to date, with percentage change from 2020 to 2021.  Note that the number of months included depends on the most recent data update, which may be different for Fatal Encounters and the Washington Post.  So we present these separately.
+
+```{r wavsus, warning=F}
+fe_tab <- fe_2015 %>% 
+  filter(homicide==1 & year > 2014) %>% 
+  filter(match(month, month.abb) <= 10) %>%
+  mutate(wa = ifelse(st == "WA", 1, 0)) %>%
+  group_by(year, wa) %>%
+  count() %>%
+  pivot_wider(names_from = wa,
+              values_from = n)
+fe_tab <- rbind(fe_tab, 
+                100*round(fe_tab[nrow(fe_tab),]/fe_tab[nrow(fe_tab)-1,]-1, 2)) %>%
+  mutate(year = as.character(year))
+fe_tab[nrow(fe_tab), 1] <- "Pct change 2020 to 2021"
+
+wapo_tab <- wapo_2015 %>% 
+  filter(match(month, month.abb) <= 12) %>%
+  mutate(wa = ifelse(st == "WA", 1, 0)) %>%
+  group_by(year, wa) %>%
+  count() %>%
+  pivot_wider(names_from = wa,
+              values_from = n)
+wapo_tab <- rbind(wapo_tab, 
+                100*round(wapo_tab[nrow(wapo_tab),]/wapo_tab[nrow(wapo_tab)-1,]-1, 2)) %>%
+  mutate(year = as.character(year))
+wapo_tab[nrow(wapo_tab), 1] <- "Pct change 2020 to 2021"
+```
+
+Using Fatal Encounters data: year to date is Jan - `r month.abb[lubridate::month(last.fe.date)-1]`
+
+```{r wavsusfe, warning=F}
+kable(fe_tab,
+      caption = "Persons killed by police by year in FE: WA vs. all other states *",
+      col.names = c("Year", "All Other States", "WA")) %>%
+  kable_styling(bootstrap_options = c("striped","hover"),
+                full_width = F) %>%
+  row_spec(nrow(fe_tab), bold = T) %>%
+  add_footnote(label = "YTD counts:  Jan - Sep of each year",
+               notation = "symbol")
+```
+
+Using Washington Post data: year to date is Jan - `r month.abb[lubridate::month(last.wapo.date)-1]`
+
+```{r wavsuswapo, warning=F}
+kable(wapo_tab,
+      caption = "Persons shot by police by year in WaPo: WA vs. all other states *",
+      col.names = c("Year", "All Other States", "WA")) %>%
+  kable_styling(bootstrap_options = c("striped","hover"),
+                full_width = F) %>%
+  row_spec(nrow(fe_tab), bold = T)  %>%
+  add_footnote(label = "YTD counts:  Jan - Nov of each year",
+               notation = "symbol")
 ```
 
 # Say their names {.tabset}
@@ -1046,9 +1109,11 @@ tab %>%
                notation = "symbol")
 ```
   
-## Suicides excluded
+## Suicides excluded in this report
 
-The Fatal Encounters data includes some cases described as "suicides" that occur during an encounter with police.  **We have excluded these from the analyses in this report.**  However, we acknowledge that these cases warrant further assessment.  The classification as "suicide" is not definitive, it is typically based on the narrative provided by law enforcement.  And even if these are suicides, it is possible that the outcome might have been different if the case had been handled differently, for example, by calling in a crisis intervention team.
+The Fatal Encounters data includes some cases classified as "suicides" that occur during an encounter with police.  These are not cases of "suicide by cop", where the victim appears to have provoked the police in order to be shot by police.  They are cases where the victim shoots or otherwise kills themself.  **We have excluded these from the analyses in this report, because the report focuses on persons killed by police.**  
+
+However, we acknowledge that these cases warrant further assessment.  The classification as "suicide" is not definitive, it is typically based on the narrative provided by law enforcement.  And even if these are suicides, it is possible that the outcome might have been different if the case had been handled differently, for example, by calling in a crisis intervention team.
 
 The excluded case counts and fraction of total cases by year is shown in the table below.
 
