@@ -421,7 +421,7 @@ len <- end-start+1
 
 ### Fix incorrect matches
 mergefull[mergefull$feID==25615,start:end] <- rep(NA, len) # fixes wapoID 4568 (may not be a fatality, see below)
-# 
+ 
 ### fix for wapoID 5242
 ### transfer from feID 26695 to 27067
 mergefull[mergefull$feID==27067,start:end] <- mergefull[mergefull$feID==26695,start:end]
@@ -429,7 +429,7 @@ mergefull[mergefull$feID==27067,]$wapoID <- 5242
 mergefull[mergefull$feID==26695,start:end] <- rep(NA, len)
 mergefull[mergefull$feID==26695,]$wapoID <- NA
 
-# Recheck city/date mismatch
+# Re-check city/date mismatch
 mergefull %>%
     filter(city.y != city.x & date.x != date.y) %>%
     select(feID, wapoID, city.x, city.y, date.x, date.y)
