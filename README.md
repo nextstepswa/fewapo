@@ -2,9 +2,11 @@
 
 This repository contains R language scripts for scraping, cleaning and merging the data on persons killed by police from the [Fatal Encounters Project](https://fatalencounters.org/) and the [Washington Post police shootings database](https://www.washingtonpost.com/graphics/investigations/police-shootings-database).
 
-*If you use these data or scripts, please consider [donating to Fatal Encounters](https://fatalencounters.org/donate/)*
-
 We are committed to accurate, transparent, reproducible research.  All of the tools used in our workflow are open-source and free to the public.
+
+____
+
+*If you use these data or scripts, please consider [donating to Fatal Encounters](https://fatalencounters.org/donate/)*
 
 ____
 
@@ -15,6 +17,10 @@ This contains the key files needed to construct the merged dataset and populatio
 * `ScrapeMerge` - the main scraping / cleaning / merging / datafile construction script
 * `fixes` - called by `ScrapeMerge` to spot fix errors identified in either dataset, these are applied to the final merged dataset.
 * `StateCensusData` - script for scraping and managing census population estimates, used to calculate *per capita* rates for the US report
+
+Running/sourcing the `ScrapeMerge` script will create the cleaned datafiles needed for the WA state reports below.
+
+If you want to run the US national per capita analysis, you will also need to source the `StateCensusData` script
 
 ## The `Analyses` folder
 
@@ -31,4 +37,4 @@ ____
 
 *Find a bug/error?*  Please report it as an issue, thx!
 
-*Want to get involved?* contact the repository maintainer
+*Want to get involved?* Please contact the repository maintainer
