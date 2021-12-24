@@ -7,9 +7,7 @@ We are committed to accurate, transparent, reproducible research.  All of the to
 ____
 
 <p align="center">
-  
-  *If you use these data or scripts, please consider [donating to Fatal Encounters](https://fatalencounters.org/donate/)*
-
+  <b>If you use these data or scripts, please consider donating to Fatal Encounters at:  </b><a href="https://fatalencounters.org/donate/">https://fatalencounters.org/donate/</a>
 </p>
 
 ____
