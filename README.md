@@ -6,7 +6,11 @@ We are committed to accurate, transparent, reproducible research.  All of the to
 
 ____
 
-*If you use these data or scripts, please consider [donating to Fatal Encounters](https://fatalencounters.org/donate/)*
+<p align="center">
+  
+  *If you use these data or scripts, please consider [donating to Fatal Encounters](https://fatalencounters.org/donate/)*
+
+</p>
 
 ____
 
