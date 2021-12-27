@@ -1,18 +1,40 @@
-# edits when we know more than FE, 
+# edits when we know more than FE and WaPo, 
 # should be kept up to date and commented out when no longer relevant
+# ---------------------------------------------------------------------
 
-# fe_clean[!is.na(fe_clean$feID) & fe_clean$feID == 29054,] <- 
-#   fe_clean[!is.na(fe_clean$feID) & fe_clean$feID == 29054,] %>%
-#   mutate(name = "Darren Butrick",
-#          date = lubridate::ymd("2020-11-04"),
-#          month = "Nov",
-#          day = 4,
-#          year = 2020)
+# Dingman shooting 12/10/2021 Spokane -- 
+# not showing up in WaPo and FE hasn't updated yet
 
-# wapo_clean[!is.na(wapo_clean$wapoID) & wapo_clean$wapoID == 6290,] <- 
-#   wapo_clean[!is.na(wapo_clean$wapoID) & wapo_clean$wapoID == 6290,] %>%
-#   mutate(name = "Darren Butrick",
-#          gender = "Male")
+fe_target <- which(grepl("Dingman", fe_clean$name) & fe_clean$st == "WA")
+wapo_target <- which(grepl("Dingman", wapo_clean$name) & wapo_clean$st == "WA")
+newcase <- nrow(fe_clean)+1
+
+if(is_empty(wapo_target) & is_empty(fe_target)) {
+  fe_clean[newcase,] <- NA
+  fe_clean$feID[newcase] <- 99999
+  fe_clean$name[newcase] <- "Michael Lee Dingman"
+  fe_clean$date[newcase] <- lubridate::ymd("2021-12-10")
+  fe_clean$day[newcase] <- 12
+  fe_clean$month[newcase] <- "Dec"
+  fe_clean$year[newcase] <- 2021
+  fe_clean$age[newcase] <- 43
+  fe_clean$gender[newcase] <- "Male"
+  fe_clean$city[newcase] <- "Spokane"
+  fe_clean$county[newcase] <- "Spokane"
+  fe_clean$agency[newcase] <- "Spokane County Sheriff"
+  fe_clean$agency.type[newcase] <- "County Sheriff's Office"
+  fe_clean$cod[newcase] <- "Gunshot"
+  fe_clean$homicide[newcase] <- 1
+  fe_clean$hotPursuit[newcase] <- "Other"
+  fe_clean$st[newcase] <- "WA"
+  fe_clean$state[newcase] <- "Washington"
+  fe_clean$latitude[newcase] <- 47.7175
+  fe_clean$longitude[newcase] <- -117.34472222222
+  fe_clean$url_info[newcase] <- "https://www.kxly.com/spokane-county-medical-examiner-identifies-man-killed-by-deputies-in-n-spokane/"
+  fe_clean$url_click[newcase] <- make_url(fe_clean$url_info[newcase])
+} else {
+  print("Check Dingman case, may not need this anymore")
+}
 
 # NOTE: WAPO 4568 is the only case since 2015 not found in FE.  From the news coverage
 # I can't tell if the victim died.  Have reported the case to FE.
@@ -86,6 +108,18 @@ wapo_clean$name[wapo_clean$wapoID==6989] <- "Dwayne Michael Fields"
 # # Force the right match since wapo name is NA
 # wapo_clean$name[wapo_clean$wapoID==6548] <- "John Eric Ostbye"
 
+# fe_clean[!is.na(fe_clean$feID) & fe_clean$feID == 29054,] <- 
+#   fe_clean[!is.na(fe_clean$feID) & fe_clean$feID == 29054,] %>%
+#   mutate(name = "Darren Butrick",
+#          date = lubridate::ymd("2020-11-04"),
+#          month = "Nov",
+#          day = 4,
+#          year = 2020)
+
+# wapo_clean[!is.na(wapo_clean$wapoID) & wapo_clean$wapoID == 6290,] <- 
+#   wapo_clean[!is.na(wapo_clean$wapoID) & wapo_clean$wapoID == 6290,] %>%
+#   mutate(name = "Darren Butrick",
+#          gender = "Male")
 
 ## Permanent fixes ------------------------------------------------
 
