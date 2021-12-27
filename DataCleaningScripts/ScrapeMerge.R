@@ -51,7 +51,7 @@ wapo <- scrape_data(wapo, wapo_url, wapo_save_file)
 # FE cleaning -------------------------------------------------
 
 fe_clean <- fe %>%
-    filter(!is.na(`Unique ID`)) %>%
+    filter(!is.na(`Unique ID`) & `Unique ID` != "NA") %>%
     mutate(
         feID = `Unique ID`,
         name = case_when(
@@ -323,7 +323,8 @@ fe_2015 <- fe_clean %>%
     filter(date > "2014-12-31" & st == "WA")
 wapo_2015 <- wapo_clean %>% filter(st == "WA")
 
-# Merge (we only do this for WA state, to make cleaning feasible) ---------
+# Merge  ---------
+# we only do this for WA state, to make cleaning feasible
 
 mergefull <- stringdist_full_join(fe_2015, wapo_2015,
                                   by = c("lname", "fname", "date", "gender", "cod"),
@@ -369,29 +370,18 @@ if (dim(aaa)[1] > 0) {
 
 ## WaPo doesn't have all the info needed, so we fill in the rest manually if we have it
 
-# Rebischke
-target <- which(mergefull$wapoID==7345 & mergefull$feID==99999)
-if(length(target > 0)) {
-    print("Fixing Rebischke case")
-    mergefull$agency[target] <- "North Bend Police Department"
-    mergefull$county[target] <- "King"
-    mergefull$url_info[target] <- "https://www.seattletimes.com/seattle-news/law-justice/officer-who-fatally-shot-man-at-north-bend-park-is-identified/"
-    mergefull$url_click[target] <- make_url(mergefull$url_info[target])
-} else {
-    print("Rebischke fix not needed anymore")
-}
+# # Name of case
+# target <- which(mergefull$wapoID==7345 & mergefull$feID==99999)
+# if(length(target > 0)) {
+#     print("Fixing Rebischke case")
+#     mergefull$agency[target] <- "North Bend Police Department"
+#     mergefull$county[target] <- "King"
+#     mergefull$url_info[target] <- "https://www.seattletimes.com/seattle-news/law-justice/officer-who-fatally-shot-man-at-north-bend-park-is-identified/"
+#     mergefull$url_click[target] <- make_url(mergefull$url_info[target])
+# } else {
+#     print("Rebischke fix not needed anymore")
+# }
 
-# unk Renton shooting
-target <- which(mergefull$wapoID==7341 & mergefull$feID==99999)
-if(length(target > 0)) {
-    print("Fixing UNK Renton case")
-    mergefull$agency[target] <- "Renton Police Department"
-    mergefull$county[target] <- "King"
-    mergefull$url_info[target] <- "https://www.seattletimes.com/seattle-news/law-justice/renton-police-shoot-person-who-allegedly-charged-at-them-with-a-gun/"
-    mergefull$url_click[target] <- make_url(mergefull$url_info[target])
-} else {
-    print("UNK Renton fix not needed anymore")
-}
 
 ### END TEMPORARY FIXES #######################################
 
@@ -499,7 +489,9 @@ save(list = c("fe_clean", "wapo_clean",
               "scrape.date", "last.fe.date", "last.wapo.date"),
      file = here("data-outputs", "CleanData.rda"))
 
-##  WA after 2015 ----
+##  2015 and later ----
+## (note that the fe and wapo data include all cases, not just WA)
+
 fe_2015 <- fe_clean %>% filter(date > "2014-12-31")
 wapo_2015 <- wapo_clean
 finalmerge_2015 <- finalmerge
