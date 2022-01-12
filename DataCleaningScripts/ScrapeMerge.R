@@ -7,28 +7,33 @@ library(forcats)
 library(maps)
 library(here)
 library(fuzzyjoin)
+library(lubridate)
 
 # functions ----
 
-state_translate <- function(x){
+state_translate_fn <- function(x){
     snames <- c(state.name, "District of Columbia")
     names(snames) <- c(state.abb, "DC")
     snames[x]
 }
 
-scrape_data <- function(dataset_name, url, save_file) {
+scrape_data_fn <- function(dataset_name, url, save_file) {
     dataset_name <- rio::import(url)
     write.csv(dataset_name, save_file)
     dataset_name
 }
 
-make_url <- function(x) {
+make_url_fn <- function(x) {
     paste(sprintf('<a href="%1$s">%1$s</a>', x),
           collapse=",")
 }
 
-#' Fatal Encounters
-#source(file.path(path_to_src, "MakeFEData.R"))
+num <- 1:51
+states <- c(sort(state.abb), "DC")
+
+# Scrape data ----
+
+## Fatal Encounters
 
 doc_id = "1dKmaV_JiWcG8XBoRgP8b4e9Eopkpgt7FL7nyspvzAsE"
 url_template = 'https://docs.google.com/spreadsheets/d/DOC_ID/export?format=tsv'
@@ -37,18 +42,23 @@ fe_url = sub("(*.)DOC_ID(*.)",
              url_template)
 fe_save_file = here("Downloads", "fe_raw.csv")
 
-fe <- scrape_data(fe, fe_url, fe_save_file)
+fe <- scrape_data_fn(fe, fe_url, fe_save_file)
 
 
-#' Washington Post
-#source(file.path(path_to_src, "MakeWaPoData.R"))
+## Washington Post
 
 wapo_url = "https://raw.githubusercontent.com/washingtonpost/data-police-shootings/master/fatal-police-shootings-data.csv"
 wapo_save_file = here("Downloads", "wapo_raw.csv")
 
-wapo <- scrape_data(wapo, wapo_url, wapo_save_file)
+wapo <- scrape_data_fn(wapo, wapo_url, wapo_save_file)
 
-# FE cleaning -------------------------------------------------
+# Cleaning & Variable construction ----
+
+## Case fixes ----
+## ID'd during merging & needed before cleaning
+source(here("DataCleaningScripts", "fixes_precleaning.R"))
+
+## FE cleaning -------------------------------------------------
 
 fe_clean <- fe %>%
     filter(!is.na(`Unique ID`) & `Unique ID` != "NA") %>%
@@ -59,8 +69,12 @@ fe_clean <- fe %>%
             TRUE ~ Name),
         name = str_remove(name, " Jr."),
         name = str_remove(name, " Sr."),
+        name = str_remove(name, " III"),
+        name = str_remove(name, " II"),
+        name = str_remove(name, " IV"),
+        name = str_remove(name, " V$"),
+        name = str_remove(name, " aka.*"),
         name = str_replace_all(name, "-"," "),
-        name = ifelse(feID == 28826, "Andrea Churna", name),
         fname = "NA", # prep for assignment
         lname = "NA") %>%
     mutate(
@@ -95,10 +109,8 @@ fe_clean <- fe %>%
                TRUE ~ raceImp),
            raceImp = fct_relevel(raceImp, "Unknown", after = Inf)
     ) %>%
-    mutate(gender = case_when(
-        Gender == "" ~ "Unknown",
-        TRUE ~ Gender),
-        gender = fct_relevel(`gender`, "Unknown", after = Inf)
+    mutate(gender = ifelse(Gender == "", "Unknown", Gender),
+           gender = fct_relevel(`gender`, "Unknown", after = Inf)
     ) %>%
     # age is a mess, chr & lots of typos, lots of NA, case_when doesn't like "-"
     mutate(Age = gsub("-","", Age),
@@ -106,19 +118,18 @@ fe_clean <- fe %>%
                               Age == "55." ~ "55",
                               Age == "4050" ~ "45",
                               TRUE ~ Age),
-           age = as.numeric(ageChr)
+           age = as.numeric(ageChr),
+           age = ifelse(is.na(age), 999, age) # missing value
     ) %>%
     mutate(date = 
-               lubridate::mdy(`Date of injury resulting in death (month/day/year)`),
-           date = case_when(feID == 27052 ~ lubridate::ymd("2019-11-22"),
-                            TRUE ~ date),
-           month = lubridate::month(date, label=T),
-           day = lubridate::day(date),
-           year = lubridate::year(date)
+               mdy(`Date of injury resulting in death (month/day/year)`),
+           month = month(date, label=T),
+           day = day(date),
+           year = year(date)
     ) %>%
     mutate(city = `Location of death (city)`,
            st = State,
-           state = state_translate(st),
+           state = state_translate_fn(st),
            zip = `Location of death (zip code)`,
            county = `Location of death (county)`
     ) %>%
@@ -151,6 +162,7 @@ fe_clean <- fe %>%
     mutate(cod = `Highest level of force`,
            cod = case_when(
                cod %in% c("", "Undetermined", "Unknown") ~ "Unknown",
+               grepl("Less", cod) ~ "Unknown", # one case, fe 30304
                grepl("^.*(phyx).*", cod) ~ "Asphyxiated/Restrained",
                TRUE ~ cod),
            cod = factor(
@@ -160,7 +172,7 @@ fe_clean <- fe %>%
                           "Beaten/Bludgeoned with instrument", "Drug overdose", 
                           "Fell from a height", "Burned/Smoke inhalation", 
                           "Chemical agent/Pepper spray", "Stabbed", "Other", "Unknown")
-            )
+           )
     ) %>%
     mutate(armed = `Armed/Unarmed`,
            armed = case_when(
@@ -168,8 +180,8 @@ fe_clean <- fe %>%
                armed == "Unarmed" ~ "Unarmed",
                TRUE ~ "Unknown"),
            armed = fct_relevel(armed, "Unknown", 
-                                      after = Inf)
-           ) %>%
+                               after = Inf)
+    ) %>%
     mutate(weapon = `Alleged weapon`,
            weapon =case_when(
                grepl("Edged", weapon)  ~ "Alleged edged weapon",
@@ -179,7 +191,7 @@ fe_clean <- fe %>%
                weapon == "" | is.na(weapon) ~ "Unknown",
                TRUE ~ "Other"),
            weapon = fct_relevel(weapon, "Unknown", 
-                                        after = Inf)
+                                after = Inf)
     ) %>%
     mutate(fleeing = `Fleeing/Not fleeing`,
            fleeing = case_when(
@@ -188,7 +200,7 @@ fe_clean <- fe %>%
                grepl("Not", fleeing) ~ "No",
                TRUE ~ "Alleged yes"),
            fleeing = fct_relevel(fleeing, "Unknown", 
-                               after = Inf)
+                                 after = Inf)
     ) %>%
     # see email chain with Burghardt re "Intended use of force (Developing)".  
     # Veh/Purs is the unclean mix category that he is slowly working through
@@ -201,7 +213,7 @@ fe_clean <- fe %>%
                hotPursuit == "Vehic/Purs" | hotPursuit == "Pursuit" ~ "Vehicle Pursuit",
                TRUE ~ "Other"),
            hotPursuit = fct_relevel(hotPursuit, "Unknown", 
-                                 after = Inf)
+                                    after = Inf)
     ) %>%
     mutate(circumstances = `Intended use of force (Developing)`,
            circumstances = case_when(
@@ -214,7 +226,7 @@ fe_clean <- fe %>%
                TRUE ~ circumstances),
            circumstances = fct_relevel(circumstances, "Unknown", 
                                        after = Inf)
-           ) %>%
+    ) %>%
     # Here we do not classify "suicide" as a homicide.
     mutate(homicide = circumstances,
            homicide = case_when(
@@ -230,30 +242,28 @@ fe_clean <- fe %>%
                foreknowledge == "" ~ "Unknown",
                foreknowledge == "Yes" ~ "Mental Illness",
                foreknowledge == "No" ~ "None",
-        TRUE ~ foreknowledge) 
+               TRUE ~ foreknowledge) 
     ) %>%
     mutate(latitude = as.numeric(Latitude),
            longitude = as.numeric(Longitude)) %>%
     mutate(url_info = `Supporting document link`) %>%
     mutate(description = `Brief description`) %>%
+    mutate(state.num = num[match(st, states)]) %>%
     select(
         feID, name, fname, lname,
         date, month, day, year,
-        city, county, st, state, zip, 
+        city, county, st, state, state.num, zip, 
         latitude, longitude,
         raceOrig, raceImp, gender, age, ageChr, foreknowledge,
         cod, armed, weapon, fleeing,
         circumstances, hotPursuit, homicide, agency, agency.type,
         description, url_info
-        )
+    )
 
-# create clickable url for Rpubs reports
-fe_clean$url_click <- sapply(fe_clean$url_info, make_url)
-                             # function(x) 
-                             #     paste(sprintf('<a href="%1$s">%1$s</a>', x),
-                             #           collapse=","))
+### create clickable url for Rpubs reports
+fe_clean$url_click <- sapply(fe_clean$url_info, make_url_fn)
 
-# WAPO cleaning -------------------------------------------------
+## WAPO cleaning -------------------------------------------------
 
 wapo_clean <- wapo %>%
     rename(wapoID = id,
@@ -264,20 +274,25 @@ wapo_clean <- wapo %>%
            wapo_threat = threat_level,
            wapo_flee = flee,
            wapo_bcam = body_camera) %>%
-    mutate(name = case_when(wapoID == 4967 ~ "Collin Osborn", # spot fixes
-                            wapoID == 5802 ~ "River Hudson",
-                            wapoID == 5816 ~ "Terry Caver",
-                            wapoID == 6024 ~ "Juan Rene Hummel",
-                            name == "" ~ "Unknown",
-                            TRUE ~ name),
+    mutate(name = ifelse(name == "", "Unknown", name),
            name = str_remove(name, " Jr."),
            name = str_remove(name, " Sr."),
+           name = str_remove(name, " III"),
+           name = str_remove(name, " II"),
+           name = str_remove(name, " IV"),
+           name = str_remove(name, " V$"),
+           name = str_remove(name, " aka.*"),
            name = str_replace_all(name, "-"," "),
            fname = "NA",
-           lname = "NA",
-           gender = recode(gender, 
+           lname = "NA"
+    ) %>%
+    mutate(age = ifelse(is.na(age), 999, age)) %>% # missing value
+    mutate(gender = recode(gender, 
                            "M"="Male", "F"="Female"),
-           race = recode(race,
+           gender = ifelse(gender=="", "Unknown", gender),
+           gender = fct_relevel(gender, "Unknown", after = Inf)
+    ) %>%
+    mutate(race = recode(race,
                          "A" = "API",
                          "B" = "BAA",
                          "H" = "HL",
@@ -285,46 +300,78 @@ wapo_clean <- wapo %>%
                          "W" = "WEA",
                          .default = "Unknown"),
            race = fct_relevel(race, "Unknown", 
-                             after = Inf),
-           wapo_armed = recode(wapo_armed,
+                              after = Inf)
+    ) %>%
+    mutate(wapo_armed = recode(wapo_armed,
                                "unknown weapon" = "Unknown"),
-           state = state_translate(st),
-           date = lubridate::ymd(date),
-           date = case_when(name == "Shaun Lee Fuhr" ~ as.Date("2020-04-29"),
-                            TRUE ~ date),
-           month = lubridate::month(date, label=T),
-           day = lubridate::day(date),
-           year = lubridate::year(date),
+           state = state_translate_fn(st),
+           state.num = num[match(st, states)],
+           date = ymd(date),
+           month = month(date, label=T),
+           day = day(date),
+           year = year(date),
            cod = "Gunshot")
 
 
 # Final prep -------------------------------------------------
 
-# known fixes
-source(here("DataCleaningScripts", "fixes.R"))
+## post-cleaning fixes (mostly for WA State) ----
+source(here("DataCleaningScripts", "fixes_postcleaning.R"))
 
-#FE name processing
+##FE name processing ----
 name.list <- str_split(fe_clean$name, " ")
 for(i in 1:length(name.list)) {
     fe_clean$fname[i] <- name.list[[i]][1]
     fe_clean$lname[i] <- name.list[[i]][length(name.list[[i]])]
 }
 
-#WaPo name processing
+##WaPo name processing ----
 name.list <- str_split(wapo_clean$name, " ")
 for(i in 1:length(name.list)) {
     wapo_clean$fname[i] <- name.list[[i]][1]
     wapo_clean$lname[i] <- name.list[[i]][length(name.list[[i]])]
 }
 
+# Save clean datasets, all cases ----
+
+## CSV files ----
+
+write.csv(fe_clean, here("data-outputs", "FE_clean.csv"))
+write.csv(wapo_clean, here("data-outputs", "WaPo_clean.csv"))
+
+## Rdata files ----
+
+## key date info
+
+selection <- "all cases"
+scrape_date <- Sys.Date()
+last_fe_date <- max(fe_clean$date)
+last_wapo_date <- max(wapo_clean$date)
+last_data_update <- max(last_fe_date, last_wapo_date)
+last_update_is_eoy <- month(last_data_update)==12 & 
+    day(last_data_update)==31
+last_complete_mo <- ifelse(last_update_is_eoy | month(last_data_update)==1, 
+                           12, 
+                           month(last_data_update)-1)
+last_complete_yr <- ifelse(last_update_is_eoy, 
+                           year(last_data_update), 
+                           year(last_data_update)-1)
+
+save(list = c("fe_clean", "wapo_clean", "selection",
+              "scrape_date", "last_fe_date", "last_wapo_date",
+              "last_data_update", "last_complete_mo", 
+              "last_complete_yr", "last_update_is_eoy"),
+     file = here("data-outputs", "CleanData.rda"))
+
+
+
+# Merge  ---------
+# we only do this for WA state, to make cleaning feasible
 
 # Filter WA from 2015
 fe_2015 <- fe_clean %>% 
     filter(date > "2014-12-31" & st == "WA")
 wapo_2015 <- wapo_clean %>% filter(st == "WA")
-
-# Merge  ---------
-# we only do this for WA state, to make cleaning feasible
 
 mergefull <- stringdist_full_join(fe_2015, wapo_2015,
                                   by = c("lname", "fname", "date", "gender", "cod"),
@@ -338,8 +385,12 @@ mergefull <- stringdist_full_join(fe_2015, wapo_2015,
 aaa <- mergefull %>% 
     filter(is.na(feID)) %>% 
     select("wapoID", "fname.y", "lname.y")
-print("Unmatched WAPO records:")
-print(aaa)
+if(nrow(aaa) > 0){
+    print("Unmatched WAPO records:")
+    print(aaa)
+} else {
+    print("No unmatched WAPO records")
+}
 
 ### START TEMPORARY FIXES #######################################
 
@@ -373,13 +424,13 @@ if (dim(aaa)[1] > 0) {
 # # Name of case
 # target <- which(mergefull$wapoID==7345 & mergefull$feID==99999)
 # if(length(target > 0)) {
-#     print("Fixing Rebischke case")
+#     print("Fixing <name of case>")
 #     mergefull$agency[target] <- "North Bend Police Department"
 #     mergefull$county[target] <- "King"
 #     mergefull$url_info[target] <- "https://www.seattletimes.com/seattle-news/law-justice/officer-who-fatally-shot-man-at-north-bend-park-is-identified/"
-#     mergefull$url_click[target] <- make_url(mergefull$url_info[target])
+#     mergefull$url_click[target] <- make_url_fn(mergefull$url_info[target])
 # } else {
-#     print("Rebischke fix not needed anymore")
+#     print("<name of case> fix not needed anymore")
 # }
 
 
@@ -390,12 +441,26 @@ if (dim(aaa)[1] > 0) {
 
 # Check for duplicate feIDs
 aaa <- table(mergefull$feID)
-names(aaa[aaa==2])
+if(any(aaa>1)){
+    names(aaa[aaa>1])
+    sort(unique(aaa))
+    print("Duplicate FE IDs, #times")
+    aaa[aaa>1] 
+} else {
+    print("No duplicate FE IDs")
+}
 
 # Check for duplicate wapoIDs
 aaa <- table(mergefull$wapoID)
-names(aaa[aaa==2])
- 
+if(any(aaa>1)){
+    names(aaa[aaa>1])
+    sort(unique(aaa))
+    print("Duplicate WaPo IDs, #times")
+    aaa[aaa>1]
+} else {
+    print("No duplicate WaPo IDs")
+}
+
 # Check for city/date mismatch
 mergefull %>%
     filter(city.y != city.x & date.x != date.y) %>%
@@ -412,12 +477,15 @@ len <- end-start+1
 ### Fix incorrect matches
 mergefull[mergefull$feID==25615,start:end] <- rep(NA, len) # fixes wapoID 4568 (may not be a fatality, see below)
  
-### fix for wapoID 5242
-### transfer from feID 26695 to 27067
+### fix for wapoID 5242: transfer from feID 26695 to 27067
 mergefull[mergefull$feID==27067,start:end] <- mergefull[mergefull$feID==26695,start:end]
 mergefull[mergefull$feID==27067,]$wapoID <- 5242
 mergefull[mergefull$feID==26695,start:end] <- rep(NA, len)
 mergefull[mergefull$feID==26695,]$wapoID <- NA
+
+### fix for wapoID 7314: delete duplicate match
+mergefull[mergefull$feID==31303,start:end] <- rep(NA, len)
+mergefull[mergefull$feID==31303,]$wapoID <- NA
 
 # Re-check city/date mismatch
 mergefull %>%
@@ -473,39 +541,33 @@ finalmerge <- mergefull %>%
            url_click
            )
 
-# Write out clean unmerged datasets as csv files ----
 
-write.csv(fe_clean, here("data-outputs", "FE_clean.csv"))
-write.csv(wapo_clean, here("data-outputs", "WaPo_clean.csv"))
-
-# Save clean datasets as Rdata files ----
-
-scrape.date <- Sys.Date()
-last.fe.date <- max(fe_clean$date)
-last.wapo.date <- max(wapo_clean$date)
-
-## All cases ----
-save(list = c("fe_clean", "wapo_clean", 
-              "scrape.date", "last.fe.date", "last.wapo.date"),
-     file = here("data-outputs", "CleanData.rda"))
+# Save WA clean and merged datasets as Rdata files ----
+## Note that the fe and wapo data include all cases, not just WA.
+## For WA only analysis, use the merged_data
 
 ##  2015 and later ----
-## (note that the fe and wapo data include all cases, not just WA)
+selection <- "2015+"
+fe_data <- fe_clean %>% filter(date > "2014-12-31")
+wapo_data <- wapo_clean
+merged_data <- finalmerge 
 
-fe_2015 <- fe_clean %>% filter(date > "2014-12-31")
-wapo_2015 <- wapo_clean
-finalmerge_2015 <- finalmerge
-
-save(list = c("fe_2015", "wapo_2015", "finalmerge_2015", 
-              "scrape.date", "last.fe.date", "last.wapo.date"),
+save(list = c("fe_data", "wapo_data", "merged_data", "selection",
+              "scrape_date", "last_fe_date", "last_wapo_date",
+              "last_data_update", "last_complete_mo", 
+              "last_complete_yr", "last_update_is_eoy"),
      file = here("data-outputs", "WA2015.rda"))
 
-##  WA post 940 ----
-fe_940 <- fe_clean %>% filter(date > "2018-12-06")
-wapo_940 <- wapo_clean %>% filter(date > "2018-12-06")
-finalmerge_940 <- finalmerge %>% filter(date > "2018-12-06")
+##  Since 940 ----
+selection <- "since 940"
+fe_data <- fe_clean %>% filter(date > "2018-12-06")
+wapo_data <- wapo_clean %>% filter(date > "2018-12-06")
+merged_data <- finalmerge %>% filter(date > "2018-12-06")
 
-save(list = c("fe_940", "wapo_940", "finalmerge_940", 
-              "scrape.date", "last.fe.date", "last.wapo.date"),
+save(list = c("fe_data", "wapo_data", "merged_data", "selection",
+              "scrape_date", "last_fe_date", "last_wapo_date",
+              "last_data_update", "last_complete_mo", 
+              "last_complete_yr", "last_update_is_eoy"),
      file = here("data-outputs", "WA940.rda"))
+
 
