@@ -19,4 +19,5 @@ DataCleaningScripts/*
 Analyses/*
 !Analyses/WAsince*.Rmd
 !Analyses/USpercapitaTrends.Rmd
+!Analyses/Common/
 

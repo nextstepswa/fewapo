@@ -17,7 +17,7 @@ ____
 This contains the key files needed to construct the merged dataset and population counts:
 
 * `ScrapeMerge` - the main scraping / cleaning / merging / datafile construction script
-* `fixes` - called by `ScrapeMerge` to spot fix errors identified in either dataset, these are applied to the final merged dataset.
+* `fixes_precleaning` & `fixes_postcleaning - called by `ScrapeMerge` to spot fix errors identified in both datasets. The `postcleaning` corrections are only applied to the final merged dataset.
 * `StateCensusData` - script for scraping and managing census population estimates, used to calculate *per capita* rates for the US report
 
 Running/sourcing the `ScrapeMerge` script will create the cleaned datafiles needed for the WA state reports below.
@@ -26,14 +26,22 @@ If you want to run the US national per capita analysis, you will also need to so
 
 ## The `Analyses` folder
 
-This contains the scripts that used the cleaned data to produce reports that are hosted on rpubs:
+This contains the scripts that use the cleaned/merged data to produce reports that are hosted on rpubs.com:
 
 *Washington state*  
 * [WA since the passage of Inititative-940](https://rpubs.com/moxbox/wa_since940) -- updated weekly
 * [WA since 2015](https://rpubs.com/moxbox/wa_since2015) -- updated weekly
 * [WA since 2000](https://rpubs.com/moxbox/wa_since2000) -- updated annually, and uses only FE data because WaPo doesn't go back that far
 
-*US* -- [US per capita trends by state](https://rpubs.com/moxbox/statepercapitatrends)
+*US* -- [US per capita trends by state since 2000](https://rpubs.com/moxbox/statepercapitatrends) -- updated annually, also only use FE data given the time frame.
+
+### `Common` subfolder
+
+The `Common` subfolder includes a set of scripts/rmarkdown files that are used by the WA since 940 and WA since 2015 reports.  They are called by the rmarkdown files for those reports via either `source` or the chunk option `child=`.
+
+### Note the yaml params
+
+For the WA since 940 and 2015 reports, the format is essentially identical, only the data (and captioning) are different.  To facilitate maintenance, these small differences are captured in the yaml as `params`, and the `params` are referred to in the report markdown. 
 
 ____
 

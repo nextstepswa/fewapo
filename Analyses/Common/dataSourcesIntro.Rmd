@@ -1,0 +1,22 @@
+## Where the data come from
+
+This report is updated about once each week, pulling, cleaning and merging data from two online sources:   Fatal Encounters (https://fatalencounters.org/), and the Washington Post (https://www.washingtonpost.com/graphics/investigations/police-shootings-database/).  
+
+* Fatal Encounters includes all deaths during encounters with police; 
+
+* Washington Post only includes fatal *shootings* by police.  
+
+* Neither dataset includes deaths in custody after booking.  
+
+A comparison of the cases found in each dataset is found in the [last section](#dataset-comparison) of this report.
+
+There is typically a 1-2 week lag in the Fatal Encounters and WaPo datasets, but it can sometimes be longer.  The date shown in the "most recent data update" tab above is an indication of the current lag.  As of this report, the last data updates were:
+
+
+* `r format(last_fe_date, format="%B %d %Y")` for the Fatal Encounters project
+* `r format(last_wapo_date, format="%B %d %Y")` for the Washington Post
+
+
+This report is restricted to the cases that can be classified as homicides by police, it excludes cases identified in the Fatal Encounters dataset as suicides (see the [last section](#dataset-comparison) for details).
+
+___

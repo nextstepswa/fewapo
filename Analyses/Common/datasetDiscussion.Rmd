@@ -1,0 +1,151 @@
+
+As noted in the Introduction section, this report relies on data from the Fatal Encounters project and the Washington Post.  Both datasets are "unofficial", in the sense that the data are not drawn from mandatory government reporting on deaths caused by law enforcement officers, because there is no official national data program.  Instead these datasets are based on cases known/discovered by the two project teams.
+
+Fatal Encounters includes more cases than the Washington Post, because the Post dataset is restricted to fatal shootings.  
+
+---
+
+> Among the cases missing from the Washington Post data are Manny Ellis (in WA) and George Floyd (at the national level), because their deaths were caused by asphyxiation, not gunshots.
+
+---
+
+The total number of cases in the Fatal Encounters dataset for WA State since
+`r params$from` is `r nrow(merged_data)`.  These are classified as follows:
+
+```{r tabAllCases}
+
+tab <- merged_data %>%
+  group_by(circumstances) %>%
+  summarize(Number = n(),
+            Percent = round(100*Number/nrow(merged_data), 1)
+  ) %>%
+  arrange(desc(Number)) %>%
+  bind_rows(data.frame(circumstances ="Total", 
+                       Number = sum(.$Number), 
+                       Percent = sum(.$Percent))) 
+
+tab %>%
+  kable(caption = "All Fatal Encounters dataset cases, broken down by type",
+        col.names = c("Type", "Number", "Percent")) %>%
+  kable_styling(bootstrap_options = c("striped","hover")) %>%
+  row_spec(dim(tab)[1], bold = T)  %>%
+  add_footnote(label = "Percents may not sum to 100 due to rounding",
+               notation = "symbol")
+```
+  
+## Suicides excluded in this report
+
+The Fatal Encounters data includes some cases classified as "suicides" that occur during an encounter with police.  These are not cases of "suicide by cop", where the victim appears to have provoked the police in order to be shot by police.  They are cases where the victim shoots or otherwise kills themself.  **We have excluded these from the analyses in this report, because the report focuses on persons killed by police.**  
+
+However, we acknowledge that these cases warrant further assessment.  The classification as "suicide" is not definitive, it is typically based on the narrative provided by law enforcement.  And even if these are suicides, it is possible that the outcome might have been different if the case had been handled differently, for example, by calling in a crisis intervention team.
+
+The excluded case counts and fraction of total cases by year is shown in the table below.
+
+```{r tabSuicide}
+
+tab <- merged_data %>%
+  group_by(year, homicide) %>%
+  summarize(Number = n()) %>%
+  pivot_wider(id_cols = year,
+              names_from = homicide,
+              names_prefix = "N",
+              values_from = Number) %>%
+  replace_na(list(N0=0)) %>%
+  mutate(Percent = round(100*N0/(N0 + N1), 1),
+         year = as.character(year)) %>%
+  select(year, Number=N0, Percent) %>%
+  bind_rows(data.frame(year ="Total", 
+                       Number = sum(.$Number), 
+                       Percent = round(100*sum(.$Number)/nrow(merged_data), 1)))
+
+tab %>%
+  kable(caption = "Cases labeled 'Suicide' in Fatal Encounters dataset by year",
+        col.names = c("Type", "Number", "Percent of all cases")) %>%
+  kable_styling(bootstrap_options = c("striped","hover"),
+                full_width = F) %>%
+  row_spec(dim(tab)[1], bold = T)  %>%
+  add_footnote(label = "These cases were excluded from analyses in this report",
+               notation = "symbol")
+```
+
+
+___
+
+
+## Homicide case comparison
+
+Restricting the Fatal Encounters dataset to the homicide cases, it still has 
+`r paste0(round(100*prop.table(table(is.na(homicides$wapoID)))[[2]]), "%")`
+more cases than found in the Post dataset.
+
+```{r difftab}
+tab <- homicides %>%
+  mutate(in.wapo = ifelse(is.na(wapoID), 
+                          "In FE only", 
+                          "In both FE and WaPo")) %>%
+  group_by(in.wapo) %>%
+  summarize(Number = n(),
+            Percent = round(100*Number/nrow(homicides), 1)
+  ) %>%
+  bind_rows(data.frame(in.wapo ="Total", 
+                       Number = sum(.$Number), 
+                       Percent = sum(.$Percent))) 
+
+tab %>%
+  kable(caption = "Cases found in each dataset",
+        col.names = c("Case is:", "Number", "Percent")) %>%
+  kable_styling(bootstrap_options = c("striped","hover")) %>%
+  row_spec(row=dim(tab)[1], bold = T) %>%
+  add_footnote(label = "Percents may not sum to 100 due to rounding",
+               notation = "symbol")
+
+```
+
+___
+
+### Missing cases in WaPo {.tabset}
+
+#### By cause of death
+
+
+```{r datadiff}
+tab <- homicides %>%
+  filter(is.na(wapoID)) %>%
+  group_by(cod.fe) %>%
+  summarize(Number = n()
+  ) %>%
+  arrange(desc(Number)) %>%
+  bind_rows(data.frame(cod.fe ="Total", 
+                       Number = sum(.$Number))) 
+
+pct.shot.missing <- tab$Number[tab$cod.fe=="Gunshot"]/tab$Number[tab$cod.fe=="Total"]
+```
+
+Among the cases missing from the Post dataset, 
+`r tab$Number[tab$cod.fe=="Gunshot"]` (`r scales::percent(pct.shot.missing)`)
+are identified as fatal shootings in the Fatal Encounters dataset.
+
+```{r datadifftab}
+tab %>%
+  kable(caption = "Cause of death for cases missing from WaPo dataset",
+        col.names = c("Cause:", "Number")) %>%
+  kable_styling(bootstrap_options = c("striped","hover")) %>%
+  row_spec(row=c(which(tab$cod.fe=="Gunshot"),
+                 dim(tab)[1]), bold = T)
+```
+
+#### By name, for fatal shootings
+
+Below is the list of cases identified as gunshot fatalities in Fatal Encounters that are missing from the Washington Post dataset.
+
+```{r casesdiff}
+
+homicides %>%
+  filter(is.na(wapoID) & cod.fe == "Gunshot") %>%
+  select(name, date, city, county, agency, url_click) %>%
+  DT::datatable(rownames = F,
+                caption = "Gunshot cases missing from WaPo dataset",
+                escape = FALSE)
+
+```
+

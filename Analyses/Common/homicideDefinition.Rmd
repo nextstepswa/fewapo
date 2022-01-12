@@ -1,0 +1,36 @@
+## What is a homicide?
+
+The deadly force incidents in this report are homicides.  A homicide is simply defined as the killing of one person by another.  In the context of this report it refers to any encounter with law enforcement officers that results in a fatality.  Homicides normally result in a criminal investigation or inquest, but the word does not imply a crime has been committed.
+
+* The word homicide means only that the death was caused in some way by the officer.  
+
+* It does not not mean the officer's actions that led to the death were justified, or that they were unjustified.
+
+
+The law then defines different types of homicides, in order to distinguish levels of intention and criminal culpability.  In the U.S., these types and definitions are broadly similar across states, but do vary somewhat in the the how many different types are specified, and what names are used for each type.
+
+The definitions below are taken from a useful online summary found [here](https://www.steinandmarkuslaw.com/whats-the-difference-between-homicide-murder-and-manslaughter), based on California State laws.
+
+
+**Homicide**  
+Homicide is the killing of one person by another. This is a broad term that includes both legal and illegal killings. For example, a soldier may kill another soldier in battle, but that is not a crime. The situation in which the killing happened determines whether it is a crime. 
+
+* **Murder** is the illegal and intentional killing of another person. Under California Penal Code Section 187, for example, murder is defined as one person killing another person with malice aforethought. Malice is defined as the knowledge and intention or desire to do evil. Malice aforethought is found when one person kills another person with the intention to do so.  
+
+    In California, for example, a defendant may be charged with first-degree, second-degree, capital or felony murder.
+
+    * *First-degree murder* is the most serious and includes capital murder -- first-degree murder with “special circumstances” that make the crime even more egregious. These cases can be punishable by life in prison without the possibility of parole, or death. 
+
+    * *Second-degree murder* is murder without premeditation, but with intent that is typically rooted in pre-existing circumstances. The penalty for second-degree murder may be up to 15 years to life in prison in California.
+
+    * *Felony murder* is a subset of first-degree murder and is charged when a person is killed during the commission of a felony, such as a robbery or rape.
+
+* **Manslaughter** is the illegal killing of another person without premeditation, and in some cases without the intent to kill. These cases are treated as less severe crimes than murder. Manslaughter can also be categorized as voluntary or involuntary.
+
+    * *Voluntary manslaughter* occurs when a person kills another without premeditation, typically in the heat of passion. The provocation must be such that a reasonable person under the same circumstances would have acted the same way. Penalties for voluntary manslaughter include up to 11 years in prison in California.
+
+    * *Involuntary manslaughter* is when a person is killed by actions that involve a wanton disregard for life by another. Involuntary manslaughter is committed without premeditation and without the true intent to kill, but the death of another person still occurs as a result. Penalties for involuntary manslaughter include up to four years in prison in California.
+
+    * *Vehicular manslaughter* occurs when a person dies in a car accident due to another driver’s gross negligence or even simple negligence, in certain circumstances.
+
+___
