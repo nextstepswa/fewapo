@@ -32,12 +32,16 @@ library(RColorBrewer)
 # FE Data only for this range of years
 load(file = here("data-outputs", "CleanData.rda"))
 last.data.update = max(fe_clean$date)
+curr_mo <- lubridate::month(Sys.Date())
+curr_yr = lubridate::year(Sys.Date())
 
 startmo = 1  # Jan 2000
 startyr = 2000
+endmo = 12
+endyr = 2021
 
 finaldata_2000 <- fe_clean %>% 
-  filter(year >= startyr & st == "WA")
+  filter(year >= startyr & year <= endyr & st == "WA")
 
 # Lots of "Unknowns" in the FE homicide indicator
 
@@ -80,11 +84,6 @@ num.suffix <- ifelse(tot.this.yr == 1, "st",
 
 # Indices for plotting by time
 
-curr_mo <- lubridate::month(Sys.Date())
-curr_yr = lubridate::year(Sys.Date())
-
-endyr = curr_yr-1 # last complete year
-endmo = lubridate::month(last.data.update) -1 # respect last data update
 numyrs = endyr - startyr + 1
 
 month = month.abb[startmo:12]
@@ -96,8 +95,7 @@ for(i in 1:(numyrs-1)) {
   year <- c(year, rep(thisyr, 12))
   month <- c(month, month.abb)
 }
-year <- c(year, rep(curr_yr, endmo))
-month <- c(month, month.abb[1:endmo])
+
 
 ## Month index for date plotting
 
@@ -572,11 +570,17 @@ tab %>%
 ```
 
 
-## Date {.tabset}
+# Trends over time {.tabset}
+
+In this section, we plot data only from completed years, so the current year will not be shown.
 
 ```{r}
 # Pop growth
-pop.growth.rate = (6724540 - 5894121)/5894121
+# Data from WA OFM
+# https://ofm.wa.gov/about/news/2021/06/state-population-steadily-increases-tops-77-million-residents-2021
+# https://ofm.wa.gov/sites/default/files/public/legacy/pop/census2000/profiles/state/04053.pdf
+
+pop.growth.rate = (7766925 - 5894121)/5894121
 
 # FE by month
 dat <- homicides %>%
@@ -600,7 +604,7 @@ proj.fe <- seq(from=mean.fe.2000, to=pop.adj.fe.2020,
 proj.df <- data.frame(sequence=dat$sequence, proj=proj.fe)
 ```
 
-### Monthly Totals By Year
+## Monthly Totals
 
 * The points show the monthly totals, the grey line shows the smoothed trend in fatalities by month, and the grey shaded ribbon shows the 95% confidence interval around the trend line. 
 
@@ -614,7 +618,6 @@ proj.df <- data.frame(sequence=dat$sequence, proj=proj.fe)
 * This is an interactive plot:  You can hover over points to get the exact values for the number of cases for that month and year.
 
 ```{r series, warning=F}
-# we will only plot after current month has finished
 
 xaxis.ticks <- seq(0, length(dat$sequence), 12)+6 # x axis ticks
 p <- ggplot(dat, aes(x = sequence, 
@@ -647,7 +650,7 @@ ggplotly(p, tooltip = "text")
 
 
 
-### Cumulative Totals by Month/Year
+## Cumulative Totals by Month/Year
 
 * The lines show the cumulative total fatalities by month as the year progresses, for each year. 
 
@@ -706,7 +709,7 @@ ggplotly(p, tooltip = "text")
 ```
 
 
-### Year to date, by Year
+## Cause of Death, by Year
 
 Here we plot the cumulative totals for year to date, up to the last complete complete month of the current year, for each year.
 
@@ -720,21 +723,26 @@ Here we plot the cumulative totals for year to date, up to the last complete com
 ```{r annual, warning=F}
 p <-  homicides %>%
   filter(match(month, month.abb) <= endmo) %>%
-  mutate(cod = ifelse(cod == "Gunshot", "shot", "other"),
-         cod = factor(cod, levels = c("shot", "other")),
-         year = as.character(year)) %>%
-  group_by(year, cod) %>%
+  mutate(
+    cod_3 = factor(
+      case_when(
+        cod == "Gunshot" ~ "shot", 
+        cod == "Vehicle" ~ "vehicle-related",
+        TRUE ~ "other"),
+      levels = c("shot", "vehicle-related", "other")),
+    year = as.character(year)) %>%
+  group_by(year, cod_3) %>%
   summarize(n = n()) %>%
   mutate(percent = round(100*n / sum(n), 1)) %>%
   ggplot(aes(x = year,
              y = n, 
              label = percent,
-             fill = cod,
-             text = paste(cod, "=", n, '<br>', 
+             fill = cod_3,
+             text = paste(cod_3, "=", n, '<br>', 
                           year))) +
   geom_bar(stat="identity", alpha=.5,
            position = position_stack(reverse=T)) +
-  scale_fill_manual(values = c("cadetblue", "goldenrod")) +
+  scale_fill_manual(values = c("cadetblue","darkorange3", "goldenrod")) +
   labs(title = paste0("Fatalities Jan-", 
                       month.abb[endmo], 
                       " by Year"),
@@ -762,7 +770,7 @@ homicides %>%
   select(name, date, age=age, county, agency, url = url_click) %>%
   arrange(desc(date)) %>%
   DT::datatable(rownames = F,
-                caption = paste("The Names We Know:  as of", scrape.date),
+                caption = paste("The Names We Know:  as of", scrape_date),
                 filter = 'top',
                 escape = FALSE)
 
@@ -780,7 +788,7 @@ homicides %>%
   select(name, date, age=age, county, agency, url = url_click) %>%
   arrange(desc(date)) %>%
   DT::datatable(rownames = F,
-                caption = paste("The Names We Don't Know:  as of", scrape.date),
+                caption = paste("The Names We Don't Know:  as of", scrape_date),
                 filter = 'top',
                 escape = FALSE)
 ```

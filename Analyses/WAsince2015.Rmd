@@ -187,16 +187,23 @@ ____
 
 ## Cause of death {.tabset}
 
+The table shows all of the causes that appear in the Fatal Encounters dataset.  The plot aggregates these into three categories, as the first two (shot and vehicle-related) account for the large majority of cases.  Vehicle-related refers to deaths caused by vehicle crashes or getting run over by a car, and typically occur in the context of vehicle pursuits/chases.
+
 ### Plot
 
 ```{r codplot}
 homicides %>%
-  mutate(codb = case_when(cod.fe == "Gunshot" ~ "Gunshot",
-                          TRUE ~ "Other")
-         ) %>%
-  count(codb) %>%
+  mutate(
+    cod_3 = factor(
+      case_when(
+        cod == "Gunshot" ~ "shot", 
+        cod == "Vehicle" ~ "vehicle-related",
+        TRUE ~ "other"),
+      levels = c("shot", "vehicle-related", "other"))
+  ) %>%
+  count(cod_3) %>%
   mutate(perc = n / nrow(homicides)) %>%
-  ggplot(aes(x=codb, 
+  ggplot(aes(x=cod_3, 
              y = perc, 
              label = n)) +
   geom_text(aes(y = perc), size = 3, nudge_y = .025) +
@@ -205,7 +212,7 @@ homicides %>%
        caption = paste0("WA State since ", 
                         params$from, 
                         "; y-axis=pct, bar label=count")) +
-  xlab("Reported Weapon Used by Police") +
+  xlab("Cause of Death") +
   ylab("Percent of Total")
 ```
 
@@ -720,19 +727,21 @@ Here we plot the cumulative totals for year to date -- the count of total fatali
 p <-  homicides %>%
   filter(year >= params$startyr) %>%
   filter(match(month, month.abb) <= last_complete_mo) %>%
-  mutate(cod = case_when(
-    cod.fe == "Gunshot" ~ "shot", 
-    cod.fe == "Vehicle" ~ "vehicle chase",
-    TRUE ~ "other"),
-    cod = factor(cod, levels = c("shot", "vehicle chase", "other")),
-         year = as.character(year)) %>%
-  group_by(year, cod) %>%
+  mutate(
+    cod_3 = factor(
+      case_when(
+        cod == "Gunshot" ~ "shot", 
+        cod == "Vehicle" ~ "vehicle-related",
+        TRUE ~ "other"),
+      levels = c("shot", "vehicle-related", "other")),
+    year = as.character(year)) %>%
+  group_by(year, cod_3) %>%
   summarize(n = n()) %>%
   mutate(percent = round(100*n / sum(n), 1)) %>%
   
   ggplot(aes(x = year,
              y = n,
-             fill = cod, 
+             fill = cod_3, 
              text = paste0("N=", n, 
                            ", (", round(percent),"%)"))
          ) +
