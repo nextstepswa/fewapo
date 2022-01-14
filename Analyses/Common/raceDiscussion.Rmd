@@ -48,6 +48,12 @@ So, does this mean that we can say: "There aren't any racial disparities in pers
   
 No. This raw count can not be used to assess racial disparities, because the word disparity implies the risk is "disproportionate" -- that is, higher (or lower) than proportional.  Proportional is a comparative term: it compares the proportion of fatalities by race, to the proportion of the population by race.  If the two proportions are the same, then we can say there are no disparities.  In this case, if `r scales::percent(prop.table(table(homicides$raceImp))[["WEA"]])` of the population is White, then we can say that their risk of being killed by police is proportional to their share of the population.
 
+*Bottom line:* The raw counts can not be used to identify racial disparities.
+
+____
+
+#### What we *can* say about disparities
+
 The population of Washington State overwhelmingly identifies as White --  `r scales::percent(pop.W, accuracy=1)` in 2020 [source: WA State OFM](https://www.ofm.wa.gov/washington-data-research/statewide-data/washington-trends/population-changes/population-race).  If we exclude Hispanics (which the Census treats as ethnicity, not race), non-Hispanic Whites comprise
 `r scales::percent(pop.NHW, accuracy=1)` of the WA population
 [source: Statistical Atlas of the US](https://statisticalatlas.com/state/Washington/Race-and-Ethnicity). 
@@ -73,7 +79,7 @@ ____
 
 #### So why don't we calculate standardized per capita rates?
 
-Because the classification of cases by race, in both the Fatal Encounters and WaPo datasets, is not consistent with the classification of race in population data provided by the US Census.  
+Because the classification of cases by race, in both the Fatal Encounters and WaPo datasets, is not consistent with the classification of race in population data from by the US Census that is needed to calculate per capita rates.  
 
 The calculation of per capita rates takes the ratio of the fatality count (in the numerator) to the population count (in the denominator).  To break this down by race we need a consistent measure of race to use for the numerator and denominator for all groups.  And we don't have that.
 
@@ -85,10 +91,14 @@ The calculation of per capita rates takes the ratio of the fatality count (in th
 
 [U.S. Decennial Census Measurement of Race and Ethnicity Across the Decades: 1790–2020](https://www.census.gov/library/visualizations/interactive/decennial-census-measurement-of-race-and-ethnicity-across-the-decades-1790-2020.html)
 
+*Bottom line:* The mismatch between racial categories coded in the FE and WaPo data, and the categories used in the US Census makes it impossible to calculate per capita rates accurately for all groups.
+
 ____
 
-#### Perceived vs. self-identified race
+#### Perceived vs. self-identified race, and implicit bias
 
-The race classification in the FE and WaPo data most likely represent the subject's race as reported by law enforcement.  This may be the officer's perception, or it may be informed by previous interactions and self-reports, we have no way of knowing.  This means we can't use these data to answer the question of the officer's intention, or implicit bias, with certainty.
+The race classification in the FE and WaPo data most likely represent the subject's race as reported by law enforcement.  This may be the officer's perception, or it may be informed by previous interactions and self-reports, we have no way of knowing.  In addition, if our goal was to use these data as evidence for (or against) the effects of systemic implicit bias in the police use of deadly force, we would need to control for other variables that may influence these patterns, like the perceived and actual weapon status of the person killed, the circumstances that precipitated the incidents, the presence or absence of other persons at risk in the incidents, and the detailed population composition of the jurisdiction.
+
+*Bottom line:* We can't use these data to answer the question of the officer's intention, or systemic implicit bias.
 
 ___
