@@ -1,4 +1,5 @@
 # Post-cleaning edits when we know more than FE and WaPo
+# Executed immediately before name split and merging
 
 # Amost all of these are for WA state
 # should be kept up to date and commented out when no longer relevant
@@ -8,6 +9,19 @@
 # I can't tell if the victim died.  Have reported the case to FE.
 # https://www.kiro7.com/news/local/police-investigating-officer-involved-shooting-in-federal-way/930686522/
 
+
+# Sorin Ardelean 12/27/2021
+if (fe_clean$name[fe_clean$feID == 31462] == "Unknown"){
+  fe_clean$name[fe_clean$feID == 31462] <- "Sorin Ardelean"
+  fe_clean$age[fe_clean$feID == 31462] <- 43
+  fe_clean$COD[fe_clean$feID == 31462] <- "Gunshot"
+  fe_clean$agency[fe_clean$feID == 31462] <- "Algona Police Department"
+  fe_clean$url_info[fe_clean$feID == 31462] <- "https://www.auburn-reporter.com/news/fatal-police-shooting-of-suspect-in-algona-hostage-taking-incident-is-subject-of-investigation/"
+  fe_clean$url_click[fe_clean$feID == 31462] <- make_url_fn(fe_clean$url_info[fe_clean$feID == 31462])
+  print("Fixed Sorin Ardelean")
+} else {
+  print("Ardelian fix not needed anymore")
+}
 
 # Werner Anderson 2018, died after injection of ketamine while held down
 # FE classifies Intended use of force as "Undetermined", 
