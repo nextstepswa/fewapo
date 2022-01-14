@@ -17,7 +17,7 @@ ____
 This contains the key files needed to construct the merged dataset and population counts:
 
 * `ScrapeMerge` - the main scraping / cleaning / merging / datafile construction script
-* `fixes_precleaning` & `fixes_postcleaning - called by `ScrapeMerge` to spot fix errors identified in both datasets. The `postcleaning` corrections are only applied to the final merged dataset.
+* `fixes_precleaning` & `fixes_postcleaning` - called by `ScrapeMerge` to spot fix errors identified in both datasets. The `postcleaning` corrections are applied just before the final merge.
 * `StateCensusData` - script for scraping and managing census population estimates, used to calculate *per capita* rates for the US report
 
 Running/sourcing the `ScrapeMerge` script will create the cleaned datafiles needed for the WA state reports below.
