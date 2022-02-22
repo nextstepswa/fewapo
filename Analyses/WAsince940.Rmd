@@ -9,7 +9,7 @@ output:
     toc_float: true
     code_folding: hide
     includes:
-       in_header: gtag.940.html
+      in_header: gtag.940.html
 params:
   from: ["I-940"]
   startyr: [2019]
@@ -441,7 +441,8 @@ There are two sets of plots here.  The first focuses on the monthly totals, and 
 
 # index restricted to first/last complete month
 thisyr <- as.character(max(index$year))
-prevyrs <- paste0(min(index$year), "-", max(index$year)-1)
+prevyrs1 <- paste0(min(index$year), "-", max(index$year)-1)
+prevyrs2 <- paste0(min(index$year), "-", last_complete_yr-1)
 
 # left_join to index imposes same restriction
 df_by_month <- homicides %>%
@@ -453,8 +454,12 @@ df_by_month <- homicides %>%
          mon = factor(mon, levels = month.abb),
          this.yr = factor(ifelse(year==max(year),
                                  thisyr,
-                                 prevyrs),
-                          levels = c(prevyrs, thisyr)))
+                                 prevyrs1),
+                          levels = c(prevyrs1, thisyr)),
+         last.compl.yr = factor(ifelse(year==last_complete_yr,
+                                 as.character(last_complete_yr),
+                                 prevyrs2),
+                          levels = c(prevyrs2, as.character(last_complete_yr))))
 
 yrs <- as.numeric(lubridate::ymd(
   paste0(seq(min(index$year), max(index$year), 1), 
@@ -510,7 +515,7 @@ p <- ggplot(df_by_month, aes(x = index.date,
         panel.grid.minor = element_blank())
 
 ggplotly(p, tooltip = "text") %>% 
-  style(hoverinfo = "y", traces = 8)
+  style(hoverinfo = "y", traces = 9) # use plotly_json(p) to verify
   
 ```
 
@@ -645,7 +650,58 @@ p <- ggplot(data = df_by_month,
   ylab("Number of people killed")
 
 
-ggplotly(p, tooltip = "text")
+ggplotly(p, tooltip = "text") %>% 
+  style(hoverinfo = "y", traces = 3)
+  
+```
+
+### Last complete year vs. previous years
+
+* The points show the monthly totals for each year. They are color coded to highlight the current year.
+
+* The blue line shows the moving average for the monthly fatality rate for the `r params$startyr`-`r last_complete_yr-1` period, and the grey shaded ribbon shows the 95% confidence band around that average.
+
+* The black line shows the moving average for the monthly fatality rate for `r last_complete_yr`, the last complete year. *When this line lies outside the grey ribbon for the blue line, this suggests the difference between this year and previous years is larger than normal variation would predict.*
+
+* This is an interactive plot:  You can hover over points to get the month and year for each point.
+
+```{r monthly-lastcomplyr, warning=F}
+
+# make sure the factor levels match
+last.compl.yr.color = c("lightsteelblue", "black")
+names(last.compl.yr.color) <- levels(df_by_month$last.compl.yr)
+last.compl.yr.alpha = c(0.5, 1)
+names(last.compl.yr.alpha) <- levels(df_by_month$last.compl.yr)
+
+p <- ggplot(data = df_by_month %>% filter(year <= last_complete_yr),
+            aes(x = mo, y = count)) +
+  
+  geom_jitter(aes(col = last.compl.yr,
+                  alpha = last.compl.yr,
+                  text = mon.yr),
+              width = 0, height = .1) +
+  scale_color_manual(name="Year", 
+                     values=last.compl.yr.color) +
+  scale_alpha_manual(values=last.compl.yr.alpha) +
+  guides(alpha = "none") +
+  
+  geom_smooth(data = df_by_month %>% filter(year != last_complete_yr),
+              color = "lightsteelblue") +
+  geom_smooth(data = df_by_month %>% filter(year == last_complete_yr), se=F,
+              color = "black") +
+  
+  scale_x_continuous(breaks = seq(1,12,1), 
+                     label = month.abb) +
+  
+  labs(title = paste0("WA since ", params$startyr, 
+                     ":  Monthly totals with moving average"),
+       caption = paste("WA since", params$startyr)) +
+  xlab("Month") +
+  ylab("Number of people killed")
+
+
+ggplotly(p, tooltip = "text")  %>% 
+  style(hoverinfo = "y", traces = 3) # use plotly_json(p) to verify
   
 ```
 
@@ -662,48 +718,49 @@ ggplotly(p, tooltip = "text")
 ```{r cumulative, warning=F}
 # plotly doesn't handle the multiple legend properly so we don't use it here
 
-n.yrs <- max(index$year) - params$startyr + 1
-yr.colors <- rev(RColorBrewer::brewer.pal(n.yrs+2, "Spectral"))[c(1:3, 6:9)]
+# set up color palette for previous years:
+n.yrs <- max(index$year) - params$startyr # num yrs excl this yr
+paletteFunc <- colorRampPalette(c('blue', 'yellow', 'red'))
+my.colors <- paletteFunc(n.yrs)
 
-this.yr.col <- c(n="#00000000", y="black")
-
-ltyp = c("2021" = "solid")
 
 df <- df_by_month %>%
   group_by(year) %>%
   mutate(cumulative = cumsum(count),
          mon = factor(mon, levels=month.abb))
 
+# Plot prev yrs separately and specify 2 aes (color, ltyp) to get 2 legends
+
 ggplot(data= df %>% filter(year != max(df$year)),
        aes(x = mon, 
            y = cumulative, 
            color = factor(year),
            group = year)) +
-  geom_line(size = 1.5, alpha = 1) +
+  
+  geom_line(size = 1.5, alpha = .7) +
   geom_point(aes(text = paste('Total =', cumulative, '<br>', 
                               mon, '<br>', year)),
                  size=1, alpha = 1) +
-  scale_color_manual(values = yr.colors) +
-  #scale_color_brewer(palette="Spectral") +
+  scale_color_manual(values = my.colors) +
 
   geom_line(data = df %>% filter(year == max(df$year)),
             aes(x = mon, 
                 y = cumulative,
-                linetype = "2021",
+                linetype = factor(year),
                 text = paste('Total =', cumulative, '<br>', 
                              mon, '<br>', year)),
             color = "black", size = 2, alpha = 0.7) +
-  scale_linetype_manual(name = "This Yr", values = ltyp) +
+  scale_linetype_manual(name = "This Yr", values = c("solid")) +
   
   labs(title = paste0("WA since ", params$startyr,
                      ":  Cumulative fatalities by Month and Year"),
+       x = "Month", 
+       y = "Number of people killed",
        caption = paste("WA since", params$startyr),
        color = "Previous Yrs") +
-  xlab("Month") +
-  ylab("Number of people killed") +
+  
   guides(color = guide_legend(order = 1),
          linetype = guide_legend(order = 2))
-  # + theme_bw()
 
 #ggplotly(p, tooltip = "text")
   
@@ -762,7 +819,11 @@ ggplotly(p, tooltip = "text")
 
 ```
 
-### WA vs. all other states
+
+
+## WA vs. other states
+
+### Annual totals and change {.tabset}
 
 Cumulative annual totals up to the last complete year, 
 `r last_complete_yr`, with percentage change from 
@@ -804,7 +865,7 @@ wapo_tab[nrow(wapo_tab), 1] <- paste("Pct change",
                                      "to", last_complete_yr)
 ```
 
-Using Fatal Encounters data:
+#### Fatal Encounters data
 
 ```{r wavsusfe, warning=F}
 kable(fe_tab,
@@ -817,7 +878,7 @@ kable(fe_tab,
   #              notation = "symbol")
 ```
 
-Using Washington Post data:
+#### Washington Post data
 
 ```{r wavsuswapo, warning=F}
 kable(wapo_tab,
@@ -828,6 +889,255 @@ kable(wapo_tab,
   row_spec(nrow(fe_tab), bold = T)  #%>%
   # add_footnote(label = "YTD counts:  Jan - Nov of each year",
   #              notation = "symbol")
+```
+
+### State rankings {.tabset}
+
+Here we also report the results from the Fatal Encounters project and the Washington Post data separately.  Recall that Washington Post data only include persons shot and killed by police, while Fatal Encounters includes all persons who are killed by police (including deaths due to asphyxiation, tasers, vehicle chases, etc).
+
+* States are ranked by the percent change in persons killed from `r last_complete_yr-1` to `r last_complete_yr`.
+
+* The bar for WA State is highlighted with a black border.
+
+* Since percentage changes in numbers smaller than 10 tend to have high volatility from year to year, we show the plot using both states with average annual counts of 10 or more, and all states.
+
+* These are interactive plots:  You can hover over bars to get the exact values for the percent change and average annual number of persons killed from `r start_yr` - `r last_complete_yr-1`.
+
+
+```{r seriesfe, warning=F}
+
+# use fe_data (not merged) b/c we need all US cases
+
+fe_dat <- fe_data %>%
+  filter(homicide==1 & year >= start_yr & year <= last_complete_yr) %>%
+  group_by(year, st) %>%
+  summarize(count = n()) %>%
+  pivot_wider(id_cols = st,
+              names_from = year,
+              names_prefix = "cases_",
+              values_from = count) %>%
+  replace(is.na(.), 0)
+  
+  if (params$from == "2015") {
+    fe_dat <- fe_dat %>%
+      rowwise() %>%
+      mutate(
+        average = mean(c_across(cases_2015:cases_2020)),
+        pct.chg_2016 = cases_2016/cases_2015 - 1,
+        pct.chg_2017 = cases_2017/cases_2016 - 1,
+        pct.chg_2018 = cases_2018/cases_2017 - 1,
+        pct.chg_2019 = cases_2019/cases_2018 - 1,
+        pct.chg_2020 = cases_2020/cases_2019 - 1,
+        pct.chg_2021 = cases_2021/cases_2020 - 1)
+  } else {
+    fe_dat <- fe_dat %>%
+      rowwise() %>%
+      mutate(
+        average = mean(c_across(cases_2019:cases_2020)),
+        pct.chg_2020 = cases_2020/cases_2019 - 1,
+        pct.chg_2021 = cases_2021/cases_2020 - 1)
+  }
+
+wapo_dat <- wapo_data %>%
+  filter(year >= start_yr & year <= last_complete_yr) %>%
+  group_by(year, st) %>%
+  summarize(count = n()) %>%
+  pivot_wider(id_cols = st,
+              names_from = year,
+              names_prefix = "cases_",
+              values_from = count) %>%
+  replace(is.na(.), 0) 
+
+  
+  if (params$from == "2015") {
+    wapo_dat <- wapo_dat %>%
+      rowwise() %>%
+      mutate(average = mean(c_across(cases_2015:cases_2020)),
+             pct.chg_2016 = cases_2016/cases_2015 - 1,
+             pct.chg_2017 = cases_2017/cases_2016 - 1,
+             pct.chg_2018 = cases_2018/cases_2017 - 1,
+             pct.chg_2019 = cases_2019/cases_2018 - 1,
+             pct.chg_2020 = cases_2020/cases_2019 - 1,
+             pct.chg_2021 = cases_2021/cases_2020 - 1)
+  } else {
+    wapo_dat <- wapo_dat %>%
+      rowwise() %>%
+      mutate(average = mean(c_across(cases_2019:cases_2020)),
+             pct.chg_2020 = cases_2020/cases_2019 - 1,
+             pct.chg_2021 = cases_2021/cases_2020 - 1)
+  }
+
+
+```
+
+#### FE Data {.tabset .tabset-pills}
+
+##### States with 10+ cases
+
+```{r barplotfe, warning = F}
+
+p <- ggplot(data = fe_dat %>% 
+              filter(average >= 10 & !is.infinite(pct.chg_2021)),
+            aes(x=pct.chg_2021, y=reorder(st, pct.chg_2021), 
+                fill = pct.chg_2021,
+                col=factor(ifelse(st=="WA", 1, 0)),
+                text=paste(st, 
+                           "change:", scales::percent(pct.chg_2021, acc=1),
+                           "avg:", round(average)))) +
+              
+  geom_bar(stat="identity") +
+    
+  scale_color_manual(values = c("grey", "black")) +
+  scale_fill_gradient2(
+    low = "blue", 
+    mid = "white", 
+    high = "red", 
+    midpoint = 0) +
+  scale_x_continuous(labels = scales::percent) +
+  
+  theme(axis.text.y=element_text(size=rel(0.6)), legend.position = "none") +
+  labs(title = paste("State ranking: % Change from",
+                     last_complete_yr-1, "to", last_complete_yr, "in persons killed by police"),
+       x="Percent change in persons killed",
+       y="State")
+
+ggplotly(p, tooltip = "text")
+
+  
+```
+
+##### All states
+
+```{r barplotallfe, warning = F}
+
+p <- ggplot(data = fe_dat %>% filter(!is.infinite(pct.chg_2021)),
+            aes(x=pct.chg_2021, y=reorder(st, pct.chg_2021), 
+                fill = pct.chg_2021,
+                col=factor(ifelse(st=="WA", 1, 0)),
+                text=paste(st, 
+                           "change:", scales::percent(pct.chg_2021, acc=1),
+                           "avg:", round(average)))) +
+              
+  geom_bar(stat="identity") +
+    
+  scale_color_manual(values = c("grey", "black")) +
+  scale_fill_gradient2(
+    low = "blue", 
+    mid = "white", 
+    high = "red", 
+    midpoint = 0) +
+  scale_x_continuous(labels = scales::percent) +
+  
+  theme(axis.text.y=element_text(size=rel(.5)), legend.position = "none") +
+  labs(title = paste("State ranking: % Change from",
+                     last_complete_yr-1, "to", last_complete_yr, "in persons killed by police"),
+       x="Percent change in persons killed",
+       y="State")
+
+ggplotly(p, tooltip = "text")
+
+  
+```
+
+##### Table
+
+The table includes all states.  Here you can clearly see the impact of small case numbers on the percentage change measure.
+
+```{r fe_change_tab, message=F, warning=F}
+
+fe_dat %>%
+  select(st, cases_2020, cases_2021, pct.chg_2021) %>%
+  arrange(desc(pct.chg_2021)) %>%
+  DT::datatable(rownames = F,
+                caption = "Fatal Encounters data: People killed by police in 2020 & 2021",
+                colnames = c("State", "2020 cases", "2021 cases", "Percentage change"),
+                filter = 'top') %>%
+  DT::formatPercentage("pct.chg_2021", 1)
+```
+
+#### WaPo Data {.tabset .tabset-pills}
+
+##### States with 10+ cases
+
+```{r barplotwapo, warning = F}
+
+p <- ggplot(data = wapo_dat %>% 
+              filter(average >= 10 & !is.infinite(pct.chg_2021)),
+            aes(x=pct.chg_2021, y=reorder(st, pct.chg_2021), 
+                fill = pct.chg_2021,
+                col=factor(ifelse(st=="WA", 1, 0)),
+                text=paste(st, 
+                           "change:", scales::percent(pct.chg_2021, acc=1),
+                           "avg:", round(average)))) +
+              
+  geom_bar(stat="identity") +
+    
+  scale_color_manual(values = c("grey", "black")) +
+  scale_fill_gradient2(
+    low = "blue", 
+    mid = "white", 
+    high = "red", 
+    midpoint = 0) +
+  scale_x_continuous(labels = scales::percent) +
+  
+  theme(axis.text.y=element_text(size=rel(.6)), legend.position = "none") +
+  labs(title = paste("State ranking: % Change from",
+                     last_complete_yr-1, "to", last_complete_yr, "in persons killed by police"),
+       x="Percent change in persons killed",
+       y="State")
+
+ggplotly(p, tooltip = "text")
+
+  
+```
+
+##### All states
+
+```{r barplotallwapo, warning = F}
+
+p <- ggplot(data = wapo_dat %>% filter(!is.infinite(pct.chg_2021)),
+            aes(x=pct.chg_2021, y=reorder(st, pct.chg_2021), 
+                fill = pct.chg_2021,
+                col=factor(ifelse(st=="WA", 1, 0)),
+                text=paste(st, 
+                           "change:", scales::percent(pct.chg_2021, acc=1),
+                           "avg:", round(average)))) +
+              
+  geom_bar(stat="identity") +
+    
+  scale_color_manual(values = c("grey", "black")) +
+  scale_fill_gradient2(
+    low = "blue", 
+    mid = "white", 
+    high = "red", 
+    midpoint = 0) +
+  scale_x_continuous(labels = scales::percent) +
+  
+  theme(axis.text.y=element_text(size=rel(.5)), legend.position = "none") +
+  labs(title = paste("State ranking: % Change from",
+                     last_complete_yr-1, "to", last_complete_yr, "in persons killed by police"),
+       x="Percent change in persons killed",
+       y="State")
+
+ggplotly(p, tooltip = "text")
+
+  
+```
+
+##### Table
+
+The table includes all states.  Here you can clearly see the impact of small case numbers on the percentage change measure.
+
+```{r wapo_change_tab, message=F, warning=F}
+
+wapo_dat %>%
+  select(st, cases_2020, cases_2021, pct.chg_2021) %>%
+  arrange(desc(pct.chg_2021)) %>%
+  DT::datatable(rownames = F,
+                caption = "WaPo data: People shot by police in 2020 & 2021",
+                colnames = c("State", "2020 cases", "2021 cases", "Percentage change"),
+                filter = 'top') %>%
+  DT::formatPercentage("pct.chg_2021", 1)
 ```
 
 # Say their names {.tabset}
