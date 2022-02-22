@@ -5,6 +5,10 @@
 
 Downloads/
 data-raw/
+FEchecking/
+reprex/
+hotpursuit2015.csv
+
 
 # Empty folder for storing script outputs
 data-outputs/*
