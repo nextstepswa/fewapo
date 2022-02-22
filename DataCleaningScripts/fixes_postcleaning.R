@@ -18,9 +18,17 @@ if (fe_clean$name[fe_clean$feID == 31462] == "Unknown"){
   fe_clean$agency[fe_clean$feID == 31462] <- "Algona Police Department"
   fe_clean$url_info[fe_clean$feID == 31462] <- "https://www.auburn-reporter.com/news/fatal-police-shooting-of-suspect-in-algona-hostage-taking-incident-is-subject-of-investigation/"
   fe_clean$url_click[fe_clean$feID == 31462] <- make_url_fn(fe_clean$url_info[fe_clean$feID == 31462])
-  print("Fixed Sorin Ardelean")
+  print("Fixed Sorin Ardelean for FE")
 } else {
-  print("Ardelian fix not needed anymore")
+  print("FE Ardelean fix not needed anymore")
+}
+
+if (wapo_clean$name[wapo_clean$wapoID == 7518] == "Unknown"){
+  wapo_clean$name[wapo_clean$wapoID == 7518] <- "Sorin Ardelean"
+  wapo_clean$age[wapo_clean$wapoID == 7518] <- 43
+  print("Fixed Sorin Ardelean for WaPo")
+} else {
+  print("WaPo Ardelean fix not needed anymore")
 }
 
 # Werner Anderson 2018, died after injection of ketamine while held down
