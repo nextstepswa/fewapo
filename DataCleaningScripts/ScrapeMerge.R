@@ -392,7 +392,7 @@ if(nrow(aaa) > 0){
     print("No unmatched WAPO records")
 }
 
-### START TEMPORARY FIXES #######################################
+### START TEMPORARY FIXES for unmatched WaPo records ##############
 
 ## For these cases, assign WAPO info to FE fields, since the FE fields
 ## are used for some of the reports
@@ -421,17 +421,18 @@ if (dim(aaa)[1] > 0) {
 
 ## WaPo doesn't have all the info needed, so we fill in the rest manually if we have it
 
-# # Name of case
-# target <- which(mergefull$wapoID==7345 & mergefull$feID==99999)
-# if(length(target > 0)) {
-#     print("Fixing <name of case>")
-#     mergefull$agency[target] <- "North Bend Police Department"
-#     mergefull$county[target] <- "King"
-#     mergefull$url_info[target] <- "https://www.seattletimes.com/seattle-news/law-justice/officer-who-fatally-shot-man-at-north-bend-park-is-identified/"
-#     mergefull$url_click[target] <- make_url_fn(mergefull$url_info[target])
-# } else {
-#     print("<name of case> fix not needed anymore")
-# }
+
+# # Sahota
+target <- which(mergefull$wapoID==7650 & mergefull$feID==99999)
+if(length(target > 0)) {
+    print("Fixing Sahota")
+    mergefull$agency[target] <- "Clark County Sheriff's Office"
+    mergefull$county[target] <- "Clark"
+    mergefull$url_info[target] <- "https://www.oregonlive.com/clark-county/2022/02/vancouver-police-officer-mistakenly-shot-by-clark-county-deputy-died-of-multiple-gunshot-wounds.html"
+    mergefull$url_click[target] <- make_url_fn(mergefull$url_info[target])
+} else {
+    print("Sahota fix not needed anymore")
+}
 
 
 ### END TEMPORARY FIXES #######################################
@@ -483,9 +484,14 @@ mergefull[mergefull$feID==27067,]$wapoID <- 5242
 mergefull[mergefull$feID==26695,start:end] <- rep(NA, len)
 mergefull[mergefull$feID==26695,]$wapoID <- NA
 
-### fix for wapoID 7314: delete duplicate match
+### fix for wapoID 7341: delete duplicate match, leave match to 31223
 mergefull[mergefull$feID==31303,start:end] <- rep(NA, len)
 mergefull[mergefull$feID==31303,]$wapoID <- NA
+
+### fix duplicate FE ID 31303, not matched to WaPo, so not sure how this ends up getting duplicated
+
+#keep <- finalmerge[finalmerge$feID == 31303,][1,]
+#finalmerge <- bind_rows(finalmerge[finalmerge$feID != 31303,], keep)
 
 # Re-check city/date mismatch
 mergefull %>%
