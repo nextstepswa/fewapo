@@ -210,8 +210,13 @@ wapo$date[wapo$id==7030] <- lubridate::ymd("2021-07-16") # Gerardo Martinez
 wapo$date[wapo$id==6900] <- lubridate::ymd("2021-05-30") # Roberto Zielinski
 wapo$date[wapo$id==7309] <- lubridate::ymd("2021-08-06") # Hayden  McIlvain
 
+wapo$date[wapo$id==5224] <- lubridate::ymd("2019-11-25") # Anthony Chilcott
+
+wapo$date[wapo$id==1964] <- lubridate::ymd("2016-11-12") # Patrick D. Reddeck
+wapo$date[wapo$id==1156] <- lubridate::ymd("2016-11-12") # David Jay Kent
 
 fe$`Date of injury resulting in death (month/day/year)`[fe$`Unique ID`==30199] <- "05/08/2021" # Everton Garfield Brown
+
 
 # COD fixes
 fe$`Highest level of force`[fe$`Unique ID`==30199] <- "Gunshot"
@@ -238,8 +243,6 @@ fe$Name[fe$`Unique ID`==23531] <- "Joshua Spottedhorse"
 fe$Name[fe$`Unique ID`==18509] <- "Bruce R. Johnson"
 fe$Name[fe$`Unique ID`==16382] <- "Samuel Toshiro Smith"
 fe$Name[fe$`Unique ID`==28826] <- "Andrea Churna"
-
-fe$`Date of injury resulting in death (month/day/year)`[fe$`Unique ID`==27052] <- "11/22/2019"
 
 wapo$name[wapo$id==1778] <- "Jeffrey Martelli" # not reported
 
