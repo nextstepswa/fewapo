@@ -44,6 +44,20 @@ fe_save_file = here("Downloads", "fe_raw.csv")
 
 fe <- scrape_data_fn(fe, fe_url, fe_save_file)
 
+# Clean up a couple of things so the temp newnames can be added, date is persnickety
+fe <- fe[!is.na(fe$`Unique ID`),] %>% # delete the end row of text
+    mutate(date = mdy(`Date of injury resulting in death (month/day/year)`))
+
+## New names (while FE updating is paused in 2022)
+## modify col classes to match
+
+newnames <- readxl::read_xlsx("temp-newnames.xlsx") %>%
+    mutate(Age = as.character(Age),
+           `Date of injury resulting in death (month/day/year)` = as.character(`Date of injury resulting in death (month/day/year)`),
+           date = ymd(`Date of injury resulting in death (month/day/year)`),
+           Latitude = as.character(Latitude))
+
+fe <- bind_rows(fe, newnames)
 
 ## Washington Post
 
@@ -62,21 +76,24 @@ source(here("DataCleaningScripts", "fixes_precleaning.R"))
 
 fe_clean <- fe %>%
     filter(!is.na(`Unique ID`) & `Unique ID` != "NA") %>%
-    mutate(
-        feID = `Unique ID`,
-        name = case_when(
-            Name == "Name withheld by police" ~ "Unknown",
-            TRUE ~ Name),
-        name = str_remove(name, " Jr."),
-        name = str_remove(name, " Sr."),
-        name = str_remove(name, " III"),
-        name = str_remove(name, " II"),
-        name = str_remove(name, " IV"),
-        name = str_remove(name, " V$"),
-        name = str_remove(name, " aka.*"),
-        name = str_replace_all(name, "-"," "),
-        fname = "NA", # prep for assignment
-        lname = "NA") %>%
+    
+    mutate(feID = `Unique ID`) %>%
+    
+    mutate(name = Name,
+           name = case_when(
+               name == "Name withheld by police" ~ "Unknown",
+               is.na(name) ~ "Unknown",
+               TRUE ~ name),
+           name = str_remove(name, " Jr."),
+           name = str_remove(name, " Sr."),
+           name = str_remove(name, " III"),
+           name = str_remove(name, " II"),
+           name = str_remove(name, " IV"),
+           name = str_remove(name, " V$"),
+           name = str_remove(name, " aka.*"),
+           name = str_replace_all(name, "-"," "),
+           fname = "NA", # prep for assignment
+           lname = "NA") %>%
     mutate(
         raceOrig = case_when(
             is.na(Race) ~ "Unknown",
@@ -121,9 +138,7 @@ fe_clean <- fe %>%
            age = as.numeric(ageChr),
            age = ifelse(is.na(age), 999, age) # missing value
     ) %>%
-    mutate(date = 
-               mdy(`Date of injury resulting in death (month/day/year)`),
-           month = month(date, label=T),
+    mutate(month = month(date, label=T),
            day = day(date),
            year = year(date)
     ) %>%
@@ -215,6 +230,9 @@ fe_clean <- fe %>%
            hotPursuit = fct_relevel(hotPursuit, "Unknown", 
                                     after = Inf)
     ) %>%
+    
+    # `Intended use of force (Developing)` is where Pursuits and Suicides are coded
+    
     mutate(circumstances = `Intended use of force (Developing)`,
            circumstances = case_when(
                circumstances == "" ~ "Unknown",
@@ -230,7 +248,7 @@ fe_clean <- fe %>%
     # Here we do not classify "suicide" as a homicide.
     mutate(homicide = circumstances,
            homicide = case_when(
-               circumstances == "Suicide" ~ 0,
+               grepl("Suicide|suicide", circumstances) ~ 0,
                circumstances == "Unknown" ~ NA_real_,
                TRUE ~ 1)
     ) %>%
@@ -345,9 +363,10 @@ write.csv(wapo_clean, here("data-outputs", "WaPo_clean.csv"))
 
 selection <- "all cases"
 scrape_date <- Sys.Date()
-last_fe_date <- max(fe_clean$date)
+last_fe_date <- max(fe_clean$date[fe_clean$feID < 900000])
 last_wapo_date <- max(wapo_clean$date)
-last_data_update <- max(last_fe_date, last_wapo_date)
+last_newname_date <- max(fe_clean$date[fe_clean$feID > 900000])
+last_data_update <- max(last_fe_date, last_wapo_date, last_newname_date)
 last_update_is_eoy <- month(last_data_update)==12 & 
     day(last_data_update)==31
 last_complete_mo <- ifelse(last_update_is_eoy | month(last_data_update)==1, 
@@ -358,7 +377,7 @@ last_complete_yr <- ifelse(last_update_is_eoy,
                            year(last_data_update)-1)
 
 save(list = c("fe_clean", "wapo_clean", "selection",
-              "scrape_date", "last_fe_date", "last_wapo_date",
+              "scrape_date", "last_fe_date", "last_wapo_date", "last_newname_date",
               "last_data_update", "last_complete_mo", 
               "last_complete_yr", "last_update_is_eoy"),
      file = here("data-outputs", "CleanData.rda"))
@@ -559,7 +578,7 @@ wapo_data <- wapo_clean
 merged_data <- finalmerge 
 
 save(list = c("fe_data", "wapo_data", "merged_data", "selection",
-              "scrape_date", "last_fe_date", "last_wapo_date",
+              "scrape_date", "last_fe_date", "last_wapo_date","last_newname_date",
               "last_data_update", "last_complete_mo", 
               "last_complete_yr", "last_update_is_eoy"),
      file = here("data-outputs", "WA2015.rda"))
@@ -571,7 +590,7 @@ wapo_data <- wapo_clean %>% filter(date > "2018-12-06")
 merged_data <- finalmerge %>% filter(date > "2018-12-06")
 
 save(list = c("fe_data", "wapo_data", "merged_data", "selection",
-              "scrape_date", "last_fe_date", "last_wapo_date",
+              "scrape_date", "last_fe_date", "last_wapo_date","last_newname_date",
               "last_data_update", "last_complete_mo", 
               "last_complete_yr", "last_update_is_eoy"),
      file = here("data-outputs", "WA940.rda"))

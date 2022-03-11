@@ -182,6 +182,7 @@ fe$Name[fe$`Unique ID`==30775] <- "Steven Dean Primm"
 
 
 ## not reported
+wapo$name[wapo$id==7765] <- "Murdock J. Phillips"
 wapo$name[wapo$id==6689] <- "James Wright"
 wapo$name[wapo$id==6790] <- "Ma'Khia Bryant"
 

@@ -6,16 +6,20 @@ This report is updated about once each week, pulling, cleaning and merging data 
 
 * Washington Post only includes fatal *shootings* by police.  
 
-* Neither dataset includes deaths in custody after booking.  
+* Neither dataset includes deaths in custody after booking. 
+
+* Both datasets may be missing incidents.
 
 A comparison of the cases found in each dataset is found in the [last section](#dataset-comparison) of this report.
 
 There is typically a 1-2 week lag in the Fatal Encounters and WaPo datasets, but it can sometimes be longer.  The date shown in the "most recent data update" tab above is an indication of the current lag.  As of this report, the last data updates were:
 
 
-* `r format(last_fe_date, format="%B %d %Y")` for the Fatal Encounters project
+* `r format(last_fe_date, format="%B %d %Y")` for the Fatal Encounters project (FE has paused updating)
 * `r format(last_wapo_date, format="%B %d %Y")` for the Washington Post
 
+While the Fatal Encounters project has paused, we are keeping track of these encounters for WA State by hand.  The most recent known incident was on
+`r format(last_newname_date, format="%B %d %Y")`.
 
 This report is restricted to the cases that can be classified as homicides by police, it excludes cases identified in the Fatal Encounters dataset as suicides (see the [last section](#dataset-comparison) for details).
 
