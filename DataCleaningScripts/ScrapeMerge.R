@@ -351,6 +351,8 @@ for(i in 1:length(name.list)) {
 }
 
 # Save clean datasets, all cases ----
+## NOTE: fixes id'd during WA merge below 
+## are implemented in post-cleaning file above so included here
 
 ## CSV files ----
 
@@ -363,9 +365,9 @@ write.csv(wapo_clean, here("data-outputs", "WaPo_clean.csv"))
 
 selection <- "all cases"
 scrape_date <- Sys.Date()
-last_fe_date <- max(fe_clean$date[fe_clean$feID < 900000])
+last_fe_date <- max(fe_clean$date[fe_clean$feID < 90000])
 last_wapo_date <- max(wapo_clean$date)
-last_newname_date <- max(fe_clean$date[fe_clean$feID > 900000])
+last_newname_date <- max(fe_clean$date[fe_clean$feID > 90000])
 last_data_update <- max(last_fe_date, last_wapo_date, last_newname_date)
 last_update_is_eoy <- month(last_data_update)==12 & 
     day(last_data_update)==31
@@ -393,13 +395,19 @@ fe_2015 <- fe_clean %>%
 wapo_2015 <- wapo_clean %>% filter(st == "WA")
 
 mergefull <- stringdist_full_join(fe_2015, wapo_2015,
-                                  by = c("lname", "fname", "date", "gender", "cod"),
+                                  by = c("lname", "fname", "date", "gender", "cod", "month", "city"),
                                   max_dist = 2)
 
 ## Check for unmatched WAPO records ----
 ## WAPO is a subset of FE, so all WAPO cases should be in FE
-## Missing cases (so far) have all been due to delays in FE updating
-## So the fixes are temporary, until FE updates
+## Missing cases are either due to delays in FE or WaPo updating
+## So the fixes are temporary, except for WaPo 4568
+
+# NOTE: WAPO 4568 is the only case not found in FE.
+# Not clear if the victim died, name unknown, can't find more info online.  
+# Have reported the case to FE.
+# https://www.kiro7.com/news/local/police-investigating-officer-involved-shooting-in-federal-way/930686522/
+# https://komonews.com/news/local/federal-way-police-investigating-officer-involved-shooting
 
 aaa <- mergefull %>% 
     filter(is.na(feID)) %>% 
@@ -415,6 +423,9 @@ if(nrow(aaa) > 0){
 
 ## For these cases, assign WAPO info to FE fields, since the FE fields
 ## are used for some of the reports
+## feID will be 99999 to id these cases
+## if WaPo info is delayed the temp fix is implemented in fixes_postcleaning
+
 
 if (dim(aaa)[1] > 0) {
     
@@ -440,21 +451,19 @@ if (dim(aaa)[1] > 0) {
 
 ## WaPo doesn't have all the info needed, so we fill in the rest manually if we have it
 
+# # Template for fill-in
+# target <- which(mergefull$wapoID==7650 & mergefull$feID > 90000)
+# if(length(target > 0)) {
+#     print("Fixing Sahota")
+#     mergefull$agency[target] <- "Clark County Sheriff's Office"
+#     mergefull$county[target] <- "Clark"
+#     mergefull$url_info[target] <- "https://www.oregonlive.com/clark-county/2022/02/vancouver-police-officer-mistakenly-shot-by-clark-county-deputy-died-of-multiple-gunshot-wounds.html"
+#     mergefull$url_click[target] <- make_url_fn(mergefull$url_info[target])
+# } else {
+#     print("Sahota fix not needed anymore")
+# }
 
-# # Sahota
-target <- which(mergefull$wapoID==7650 & mergefull$feID==99999)
-if(length(target > 0)) {
-    print("Fixing Sahota")
-    mergefull$agency[target] <- "Clark County Sheriff's Office"
-    mergefull$county[target] <- "Clark"
-    mergefull$url_info[target] <- "https://www.oregonlive.com/clark-county/2022/02/vancouver-police-officer-mistakenly-shot-by-clark-county-deputy-died-of-multiple-gunshot-wounds.html"
-    mergefull$url_click[target] <- make_url_fn(mergefull$url_info[target])
-} else {
-    print("Sahota fix not needed anymore")
-}
-
-
-### END TEMPORARY FIXES #######################################
+### END TEMPORARY FIXES FOR UNMATCHED WAPO RECORDS #############
 
 # Checks for bad matches from the merge ----
 # these are relatively stable, and need to be fixed manually
@@ -481,57 +490,45 @@ if(any(aaa>1)){
     print("No duplicate WaPo IDs")
 }
 
+# Check for unmatched wapoIDs
+if(is.na(mergefull$feID) | mergefull$feID == 99999) {
+    print("IDs of non-matched WaPo cases (expect 4568):")
+    mergefull$wapoID[is.na(mergefull$feID)]
+} else {
+    print("All wapo cases matched")
+}
+
 # Check for city/date mismatch
 mergefull %>%
     filter(city.y != city.x & date.x != date.y) %>%
     select(feID, wapoID, city.x, city.y, date.x, date.y)
  
-## Spot fix these cases manually
+# ## Spot fix these cases manually
+# 
+# ### indices for wapo vars in mergefull
+# indices <- data.frame(colnames(mergefull))
+# start <- as.numeric(row.names(indices)[indices=="wapoID"])
+# end <- as.numeric(row.names(indices)[indices=="year.y"])
+# len <- end-start+1
+# 
+# ### Template for bad matches removal
+# mergefull[mergefull$feID==25615,start:end] <- rep(NA, len) # fixes wapoID 4568 (may not be a fatality, see below)
+# 
+# ### fix for wapoID 7341: delete duplicate match, leave match to 31223
+# mergefull[mergefull$feID==31303,start:end] <- rep(NA, len)
+# mergefull[mergefull$feID==31303,]$wapoID <- NA
+#
+# ### Template for duplicate match deletion 
+# mergefull[mergefull$feID==90013,start:end] <- rep(NA, len) # remove WaPo matches for both
+# keep <- mergefull[mergefull$feID == 90013,][1,]
+# mergefull <- bind_rows(mergefull[mergefull$feID != 90013,], keep)
 
-### indices for wapo vars in mergefull
-indices <- data.frame(colnames(mergefull))
-start <- as.numeric(row.names(indices)[indices=="wapoID"])
-end <- as.numeric(row.names(indices)[indices=="year.y"])
-len <- end-start+1
-
-### Fix incorrect matches
-mergefull[mergefull$feID==25615,start:end] <- rep(NA, len) # fixes wapoID 4568 (may not be a fatality, see below)
+# Re-check cases if spotfixes have been made
+# # Re-check city/date mismatch
+# mergefull %>%
+#     filter(city.y != city.x & date.x != date.y) %>%
+#     select(feID, wapoID, city.x, city.y, date.x, date.y)
  
-### fix for wapoID 5242: transfer from feID 26695 to 27067
-mergefull[mergefull$feID==27067,start:end] <- mergefull[mergefull$feID==26695,start:end]
-mergefull[mergefull$feID==27067,]$wapoID <- 5242
-mergefull[mergefull$feID==26695,start:end] <- rep(NA, len)
-mergefull[mergefull$feID==26695,]$wapoID <- NA
-
-### fix for wapoID 7341: delete duplicate match, leave match to 31223
-mergefull[mergefull$feID==31303,start:end] <- rep(NA, len)
-mergefull[mergefull$feID==31303,]$wapoID <- NA
-
-### fix duplicate FE ID 31303, not matched to WaPo, so not sure how this ends up getting duplicated
-
-#keep <- finalmerge[finalmerge$feID == 31303,][1,]
-#finalmerge <- bind_rows(finalmerge[finalmerge$feID != 31303,], keep)
-
-# Re-check city/date mismatch
-mergefull %>%
-    filter(city.y != city.x & date.x != date.y) %>%
-    select(feID, wapoID, city.x, city.y, date.x, date.y)
-
-# Re-check age mismatch
-mergefull %>% filter(age.x != age.y) %>% select(feID, wapoID, age.x, age.y)
-
-# Check that all wapoIDs are still in the merged dataset
-if(table(!is.na(mergefull$wapoID))[[2]] != dim(wapo_2015)[1]) {
-    print("IDs of non-matched WaPo cases:")
-    wapo_2015$wapoID[is.na(!match(wapo_2015$wapoID, mergefull$wapoID))]
-} else {
-    print("All wapo cases matched")
-}
-# NOTE: WAPO 4568 is the only case not found in FE.
-# Not clear if the victim died, so not included here.  
-# Have reported the case to FE.
-# https://www.kiro7.com/news/local/police-investigating-officer-involved-shooting-in-federal-way/930686522/
-
 # spotfix WA homicide designations: optional 
 ## we don't currently do this b/c 
 ## we haven't looked at all cases, all years, so don't want to make

@@ -97,6 +97,7 @@ wapo$gender[wapo$id==7415] <- "Male"
 
 ## not reported
 wapo$gender[wapo$id==6887] <- "Transgender"
+fe$Gender[fe$`Unique ID`==27067] <- "Male"
 
 
 # Race corrections ----
@@ -213,8 +214,8 @@ wapo$date[wapo$id==7309] <- lubridate::ymd("2021-08-06") # Hayden  McIlvain
 
 wapo$date[wapo$id==5224] <- lubridate::ymd("2019-11-25") # Anthony Chilcott
 
-wapo$date[wapo$id==1964] <- lubridate::ymd("2016-11-12") # Patrick D. Reddeck
-wapo$date[wapo$id==1156] <- lubridate::ymd("2016-11-12") # David Jay Kent
+wapo$date[wapo$id==1964] <- lubridate::ymd("2016-10-12") # Patrick D. Reddeck
+wapo$date[wapo$id==1156] <- lubridate::ymd("2016-01-09") # David Jay Kent
 
 fe$`Date of injury resulting in death (month/day/year)`[fe$`Unique ID`==30199] <- "05/08/2021" # Everton Garfield Brown
 
@@ -233,6 +234,59 @@ fe$`Location of death (county)`[fe$`Unique ID`==30388] <- "Muscogee"
 
 
 # City fixes
+wapo$city[wapo$id==1084] <- "Olympia" # Nephi  Leiataua
+wapo$city[wapo$id==1145] <- "Tumwater" # Joel Nelson
+wapo$city[wapo$id==1623] <- "Ridgefield" # Kenneth Pointer
+
+wapo$city[wapo$id==1988] <- "Muckelshoot Reservation" # Renee Davis
+fe$`Location of death (city)`[fe$`Unique ID`==18333] <- "Muckelshoot Reservation" # Renee Davis
+
+fe$`Location of death (city)`[fe$`Unique ID`==19583] <- "Des Moines" # William Stokes
+
+
+wapo$city[wapo$id==2502] <- "Frederickson" # Charles Shands
+fe$`Location of death (city)`[fe$`Unique ID`==19831] <- "Frederickson" # Charles Shands
+
+
+wapo$city[wapo$id==2750] <- "West Richland" # Douglas West
+
+# google maps is wrong, Fredrickson is a city
+# https://zipmap.net/Washington/Pierce_County/Frederickson.htm
+fe$`Location of death (city)`[fe$`Unique ID`==21885] <- "Frederickson" # Eduardo Navarrete
+
+wapo$city[wapo$id==3170] <- "Spokane" # James Danforth, Hillyard verified a neighborhood of Spokane
+wapo$city[wapo$id==3332] <- "Everett" # Ilkka  Hiironen, Ebey Island verified in Everett
+
+fe$`Location of death (city)`[fe$`Unique ID`==23934] <- "Elk Plain" # William Langfitt, EP verified as Census designated place
+
+wapo$city[wapo$id==3891] <- "Kent" # Jesus Murillo
+wapo$city[wapo$id==3980] <- "Spokane Valley" # Bryan Bayne
+wapo$city[wapo$id==4133] <- "Martha Lake" # Nickolas Peters
+wapo$city[wapo$id==4545] <- "Hazel Dell South" # Carlos Hunter
+wapo$city[wapo$id==4708] <- "Spokane Valley" # Ethan Murray
+wapo$city[wapo$id==5194] <- "Mesa" # Dante Jones
+wapo$city[wapo$id==5224] <- "Enumclaw" # Anthony Chilcott
+
+fe$`Location of death (city)`[fe$`Unique ID`==27321] <- "Spokane" # Clando Anitok
+fe$`Location of death (city)`[fe$`Unique ID`==27830] <- "Eatonville" # Brandon Stokes
+fe$`Location of death (city)`[fe$`Unique ID`==27954] <- "Seattle" # Shaun Fuhr
+
+wapo$city[wapo$id==6175] <- "Spokane Valley" # Joshua Brant
+wapo$city[wapo$id==6199] <- "Spokane" # Erik Mahoney
+
+fe$`Location of death (city)`[fe$`Unique ID`==29038] <- "Hazel Dell" # Kevin Peterson
+
+wapo$city[wapo$id==6305] <- "Woodinville" # Ronny Dunning
+
+
+# 27   7791  Unknown   Unknown
+
+
+# broken url fixes
+fe$`Supporting document link`[fe$`Unique ID`==18333] <- "https://www.seattleweekly.com/news/seattle-man-fatally-shot-by-kent-police-identified/" # William Stokes
+
+
+
 
 
 # WA fixes ------------------------------------------------
