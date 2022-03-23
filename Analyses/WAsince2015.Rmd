@@ -31,6 +31,7 @@ library(kableExtra)
 library(here)
 library(leaflet)
 library(lubridate)
+library(icons)
 
 
 # get cleaned, merged data for WA
@@ -64,6 +65,10 @@ After winning over 60% of the statewide vote, Initiative 940 was passed into WA 
 
 During the last decade, one out of every 5 persons killed in Washington state has been killed by a law enforcement officer.  (Roughly 250 homicide deaths are recorded each year in WA State.  You can find the state's death data
 <a href="https://www.doh.wa.gov/DataandStatisticalReports/HealthDataVisualization/MortalityDashboards/ACHInjuryDeathsDashboards" target="_top">here</a>).
+
+____
+
+> *To find out more about what we do or get involved*, please email us at [Next Steps Washington](mailto:nextstepswa@gmail.com)
 
 ___
 
@@ -1161,6 +1166,8 @@ homicides %>%
 
 ```
 
+____
+
 ## Name Unknown
 
 The remaining 
@@ -1178,7 +1185,15 @@ homicides %>%
                 escape = FALSE)
 ```
 
+____
+
 # Datasets: discussion
 
 ```{r datasets, child='./Common/datasetDiscussion.Rmd'}
+```
+
+
+# Public Access
+
+```{r access, child='./Common/access.Rmd'}
 ```
