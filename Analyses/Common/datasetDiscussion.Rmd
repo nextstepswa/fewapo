@@ -3,11 +3,11 @@ As noted in the Introduction section, this report relies on data from the Fatal 
 
 Fatal Encounters includes more cases than the Washington Post, because the Post dataset is restricted to fatal shootings.  
 
----
+____
 
 > Among the cases missing from the Washington Post data are Manny Ellis (in WA) and George Floyd (at the national level), because their deaths were caused by asphyxiation, not gunshots.
 
----
+____
 
 The total number of cases in the Fatal Encounters dataset for WA State since
 `r params$from` is `r nrow(merged_data)`.  These are classified as follows:
@@ -134,6 +134,8 @@ tab %>%
                  dim(tab)[1]), bold = T)
 ```
 
+____
+
 #### By name, for fatal shootings
 
 Below is the list of cases identified as gunshot fatalities in Fatal Encounters that are missing from the Washington Post dataset.
@@ -148,4 +150,6 @@ homicides %>%
                 escape = FALSE)
 
 ```
+
+____
 
