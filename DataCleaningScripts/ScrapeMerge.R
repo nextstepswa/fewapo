@@ -365,10 +365,10 @@ write.csv(wapo_clean, here("data-outputs", "WaPo_clean.csv"))
 
 selection <- "all cases"
 scrape_date <- Sys.Date()
-last_fe_date <- max(fe_clean$date[fe_clean$feID < 90000])
-last_wapo_date <- max(wapo_clean$date)
+last_date_fe <- max(fe_clean$date[fe_clean$feID < 90000])
+last_date_wapo <- max(wapo_clean$date)
 last_newname_date <- max(fe_clean$date[fe_clean$feID > 90000])
-last_data_update <- max(last_fe_date, last_wapo_date, last_newname_date)
+last_data_update <- max(last_date_fe, last_date_wapo, last_newname_date)
 last_update_is_eoy <- month(last_data_update)==12 & 
     day(last_data_update)==31
 last_complete_mo <- ifelse(last_update_is_eoy | month(last_data_update)==1, 
@@ -379,7 +379,7 @@ last_complete_yr <- ifelse(last_update_is_eoy,
                            year(last_data_update)-1)
 
 save(list = c("fe_clean", "wapo_clean", "selection",
-              "scrape_date", "last_fe_date", "last_wapo_date", "last_newname_date",
+              "scrape_date", "last_date_fe", "last_date_wapo", "last_newname_date",
               "last_data_update", "last_complete_mo", 
               "last_complete_yr", "last_update_is_eoy"),
      file = here("data-outputs", "CleanData.rda"))
@@ -492,7 +492,7 @@ if(any(aaa>1)){
 
 # Check for unmatched wapoIDs
 if(is.na(mergefull$feID) | mergefull$feID == 99999) {
-    print("IDs of non-matched WaPo cases (expect 4568):")
+    print("IDs of non-matched WaPo cases:")
     mergefull$wapoID[is.na(mergefull$feID)]
 } else {
     print("All wapo cases matched")
@@ -575,7 +575,7 @@ wapo_data <- wapo_clean
 merged_data <- finalmerge 
 
 save(list = c("fe_data", "wapo_data", "merged_data", "selection",
-              "scrape_date", "last_fe_date", "last_wapo_date","last_newname_date",
+              "scrape_date", "last_date_fe", "last_date_wapo","last_newname_date",
               "last_data_update", "last_complete_mo", 
               "last_complete_yr", "last_update_is_eoy"),
      file = here("data-outputs", "WA2015.rda"))
@@ -587,7 +587,7 @@ wapo_data <- wapo_clean %>% filter(date > "2018-12-06")
 merged_data <- finalmerge %>% filter(date > "2018-12-06")
 
 save(list = c("fe_data", "wapo_data", "merged_data", "selection",
-              "scrape_date", "last_fe_date", "last_wapo_date","last_newname_date",
+              "scrape_date", "last_date_fe", "last_date_wapo","last_newname_date",
               "last_data_update", "last_complete_mo", 
               "last_complete_yr", "last_update_is_eoy"),
      file = here("data-outputs", "WA940.rda"))
