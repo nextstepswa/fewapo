@@ -9,12 +9,22 @@
 # I can't tell if the victim died.  Have reported the case to FE.
 # https://www.kiro7.com/news/local/police-investigating-officer-involved-shooting-in-federal-way/930686522/
 
+# Michael Mercado 3/16/2022
+
+if (wapo_clean$name[wapo_clean$wapoID == 7816] == "Unknown"){
+  wapo_clean$name[wapo_clean$wapoID == 7816] <- "Michael Mercado"
+  wapo_clean$age[wapo_clean$wapoID == 7816] <- 37
+  print("Michael Mercado fix for WaPo")
+} else {
+  print("WaPo Mercado fix not needed anymore")
+}
+
 # Mauricio Martinez Yanez 3/16/2022
 
 if (wapo_clean$name[wapo_clean$wapoID == 7830] == "Unknown"){
   wapo_clean$name[wapo_clean$wapoID == 7830] <- "Mauricio Martinez Yanez"
   wapo_clean$age[wapo_clean$wapoID == 7830] <- 19
-  print("Mauricio Martinez Yanez for WaPo")
+  print("Mauricio Martinez Yanez fix for WaPo")
 } else {
   print("WaPo Yanez fix not needed anymore")
 }
