@@ -3,24 +3,27 @@
 .RData
 .Ruserdata
 
+# Create empty folder for storing script outputs
+data-outputs/*
+
+# Exclude these folders
 Downloads/
-data-raw/
 FEchecking/
 reprex/
 hotpursuit2015.csv
 
+# Sync some raw data
+data-raw/*
+!data-raw/temp-newnames.csv
 
-# Empty folder for storing script outputs
-data-outputs/*
-
-# Only some scripts are synced
+# Sync some scripts
 DataCleaningScripts/*
 !DataCleaningScripts/ScrapeMerge.R
 !DataCleaningScripts/fixes_precleaning.R
 !DataCleaningScripts/fixes_postcleaning.R
 !DataCleaningScripts/StateCensusData.R
 
-# Only some analysis files are synced
+# Sync some analysis files
 Analyses/*
 !Analyses/WAsince*.Rmd
 !Analyses/USpercapitaTrends.Rmd

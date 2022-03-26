@@ -51,7 +51,7 @@ fe <- fe[!is.na(fe$`Unique ID`),] %>% # delete the end row of text
 ## New names (while FE updating is paused in 2022)
 ## modify col classes to match
 
-newnames <- readxl::read_xlsx("temp-newnames.xlsx") %>%
+newnames <- readr::read_csv("data-raw/temp-newnames.csv") %>%
     mutate(Age = as.character(Age),
            `Date of injury resulting in death (month/day/year)` = as.character(`Date of injury resulting in death (month/day/year)`),
            date = ymd(`Date of injury resulting in death (month/day/year)`),
