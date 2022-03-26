@@ -39,7 +39,7 @@ last.age <- ifelse(is.na(homicides$age[last.case]),
 last.agency <- homicides$agency[last.case]
 
 last.cod <- ifelse(homicides$cod[last.case] == "Vehicle",
-                   "Accident following a vehicle pursuit",
+                   "death following a vehicle pursuit",
                    homicides$cod[last.case])
 
 last.url <- homicides$url_click[last.case]
