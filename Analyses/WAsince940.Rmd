@@ -24,6 +24,13 @@ params:
 knitr::opts_chunk$set(echo = TRUE, message=FALSE, fig.height = 4)
 ```
 
+```{r installs, include=FALSE}
+
+## This is for the R/Markdown/GitHub icons in the public access section (Analyses/Common/access.Rmd)
+## only needed if running for the first time
+# remotes::install_github("mitchelloharawild/icons")
+```
+
 ```{r prelim, warning=F}
 library(tidyverse)
 library(plotly)
