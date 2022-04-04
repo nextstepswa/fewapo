@@ -279,8 +279,8 @@ fe$`Location of death (city)`[fe$`Unique ID`==29038] <- "Hazel Dell" # Kevin Pet
 wapo$city[wapo$id==6305] <- "Woodinville" # Ronny Dunning
 
 
-# 27   7791  Unknown   Unknown
-
+# Latitude (removes trailing comma)
+fe$Latitude[fe$`Unique ID`==28891] <- 42.167834
 
 # broken url fixes
 fe$`Supporting document link`[fe$`Unique ID`==18333] <- "https://www.seattleweekly.com/news/seattle-man-fatally-shot-by-kent-police-identified/" # William Stokes
