@@ -67,28 +67,9 @@ fe_clean$circumstances[fe_clean$feID==22065] <- "Less-than-lethal force"
 fe_clean$homicide[fe_clean$feID==22065] <- 1
 fe_clean$hotPursuit[fe_clean$feID==22065] <- "Other"
 
-# Lotsa problems:  Shawn Michael Roy Montoya Duplicate
-# Has been reported to FE
-# one is from Beaverton OR
-fe_clean$st[fe_clean$feID==30444] <- "OR"
-fe_clean$state[fe_clean$feID==30444] <- "Oregon"
-fe_clean$latitude[fe_clean$feID==30444] <- 45.477210
-fe_clean$longitude[fe_clean$feID==30444] <- -122.796570
-
-# the other is not Montoya
-# name retrieved from Sno Co Med Examiner
-# https://snohomishcountywa.gov/ArchiveCenter/ViewFile/Item/6705
-fe_clean$name[fe_clean$feID==30454] <- "Thomas B. Murroni"
-fe_clean$description[fe_clean$feID==30454] <- 
-  sub("Shawn Michael Roy Montoya", "Murroni", 
-       fe_clean$description[fe_clean$feID==30454])
-fe_clean$description[fe_clean$feID==30454] <- 
-  sub("Montoya", "Murroni", 
-      fe_clean$description[fe_clean$feID==30454])
-
 
 # Duplicate case: Alex Martinez 2/27/2011, remove ID 9914 and correct date for ID 9917
-# reported to FE
+# reported to FE, it's now labeled as a dupe but the date hasn't been fixed
 fe_clean$date[fe_clean$ID==9917] <- fe_clean$date[fe_clean$ID==9914]
 fe_clean$day[fe_clean$ID==9917] <- fe_clean$day[fe_clean$ID==9914]
 fe_clean <- fe_clean %>% filter(feID != 9914)
