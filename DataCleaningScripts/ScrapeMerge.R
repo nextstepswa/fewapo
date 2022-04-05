@@ -54,7 +54,7 @@ fe <- fe[!is.na(fe$`Unique ID`),] %>% # delete the end row of text
 newnames <- readr::read_csv("data-raw/temp-newnames.csv") %>%
     mutate(Age = as.character(Age),
            `Date of injury resulting in death (month/day/year)` = as.character(`Date of injury resulting in death (month/day/year)`),
-           date = ymd(`Date of injury resulting in death (month/day/year)`),
+           date = mdy(`Date of injury resulting in death (month/day/year)`),
            Latitude = as.character(Latitude))
 
 fe <- bind_rows(fe, newnames)
@@ -400,10 +400,12 @@ mergefull <- stringdist_full_join(fe_2015, wapo_2015,
 
 ## Check for unmatched WAPO records ----
 ## WAPO is a subset of FE, so all WAPO cases should be in FE
-## Missing cases are either due to delays in FE or WaPo updating
-## So the fixes are temporary, except for WaPo 4568
+## Missing cases are due to delays in FE updating
+## So the fixes are temporary, 
 
-# NOTE: WAPO 4568 is the only case not found in FE.
+# except for WaPo 4568
+
+# WaPo 4568 is the only case not found in FE.
 # Not clear if the victim died, name unknown, can't find more info online.  
 # Have reported the case to FE.
 # https://www.kiro7.com/news/local/police-investigating-officer-involved-shooting-in-federal-way/930686522/
@@ -413,7 +415,7 @@ aaa <- mergefull %>%
     filter(is.na(feID)) %>% 
     select("wapoID", "fname.y", "lname.y")
 if(nrow(aaa) > 0){
-    print("Unmatched WAPO records:")
+    print("Unmatched WAPO records (expect 4568):")
     print(aaa)
 } else {
     print("No unmatched WAPO records")
@@ -425,7 +427,6 @@ if(nrow(aaa) > 0){
 ## are used for some of the reports
 ## feID will be 99999 to id these cases
 ## if WaPo info is delayed the temp fix is implemented in fixes_postcleaning
-
 
 if (dim(aaa)[1] > 0) {
     
@@ -447,28 +448,45 @@ if (dim(aaa)[1] > 0) {
                raceImp = race,
                circumstances = "Deadly force",
                homicide = 1)
+
+    ## WaPo doesn't have all the info needed, 
+    ## so we fill in the rest manually if we have it
+    
+    # # Template for fill-in
+    # target <- which(mergefull$wapoID==7650 & mergefull$feID > 90000)
+    # if(length(target > 0)) {
+    #     print("Fixing Sahota")
+    #     mergefull$agency[target] <- "Clark County Sheriff's Office"
+    #     mergefull$county[target] <- "Clark"
+    #     mergefull$url_info[target] <- "https://www.oregonlive.com/clark-county/2022/02/vancouver-police-officer-mistakenly-shot-by-clark-county-deputy-died-of-multiple-gunshot-wounds.html"
+    #     mergefull$url_click[target] <- make_url_fn(mergefull$url_info[target])
+    # } else {
+    #     print("Sahota fix not needed anymore")
+    # }
+
+    # And recheck for unmatched wapoIDs
+    aaa <- mergefull %>% 
+        filter(is.na(feID)) %>% 
+        select("wapoID", "fname.y", "lname.y")
+    if(nrow(aaa) > 0){
+        print("Unmatched WAPO records (expect none):")
+        print(aaa)
+    } else {
+        print("No unmatched WAPO records after info transfer")
+    }
+
 }
-
-## WaPo doesn't have all the info needed, so we fill in the rest manually if we have it
-
-# # Template for fill-in
-# target <- which(mergefull$wapoID==7650 & mergefull$feID > 90000)
-# if(length(target > 0)) {
-#     print("Fixing Sahota")
-#     mergefull$agency[target] <- "Clark County Sheriff's Office"
-#     mergefull$county[target] <- "Clark"
-#     mergefull$url_info[target] <- "https://www.oregonlive.com/clark-county/2022/02/vancouver-police-officer-mistakenly-shot-by-clark-county-deputy-died-of-multiple-gunshot-wounds.html"
-#     mergefull$url_click[target] <- make_url_fn(mergefull$url_info[target])
-# } else {
-#     print("Sahota fix not needed anymore")
-# }
 
 ### END TEMPORARY FIXES FOR UNMATCHED WAPO RECORDS #############
 
 # Checks for bad matches from the merge ----
 # these are relatively stable, and need to be fixed manually
+# Most should be fixed by modifying incorrect info in the
+# pre or post cleaning fix files.  But if that is not enough to
+# prevent the match, then the match is reversed by hand in
+# the fixes_postmerge file
 
-# Check for duplicate feIDs
+# Duplicate feIDs
 aaa <- table(mergefull$feID)
 if(any(aaa>1)){
     names(aaa[aaa>1])
@@ -479,7 +497,7 @@ if(any(aaa>1)){
     print("No duplicate FE IDs")
 }
 
-# Check for duplicate wapoIDs
+# Duplicate wapoIDs
 aaa <- table(mergefull$wapoID)
 if(any(aaa>1)){
     names(aaa[aaa>1])
@@ -490,53 +508,13 @@ if(any(aaa>1)){
     print("No duplicate WaPo IDs")
 }
 
-# Check for unmatched wapoIDs
-if(is.na(mergefull$feID) | mergefull$feID == 99999) {
-    print("IDs of non-matched WaPo cases:")
-    mergefull$wapoID[is.na(mergefull$feID)]
-} else {
-    print("All wapo cases matched")
-}
 
-# Check for city/date mismatch
+# City/date mismatch
 mergefull %>%
     filter(city.y != city.x & date.x != date.y) %>%
     select(feID, wapoID, city.x, city.y, date.x, date.y)
- 
-# ## Spot fix these cases manually
-# 
-# ### indices for wapo vars in mergefull
-# indices <- data.frame(colnames(mergefull))
-# start <- as.numeric(row.names(indices)[indices=="wapoID"])
-# end <- as.numeric(row.names(indices)[indices=="year.y"])
-# len <- end-start+1
-# 
-# ### Template for bad matches removal
-# mergefull[mergefull$feID==25615,start:end] <- rep(NA, len) # fixes wapoID 4568 (may not be a fatality, see below)
-# 
-# ### fix for wapoID 7341: delete duplicate match, leave match to 31223
-# mergefull[mergefull$feID==31303,start:end] <- rep(NA, len)
-# mergefull[mergefull$feID==31303,]$wapoID <- NA
-#
-# ### Template for duplicate match deletion 
-# mergefull[mergefull$feID==90013,start:end] <- rep(NA, len) # remove WaPo matches for both
-# keep <- mergefull[mergefull$feID == 90013,][1,]
-# mergefull <- bind_rows(mergefull[mergefull$feID != 90013,], keep)
 
-# Re-check cases if spotfixes have been made
-# # Re-check city/date mismatch
-# mergefull %>%
-#     filter(city.y != city.x & date.x != date.y) %>%
-#     select(feID, wapoID, city.x, city.y, date.x, date.y)
- 
-# spotfix WA homicide designations: optional 
-## we don't currently do this b/c 
-## we haven't looked at all cases, all years, so don't want to make
-## one anomalous fix
-# mutate(homicide = ifelse(feID == 28698 | #deputy crash while having stroke
-#                              feID == 25804 | #next 2 killed by suspect Tad Norman, not police
-#                              feID == 25805, 
-#                          0, homicide))
+#source("fixes_postmerge.R") # only if bad merges identified above
 
 # Final merged dataset for 2015-current data ----
 
