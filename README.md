@@ -45,7 +45,7 @@ For the WA since 940 and 2015 reports, the format is essentially identical, only
 
 ____
 
-**NOTE:**  The Fatal Encounters project has temporarily paused updating, since the end of calendar year 2021.  During this time we are keeping track of the incidents in WA State (only).  The new cases can be found in the `temp_newnames.xlsx` file.  WaPo updates are integrated as usual.
+**NOTE:**  The Fatal Encounters project has temporarily paused updating, since the end of calendar year 2021.  During this time we are keeping track of the incidents in WA State (only).  The new cases can be found in the `temp_newnames.csv` file.  WaPo updates are integrated as usual.
 
 ____
 
