@@ -62,8 +62,8 @@ if (wapo_clean$name[wapo_clean$wapoID == 7518] == "Unknown"){
 
 # Werner Anderson 2018, died after injection of ketamine while held down
 # FE classifies Intended use of force as "Undetermined", 
-# we will recode as "Less-than-lethal force"
-fe_clean$circumstances[fe_clean$feID==22065] <- "Less-than-lethal force"
+# we will recode as "Other force"
+fe_clean$circumstances[fe_clean$feID==22065] <- "Other force"
 fe_clean$homicide[fe_clean$feID==22065] <- 1
 fe_clean$hotPursuit[fe_clean$feID==22065] <- "Other"
 

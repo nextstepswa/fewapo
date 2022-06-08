@@ -355,18 +355,24 @@ homicides %>%
   ggplot(aes(reorder(county, perc),
              y = perc, 
              label = n)) +
-  geom_text(aes(y = perc), size = 3, nudge_y = .025) +
+  geom_text(aes(y = perc), size = 3, nudge_y = .005) +
   geom_bar(stat="identity", fill="blue", alpha=.5) +
+  
   labs(title = "County",
        caption = paste0("WA State since ", 
                         params$from, 
-                        "; y-axis=pct, bar label=count")) +
+                        "; x-axis=pct, bar label=count")) +
   xlab("County where fatal encounter happened") +
   ylab("Percent of Total") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  
+  scale_y_continuous(labels = scales::percent_format(acc=1)) +
+  
+  coord_flip()
+
 ```
 
 ### Table
+
 ```{r countytab}
 
 homicides %>%
@@ -385,31 +391,19 @@ This information comes from Fatal Encounters.
 
 ```{r agency}
 
-# tab <- homicides %>%
-#   group_by(agency) %>%
-#   summarize(Number = n(),
-#             Percent = round(100*Number/nrow(homicides), 1)
-#             ) %>%
-#   arrange(desc(Number)) %>%
-#   bind_rows(data.frame(agency ="Total", 
-#                        Number = sum(.$Number), 
-#                        Percent = sum(.$Percent))) 
-# 
-# tab %>%
-#   kable(caption = "Breakdown by Agency/PD of Involved Officer",
-#         col.names = c("Agency/PD", "Number", "Percent")) %>%
-#   kable_styling(bootstrap_options = c("striped","hover")) %>%
-#   row_spec(row=dim(tab)[1], bold = T) %>%
-#   add_footnote(label = "Percents may not sum to 100 due to rounding",
-#                notation = "symbol")
-
 homicides %>%
   group_by(agency) %>%
   summarize(Number = n(),
             Percent = round(100*Number/nrow(homicides), 1)
   ) %>%
   DT::datatable(rownames = F,
-                caption = "Breakdown by Agency/PD of Involved Officer")
+                caption = "Breakdown by Agency/PD of Involved Officer",
+                filter = 'top',
+                escape = FALSE, 
+                extensions = 'Buttons', 
+                options = list(
+                  dom = 'Bfrtip',
+                  buttons = c('copy', 'csv', 'excel', 'pdf', 'print')) )
 
 ```
 
@@ -781,30 +775,28 @@ ggplot(data= df %>% filter(year != max(df$year)),
 ```
 
 
-### By COD
+### By cause of death 
 
-Here we plot the cumulative totals for year to date -- the count of total fatalities up to the *last complete month* of the current year, for each year.  
+Here we plot the cumulative totals each year, broken down to show the two leading causes of death.  
 
-* We only plot months once the data are complete, so the plot will lag 1-2 months behind the current date.  
+* Note that the current year only reflects cases for the year to date (`r format(scrape_date, format="%B %d %Y")`), so is not strictly comparable with the previous years. 
 
-* The bars represent totals for year-to-date for each year, divided by cause of death:  gunshot, vehicle chase and all other causes.
+* The bars represent totals for each year, divided by cause of death:  gunshot, vehicle pursuit and all other causes.  A case is classified as a vehicle pursuit death if the cause of death was vehicular homicide during an active vehicle pursuit.
 
 * This is an interactive plot:  You can hover over bar segments to get the exact values for that cause of death in that year.
 
 
 ```{r annual, warning=F}
-# Here we can't rely on index to restrict dates, so do it manually
 
 p <-  homicides %>%
   filter(year >= params$startyr) %>%
-  filter(match(month, month.abb) <= last_complete_mo) %>%
   mutate(
     cod_3 = factor(
       case_when(
         cod == "Gunshot" ~ "shot", 
-        cod == "Vehicle" ~ "vehicle-related",
+        grepl("active", vpursuit) ~ "vehicle pursuit",
         TRUE ~ "other"),
-      levels = c("shot", "vehicle-related", "other")),
+      levels = c("shot", "vehicle pursuit", "other")),
     year = as.character(year)) %>%
   group_by(year, cod_3) %>%
   summarize(n = n()) %>%
@@ -819,11 +811,13 @@ p <-  homicides %>%
   
   geom_bar(stat="identity", alpha=.5,
            position = position_stack(reverse=T)) +
+  
+  annotate("text", x = "2022", y = tot.this.yr+1, 
+           size = 3, label = "YTD") +
+  
   scale_fill_manual(values = c("cadetblue","darkorange3", "goldenrod")) +
   
-  labs(title = paste0("Fatalities Jan-", 
-                      month.abb[last_complete_mo], 
-                      " by Year"),
+  labs(title = paste0("Fatalities by Year and Cause of Death"),
        caption = paste("WA since", params$startyr),
        x = "Year",
        y = "Number",
@@ -832,7 +826,6 @@ p <-  homicides %>%
 ggplotly(p, tooltip = "text")
 
 ```
-
 
 
 ## WA vs. other states
@@ -1171,7 +1164,11 @@ homicides %>%
   DT::datatable(rownames = F,
                 caption = paste("The Names We Know:  as of", scrape_date),
                 filter = 'top',
-                escape = FALSE)
+                escape = FALSE, 
+                extensions = 'Buttons', 
+                options = list(
+                  dom = 'Bfrtip',
+                  buttons = c('copy', 'csv', 'excel', 'pdf', 'print')) )
 
 ```
 
@@ -1191,7 +1188,11 @@ homicides %>%
   DT::datatable(rownames = F,
                 caption = paste("The Names We Don't Know:  as of", scrape_date),
                 filter = 'top',
-                escape = FALSE)
+                escape = FALSE, 
+                extensions = 'Buttons', 
+                options = list(
+                  dom = 'Bfrtip',
+                  buttons = c('copy', 'csv', 'excel', 'pdf', 'print')) )
 ```
 
 ____

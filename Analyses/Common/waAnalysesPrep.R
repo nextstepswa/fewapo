@@ -5,12 +5,11 @@
 # for each of those reports
 #-----------------------------------------------------------------
 
-# Select homicides and use age and cod from FE
+# Select homicides and use age from FE
 
 homicides <- merged_data %>% 
   filter(homicide==1) %>%
-  mutate(age = ifelse(age.fe==999, NA_real_, age.fe),
-         cod = cod.fe) %>%
+  mutate(age = ifelse(age.fe==999, NA_real_, age.fe)) %>%
   arrange(date)
 
 all.cases <- nrow(merged_data)
@@ -40,7 +39,7 @@ last.agency <- homicides$agency[last.case]
 
 last.cod <- ifelse(homicides$cod[last.case] == "Vehicle",
                    "death following a vehicle pursuit",
-                   homicides$cod[last.case])
+                   as.character(homicides$cod[last.case]))
 
 last.url <- homicides$url_click[last.case]
 

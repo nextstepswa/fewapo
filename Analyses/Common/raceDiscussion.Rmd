@@ -52,30 +52,6 @@ No. This raw count can not be used to assess racial disparities, because the wor
 
 ____
 
-#### What we *can* say about disparities
-
-The population of Washington State overwhelmingly identifies as White --  `r scales::percent(pop.W, accuracy=1)` in 2020 [source: WA State OFM](https://www.ofm.wa.gov/washington-data-research/statewide-data/washington-trends/population-changes/population-race).  If we exclude Hispanics (which the Census treats as ethnicity, not race), non-Hispanic Whites comprise
-`r scales::percent(pop.NHW, accuracy=1)` of the WA population
-[source: Statistical Atlas of the US](https://statisticalatlas.com/state/Washington/Race-and-Ethnicity). 
-
-So there is a disparity in the risk of being killed by police -- for non-Hispanic Whites, their share of fatalities is *lower* than their population share.  
-  
-The "risk ratio" is a common way to combine this information into a single number that is easy to understand:  the ratio of the fatality share, to the population share.  When the two shares are the same, the risk ratio equals 1.  When it is less than one, this means the share of fatalities is lower than the population share; they are disproportionately low.  When the risk ratio is greater than one it means the share of fatalities is larger than the population share; they are disproportionately high.  Then, taking 100*(risk ratio-1) tells you the percent lower (or higher) the ratio is than expected, if the risk was proportional to their share of population. 
-
-  * The risk ratio for non-Hispanic whites is `r paste(scales::percent(prop.wea), "/", scales::percent(pop.NHW), "=", rr.wea)` -- their risk of being killed by police is `r scales::percent(1-rr.wea)` lower than expected. 
-  
-  * By contrast, only 
-`r scales::percent(pop.NHB)` of the population identifies as Black/African American, but `r paste(scales::percent(prop.baa))` of the persons killed by police are identified as being in this racial group.  So their risk ratio is
-`r paste(scales::percent(prop.baa), "/", scales::percent(pop.NHB), "=", rr.baa)` -- their risk of being killed by police is `r scales::percent(rr.baa-1)` higher than expected.
-
-Note that the number of "unknown race" cases after imputation is not enough to change the direction of these disparities.  Even if we assume that all of the "unknown race" cases are White, their share of incidents would still be below their share in the population. 
-
-So, even though we can't be certain of the exact value of the risk ratio, we can say with some confidence that there *are* racial disparities in the risk of being killed by police, and that these disparities indicate that non-Hispanic Whites are *less* likely than other racial groups to be killed. 
-
-*Bottom line:* while the largest single group of persons killed by police is identified as White, the risk ratio for this group, which adjusts for their share of the population, shows they are disproportionately less likely to be killed than other groups.
-
-____
-
 
 #### So why don't we calculate standardized per capita rates?
 
@@ -95,7 +71,31 @@ The calculation of per capita rates takes the ratio of the fatality count (in th
 
 ____
 
-#### Perceived vs. self-identified race, and implicit bias
+#### What we *can* say about disparities in WA State
+
+The population of Washington State overwhelmingly identifies as White --  `r scales::percent(pop.W, accuracy=1)` in 2020 [source: WA State OFM](https://www.ofm.wa.gov/washington-data-research/statewide-data/washington-trends/population-changes/population-race).  If we exclude Hispanics (which the Census treats as ethnicity, not race), non-Hispanic Whites comprise
+`r scales::percent(pop.NHW, accuracy=1)` of the WA population
+[source: Statistical Atlas of the US](https://statisticalatlas.com/state/Washington/Race-and-Ethnicity).  By contrast only  `r scales::percent(prop.wea, accuracy=1)` of the persons killed by police are identified as non-Hispanic White.
+
+So there is a disparity in the risk of being killed by police -- for non-Hispanic Whites, their share of fatalities is *lower* than their population share.  
+  
+The "risk ratio" is a common way to combine this information into a single number that is easy to understand:  the ratio of the fatality share, to the population share.  When the two shares are the same, the risk ratio equals 1.  When it is less than one, this means the share of fatalities is lower than the population share; they are disproportionately low.  When the risk ratio is greater than one it means the share of fatalities is larger than the population share; they are disproportionately high.  Then, taking 100*(risk ratio-1) tells you the percent lower (or higher) the ratio is than expected, if the risk was proportional to their share of population. 
+
+  * The risk ratio for non-Hispanic whites is `r paste(scales::percent(prop.wea), "/", scales::percent(pop.NHW), "=", rr.wea)` -- their risk of being killed by police is `r scales::percent(1-rr.wea)` lower than expected. 
+  
+  * By contrast, only 
+`r scales::percent(pop.NHB)` of the population identifies as Black/African American, but `r paste(scales::percent(prop.baa))` of the persons killed by police are identified as being in this racial group.  So their risk ratio is
+`r paste(scales::percent(prop.baa), "/", scales::percent(pop.NHB), "=", rr.baa)` -- their risk of being killed by police is `r scales::percent(rr.baa-1)` higher than expected.
+
+Note that the number of "unknown race" cases after imputation is not enough to change the direction of these disparities.  Even if we assume that all of the "unknown race" cases are White, their share of incidents would still be below their share in the population. 
+
+So, even though we can't be certain of the exact value of the risk ratio, we can say with some confidence that there *are* racial disparities in the risk of being killed by police, and that these disparities indicate that non-Hispanic Whites are *less* likely than other racial groups to be killed. 
+
+*Bottom line:* while the largest single group of persons killed by police is identified as White, the risk ratio for this group, which adjusts for their share of the population, shows they are disproportionately less likely to be killed than other groups.
+
+____
+
+#### Perceived vs. self-identified race and implicit bias
 
 The race classification in the FE and WaPo data most likely represent the subject's race as reported by law enforcement.  This may be the officer's perception, or it may be informed by previous interactions and self-reports, we have no way of knowing.  In addition, if our goal was to use these data as evidence for (or against) the effects of systemic implicit bias in the police use of deadly force, we would need to control for other variables that may influence these patterns, like the perceived and actual weapon status of the person killed, the circumstances that precipitated the incidents, the presence or absence of other persons at risk in the incidents, and the detailed population composition of the jurisdiction.
 

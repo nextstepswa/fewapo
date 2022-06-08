@@ -11,7 +11,7 @@ library(lubridate)
 
 # functions ----
 
-state_translate_fn <- function(x){
+state_fullname_fn <- function(x){
     snames <- c(state.name, "District of Columbia")
     names(snames) <- c(state.abb, "DC")
     snames[x]
@@ -144,7 +144,7 @@ fe_clean <- fe %>%
     ) %>%
     mutate(city = `Location of death (city)`,
            st = State,
-           state = state_translate_fn(st),
+           state = state_fullname_fn(st),
            zip = `Location of death (zip code)`,
            county = `Location of death (county)`
     ) %>%
@@ -179,6 +179,7 @@ fe_clean <- fe %>%
                cod %in% c("", "Undetermined", "Unknown") ~ "Unknown",
                grepl("Less", cod) ~ "Unknown", # one case, fe 30304
                grepl("^.*(phyx).*", cod) ~ "Asphyxiated/Restrained",
+               feID == 22977 ~ "Other", #pursued in car/fled by foot/jumped on tracks
                TRUE ~ cod),
            cod = factor(
                cod,
@@ -217,37 +218,34 @@ fe_clean <- fe %>%
            fleeing = fct_relevel(fleeing, "Unknown", 
                                  after = Inf)
     ) %>%
-    # see email chain with Burghardt re "Intended use of force (Developing)".  
-    # Veh/Purs is the unclean mix category that he is slowly working through
-    # Vehicle is the clean non-pursuit category (e.g., accident)
-    # Pursuit is the clean hot pursuit category
-    mutate(hotPursuit = `Intended use of force (Developing)`,
-           hotPursuit = case_when(
-               hotPursuit == "" ~ "Unknown",
-               hotPursuit == "Undetermined" ~ "Unknown",
-               hotPursuit == "Vehic/Purs" | hotPursuit == "Pursuit" ~ "Vehicle Pursuit",
-               TRUE ~ "Other"),
-           hotPursuit = fct_relevel(hotPursuit, "Unknown", 
-                                    after = Inf)
-    ) %>%
+
+    # `Intended use of force (Developing)`
     
-    # `Intended use of force (Developing)` is where Pursuits and Suicides are coded
+    # see email chain with Burghardt re "Intended use of force (Developing)".
+    # several variables are drawn from this field:
     
+    ## circumstances - cleaned up variable
+    ## homicide - excludes suicides
+    ## vpursuit -- for WA 2015+ only, codes all pursuit related incidents, 
+    ##             needs constant manual updating, so sourced from external 
+    ##             file at end
+    
+    # circumstances: cleaned up FE variable, factor releveling done in pursuit_coding.R
     mutate(circumstances = `Intended use of force (Developing)`,
            circumstances = case_when(
                circumstances == "" ~ "Unknown",
                circumstances == "Undetermined" ~ "Unknown",
-               circumstances == "Vehic/Purs" ~ "Mix of Vehicle hot pursuits and accidents",
-               circumstances == "Pursuit" ~ "Vehicle hot pursuits",
-               circumstances == "Vehicle" ~ "Vehicle accidents",
+               circumstances == "Vehic/Purs" ~ "Mix of Vehicle pursuits and accidents",
+               circumstances == "Pursuit" ~ "Vehicle active pursuit",
+               circumstances == "Vehicle" ~ "Vehicle accident",
                circumstances == "No" ~ "Unintended",
+               grepl("Nonlethal|Less-than", circumstances) ~ "Other force",
                TRUE ~ circumstances),
-           circumstances = fct_relevel(circumstances, "Unknown", 
-                                       after = Inf)
+
     ) %>%
-    # Here we do not classify "suicide" as a homicide.
-    mutate(homicide = circumstances,
-           homicide = case_when(
+    
+    # homicide:  Exclude suicides.
+    mutate(homicide = case_when(
                grepl("Suicide|suicide", circumstances) ~ 0,
                circumstances == "Unknown" ~ NA_real_,
                TRUE ~ 1)
@@ -266,7 +264,12 @@ fe_clean <- fe %>%
            longitude = as.numeric(Longitude)) %>%
     mutate(url_info = `Supporting document link`) %>%
     mutate(description = `Brief description`) %>%
-    mutate(state.num = num[match(st, states)]) %>%
+    mutate(state.num = num[match(st, states)])
+
+# Pursuit coding is complicated and manually updated, so sourced externally
+source(here::here("DataCleaningScripts", "pursuit_coding.R"))
+
+fe_clean <- fe_clean %>%
     select(
         feID, name, fname, lname,
         date, month, day, year,
@@ -274,7 +277,7 @@ fe_clean <- fe %>%
         latitude, longitude,
         raceOrig, raceImp, gender, age, ageChr, foreknowledge,
         cod, armed, weapon, fleeing,
-        circumstances, hotPursuit, homicide, agency, agency.type,
+        circumstances, vpursuit, homicide, agency, agency.type,
         description, url_info
     )
 
@@ -322,7 +325,7 @@ wapo_clean <- wapo %>%
     ) %>%
     mutate(wapo_armed = recode(wapo_armed,
                                "unknown weapon" = "Unknown"),
-           state = state_translate_fn(st),
+           state = state_fullname_fn(st),
            state.num = num[match(st, states)],
            date = ymd(date),
            month = month(date, label=T),
@@ -426,7 +429,11 @@ if(nrow(aaa) > 0){
 ## For these cases, assign WAPO info to FE fields, since the FE fields
 ## are used for some of the reports
 ## feID will be 99999 to id these cases
-## if WaPo info is delayed the temp fix is implemented in fixes_postcleaning
+
+## missing info set manually if needed (in fixes_wapo2FE.R)
+
+## if WaPo info is delayed the temp fix is implemented earlier 
+## in fixes_postcleaning
 
 if (dim(aaa)[1] > 0) {
     
@@ -448,21 +455,8 @@ if (dim(aaa)[1] > 0) {
                raceImp = race,
                circumstances = "Deadly force",
                homicide = 1)
-
-    ## WaPo doesn't have all the info needed, 
-    ## so we fill in the rest manually if we have it
     
-    # # Template for fill-in
-    # target <- which(mergefull$wapoID==7650 & mergefull$feID > 90000)
-    # if(length(target > 0)) {
-    #     print("Fixing Sahota")
-    #     mergefull$agency[target] <- "Clark County Sheriff's Office"
-    #     mergefull$county[target] <- "Clark"
-    #     mergefull$url_info[target] <- "https://www.oregonlive.com/clark-county/2022/02/vancouver-police-officer-mistakenly-shot-by-clark-county-deputy-died-of-multiple-gunshot-wounds.html"
-    #     mergefull$url_click[target] <- make_url_fn(mergefull$url_info[target])
-    # } else {
-    #     print("Sahota fix not needed anymore")
-    # }
+    source(here("DataCleaningScripts", "fixes_wapo2FE.R"))
 
     # And recheck for unmatched wapoIDs
     aaa <- mergefull %>% 
@@ -518,19 +512,35 @@ mergefull %>%
 
 # Final merged dataset for 2015-current data ----
 
+## For most variables, we use the FE version.  There are many errors in
+## WaPo, and they don't fix them when reported.
+
+## We create an approximate legislative year variable, to use for
+## before and after assessments.  Since some bills take effect immediately
+## (typically in late May) and others 90 days after end of session 
+## (typically late July), we use a leg year of Jun 1 - May 30.
+
+curr.yr <- lubridate::year(Sys.Date())
+
 finalmerge <- mergefull %>%
+    mutate(leg.year = 
+               cut(date.x, 
+                   breaks = as.Date(paste(2000:curr.yr, "-06-01", sep="")),
+                   labels = c(paste(month.abb[6], 2000:(curr.yr-1), "-", 
+                                    month.abb[5], 2001:curr.yr,
+                                    sep = "")))) %>%
     select(feID, wapoID,
            name = name.x, fname = fname.x, lname = lname.x,
            date = date.x, day = day.x, month = month.x, year = year.x,
+           leg.year,
            city = city.x, county, zip,
            latitude = latitude.x, longitude = longitude.x,
            raceOrig, raceImp, race.wapo = race,
            gender = gender.x,
            age.fe = age.x, age.wapo = age.y,
            foreknowledge.fe = foreknowledge.x, foreknowledge.wapo = foreknowledge.y,
-           homicide, circumstances,
-           cod.fe = cod.x, cod.wapo = wapo_cod,
-           hotPursuit,
+           circumstances, homicide, vpursuit,
+           cod=cod.x, cod.fe = cod.x, cod.wapo = wapo_cod,
            homicide, agency, agency.type,
            armed.wapo = wapo_armed,
            threat.wapo = wapo_threat,
@@ -571,3 +581,46 @@ save(list = c("fe_data", "wapo_data", "merged_data", "selection",
      file = here("data-outputs", "WA940.rda"))
 
 
+# Write out pursuit data for coding
+
+homicides <- finalmerge %>%
+    filter(homicide == 1) %>%
+    arrange(date) %>%
+    
+    # Tag vehicular homicides, and other fatalities involving pursuits
+    # Here we're using any info that suggests cars were involved, to make
+    # sure we can review all cases that might be classified into one of the
+    # pursuit or vehicle categories
+    
+    mutate(pursuit.tag = case_when(
+        grepl("active", vpursuit) ~ 1,
+        !is.na(vpursuit) ~ 2,
+        grepl('vehicle|car|crash|speed|chase|pursuit', description) |
+            grepl('car|Car', flee.wapo) |
+            grepl("pursuit", circumstances) ~ 3,
+        cod == "Vehicle" ~ 4) # this doesn't seem to pick up any more
+        
+        
+        # OLD VERSION  
+        # mutate(pursuit.tag = case_when(
+        #   grepl("pursuit", circumstances) & cod.fe == "Vehicle" ~ 1,
+        #   #grepl("accident", circumstances) ~ 3, # allegedly not pursuits
+        #   grepl('vehicle|car|crash|speed|chase|pursuit', description) |
+        #     grepl('car|Car', flee.wapo) ~ 2,
+        #   grepl("pursuit", circumstances) ~ 2)
+    )
+
+# Create pursuit file for review/coding ----
+# New cases are added to the pursuit_coding.R rile sourced by ScrapeMerge
+
+# THIS FILE MUST BE USED FOR MANUAL UPDATES TO WA2015-pursuits.xlsx
+# New pursuit cases added (sort by date to ID new cases)
+## if circumstances/vpursuit needs to be recoded, do this first in
+##   pursuit_coding and rerun ScrapeMerge
+## then code killed/injured on active-pursuit-fatalities tab for pursuit.tag=1
+
+
+aaa <- homicides %>% 
+    filter(!is.na(pursuit.tag)) %>% 
+    arrange(pursuit.tag, date)
+write.csv(aaa, here::here("data-outputs", "raw-pursuits.csv"))
