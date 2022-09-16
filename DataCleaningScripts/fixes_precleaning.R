@@ -183,6 +183,8 @@ fe$Name[fe$`Unique ID`==30775] <- "Steven Dean Primm"
 
 
 ## not reported
+wapo$name[wapo$id==8346] <- "Timothy Green"
+wapo$name[wapo$id==8310] <- "Dominic A. Shears"
 wapo$name[wapo$id==7765] <- "Murdock J. Phillips"
 wapo$name[wapo$id==6689] <- "James Wright"
 wapo$name[wapo$id==6790] <- "Ma'Khia Bryant"
@@ -202,6 +204,12 @@ fe$Name[fe$`Unique ID`==30875] <- "Omar Lazano Hernandez"
 
 
 # Date corrections
+
+## not reported
+
+# Wrong date
+wapo$date[wapo$wapoID == 8416] <- lubridate::ymd("2022-09-09") # 
+
 ## reported 
 
 wapo$date[wapo$id==6478] <- lubridate::ymd("2021-01-03") # James Reising

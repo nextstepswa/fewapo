@@ -10,6 +10,22 @@
 # https://www.kiro7.com/news/local/police-investigating-officer-involved-shooting-in-federal-way/930686522/
 
 
+# Peter Collins 8/28/2022
+
+if (wapo_clean$name[wapo_clean$wapoID == 8367] == "Unknown"){
+  wapo_clean$name[wapo_clean$wapoID == 8367] <- "Peter T Collins"
+  wapo_clean$age[wapo_clean$wapoID == 8367] <- 40
+  wapo_clean$gender[wapo_clean$wapoID == 8367] <- "Male"
+  print("Peter Collins fix for WaPo")
+} else {
+  print("WaPo Collins fix not needed anymore")
+}
+
+# Ayala 8/6/2022
+
+wapo_clean$city[wapo_clean$wapoID==8313] <- "Zillah"
+
+
 # Mauricio Martinez Yanez 3/16/2022
 
 if (wapo_clean$name[wapo_clean$wapoID == 7830] == "Unknown"){
@@ -75,7 +91,7 @@ fe_clean$day[fe_clean$ID==9917] <- fe_clean$day[fe_clean$ID==9914]
 fe_clean <- fe_clean %>% filter(feID != 9914)
 
 # correct a taser death, see url
-fe_clean$cod[fe_clean$feID==25484] <- "Tasered"
+fe_clean$cod[fe_clean$feID==25484] <- "Taser"
 fe_clean$url_info[fe_clean$feID==25484] <- "https://apnews.com/article/5c4465da24a4493085b0bd622a61e253"
 
 # Nancy King

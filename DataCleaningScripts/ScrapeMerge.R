@@ -179,15 +179,18 @@ fe_clean <- fe %>%
                cod %in% c("", "Undetermined", "Unknown") ~ "Unknown",
                grepl("Less", cod) ~ "Unknown", # one case, fe 30304
                grepl("^.*(phyx).*", cod) ~ "Asphyxiated/Restrained",
+               grepl("Beaten", cod) ~ "Beaten",
+               grepl("Chemical", cod) ~ "Chemical gas/spray",
+               cod == "Tasered" ~ "Taser",
                feID == 22977 ~ "Other", #pursued in car/fled by foot/jumped on tracks
                TRUE ~ cod),
            cod = factor(
                cod,
-               levels = c("Gunshot", "Vehicle", "Tasered", "Medical emergency",
-                          "Asphyxiated/Restrained", "Drowned", 
-                          "Beaten/Bludgeoned with instrument", "Drug overdose", 
+               levels = c("Gunshot", "Vehicle", "Taser",
+                          "Asphyxiated/Restrained", "Medical emergency", "Drowned", 
+                          "Beaten", "Drug overdose", 
                           "Fell from a height", "Burned/Smoke inhalation", 
-                          "Chemical agent/Pepper spray", "Stabbed", "Other", "Unknown")
+                          "Chemical gas/spray", "Stabbed", "Other", "Unknown")
            )
     ) %>%
     mutate(armed = `Armed/Unarmed`,
