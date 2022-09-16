@@ -1,5 +1,5 @@
 ---
-title: "Homicides by Police in WA since 2015"
+title: "Homicides by Police in WA since I-940"
 subtitle: "Next Steps Washington"
 author: "Everyone Comes Home Alive"
 date: "Last report update: `r Sys.Date()`"
@@ -72,7 +72,7 @@ After winning over 60% of the statewide vote, Initiative 940 was passed into WA 
 
     `r ifelse(last.name == "(Name not released)", "This", last.name)` is the `r paste0(tot.this.yr, num.suffix)` person killed by police in `r tot.yr.is`.  The cause of death is reported as `r last.cod`.  `r last.url`
 
-During the last decade, one out of every 5 persons killed in Washington state has been killed by a law enforcement officer.  (Roughly 250 homicide deaths are recorded each year in WA State.  You can find the state's death data
+In the decade before the police reform legislation in 2021, one out of every 5 persons killed in Washington state has been killed by a law enforcement officer.  (Roughly 250 homicide deaths are recorded each year in WA State.  You can find the state's death data
 <a href="https://www.doh.wa.gov/DataandStatisticalReports/HealthDataVisualization/MortalityDashboards/ACHInjuryDeathsDashboards" target="_top">here</a>).
 
 ____
