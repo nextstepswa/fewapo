@@ -238,7 +238,7 @@ fe_clean <- fe %>%
            circumstances = case_when(
                circumstances == "" ~ "Unknown",
                circumstances == "Undetermined" ~ "Unknown",
-               circumstances == "Vehic/Purs" ~ "Mix of Vehicle pursuits and accidents",
+               circumstances == "Vehic/Purs" ~ "Mix of vehicle pursuit and other",
                circumstances == "Pursuit" ~ "Vehicle active pursuit",
                circumstances == "Vehicle" ~ "Vehicle accident",
                circumstances == "No" ~ "Unintended",
@@ -272,6 +272,10 @@ fe_clean <- fe %>%
 # Pursuit coding is complicated and manually updated, so sourced externally
 source(here::here("DataCleaningScripts", "pursuit_coding.R"))
 
+# Select variables
+## note that officer information is currently only available for WA for 2022
+## until MPV issues are sorted out
+
 fe_clean <- fe_clean %>%
     select(
         feID, name, fname, lname,
@@ -281,13 +285,17 @@ fe_clean <- fe_clean %>%
         raceOrig, raceImp, gender, age, ageChr, foreknowledge,
         cod, armed, weapon, fleeing,
         circumstances, vpursuit, homicide, agency, agency.type,
-        description, url_info
+        description, url_info, officer_names, officer_url
     )
 
 ### create clickable url for Rpubs reports
 fe_clean$url_click <- sapply(fe_clean$url_info, make_url_fn)
 
 ## WAPO cleaning -------------------------------------------------
+
+# first remove duplicate case, Derrick Ameer Cook 8416 (info will remain in 8617)
+
+wapo <- wapo[wapo$id != 8416,]
 
 wapo_clean <- wapo %>%
     rename(wapoID = id,
@@ -459,7 +467,10 @@ if (dim(aaa)[1] > 0) {
                circumstances = "Deadly force",
                homicide = 1)
     
-    source(here("DataCleaningScripts", "fixes_wapo2FE.R"))
+    # 1 weird case 4568 in WaPo not FE, needs county
+    #source(here("DataCleaningScripts", "fixes_wapo2FE.R"))
+    mergefull$county[mergefull$wapoID==4568] <- "King"
+
 
     # And recheck for unmatched wapoIDs
     aaa <- mergefull %>% 
@@ -521,16 +532,19 @@ mergefull %>%
 ## We create an approximate legislative year variable, to use for
 ## before and after assessments.  Since some bills take effect immediately
 ## (typically in late May) and others 90 days after end of session 
-## (typically late July), we use a leg year of Jun 1 - May 30.
+## (typically late July), and that also varies by short/long leg year
+## we use a standardized approx leg year of Jun 1 - May 30.
 
 curr.yr <- lubridate::year(Sys.Date())
+curr.mo <- lubridate::month(Sys.Date())
+cut.yr <- ifelse(curr.mo > 6, curr.yr+1, curr.yr)
 
 finalmerge <- mergefull %>%
     mutate(leg.year = 
                cut(date.x, 
-                   breaks = as.Date(paste(2000:curr.yr, "-06-01", sep="")),
-                   labels = c(paste(month.abb[6], 2000:(curr.yr-1), "-", 
-                                    month.abb[5], 2001:curr.yr,
+                   breaks = as.Date(paste(2000:(cut.yr), "-06-01", sep="")),
+                   labels = c(paste(month.abb[6], 2000:(cut.yr-1), "-", 
+                                    month.abb[5], 2001:cut.yr,
                                     sep = "")))) %>%
     select(feID, wapoID,
            name = name.x, fname = fname.x, lname = lname.x,
@@ -551,7 +565,9 @@ finalmerge <- mergefull %>%
            bodycam.wapo = wapo_bcam,
            description,
            url_info,
-           url_click
+           url_click,
+           officer_names,
+           officer_url
            )
 
 
@@ -600,7 +616,7 @@ homicides <- finalmerge %>%
         !is.na(vpursuit) ~ 2,
         grepl('vehicle|car|crash|speed|chase|pursuit', description) |
             grepl('car|Car', flee.wapo) |
-            grepl("pursuit", circumstances) ~ 3,
+            grepl("pursuit", circumstances) ~ 3, #many are people killed in their cars w/o pursuit
         cod == "Vehicle" ~ 4) # this doesn't seem to pick up any more
         
         

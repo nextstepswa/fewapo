@@ -72,8 +72,10 @@ After winning over 60% of the statewide vote, Initiative 940 was passed into WA 
 
     `r ifelse(last.name == "(Name not released)", "This", last.name)` is the `r paste0(tot.this.yr, num.suffix)` person killed by police in `r tot.yr.is`.  The cause of death is reported as `r last.cod`.  `r last.url`
 
-In the decade before the police reform legislation in 2021, one out of every 5 persons killed in Washington state has been killed by a law enforcement officer.  (Roughly 250 homicide deaths are recorded each year in WA State.  You can find the state's death data
-<a href="https://www.doh.wa.gov/DataandStatisticalReports/HealthDataVisualization/MortalityDashboards/ACHInjuryDeathsDashboards" target="_top">here</a>).
+Before Washington state passed a wide range of police reform legislation in 2021, one out of every 5 persons killed in Washington state was killed by a law enforcement officer.  (Roughly 250 homicide deaths are recorded each year in WA State.  You can find the state's death data
+<a href="https://www.doh.wa.gov/DataandStatisticalReports/HealthDataVisualization/MortalityDashboards/ACHInjuryDeathsDashboards" target="_top">here</a>).  
+
+The year the reforms passed, the number of people killed by police in Washington dropped by 60%, the largest decline seen in any state.  More information on the temporal trends can be found in [the section on "Trends over time"](#trend) (the TOC on the left displays the sections of this report).
 
 ____
 
@@ -440,7 +442,7 @@ tab %>%
 
 <a id="mydate"></a>
 
-# Trend over time
+# Trend over time {#trend}
 
 There are two sets of plots here.  The first focuses on the monthly totals, and how they have changed over time.  The second focuses on the cumulative totals as the year progresses, and how this has changed over time.
 

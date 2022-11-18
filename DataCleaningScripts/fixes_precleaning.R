@@ -96,6 +96,7 @@ wapo$gender[wapo$id==7354] <- "Male"
 wapo$gender[wapo$id==7415] <- "Male"
 
 ## not reported
+wapo$gender[wapo$id==8510] <- "Male" # Jeffrey Smith
 wapo$gender[wapo$id==6887] <- "Transgender"
 fe$Gender[fe$`Unique ID`==27067] <- "Male"
 
@@ -183,6 +184,7 @@ fe$Name[fe$`Unique ID`==30775] <- "Steven Dean Primm"
 
 
 ## not reported
+wapo$name[wapo$id==8447] <- "Terris Vincent Hetland"
 wapo$name[wapo$id==8346] <- "Timothy Green"
 wapo$name[wapo$id==8310] <- "Dominic A. Shears"
 wapo$name[wapo$id==7765] <- "Murdock J. Phillips"
@@ -207,8 +209,6 @@ fe$Name[fe$`Unique ID`==30875] <- "Omar Lazano Hernandez"
 
 ## not reported
 
-# Wrong date
-wapo$date[wapo$wapoID == 8416] <- lubridate::ymd("2022-09-09") # 
 
 ## reported 
 
@@ -242,6 +242,8 @@ fe$`Location of death (county)`[fe$`Unique ID`==30388] <- "Muscogee"
 
 
 # City fixes
+wapo$city[wapo$id==8594] <- "Sunnydale" # ?
+wapo$city[wapo$id==8510] <- "Loon Lake" # Jeffrey Smith
 wapo$city[wapo$id==1084] <- "Olympia" # Nephi  Leiataua
 wapo$city[wapo$id==1145] <- "Tumwater" # Joel Nelson
 wapo$city[wapo$id==1623] <- "Ridgefield" # Kenneth Pointer
@@ -290,8 +292,9 @@ wapo$city[wapo$id==6305] <- "Woodinville" # Ronny Dunning
 # Latitude (removes trailing comma)
 fe$Latitude[fe$`Unique ID`==28891] <- 42.167834
 
-# broken url fixes
 fe$`Supporting document link`[fe$`Unique ID`==18333] <- "https://www.seattleweekly.com/news/seattle-man-fatally-shot-by-kent-police-identified/" # William Stokes
+fe$`Supporting document link`[fe$`Unique ID`==25899] <- "https://katu.com/news/local/sheriffs-office-identifies-man-brian-butts-suspected-of-shooting-killing-cowlitz-county-deputy
+" # Brian Butts
 
 
 
@@ -306,6 +309,7 @@ fe$Name[fe$`Unique ID`==23531] <- "Joshua Spottedhorse"
 fe$Name[fe$`Unique ID`==18509] <- "Bruce R. Johnson"
 fe$Name[fe$`Unique ID`==16382] <- "Samuel Toshiro Smith"
 fe$Name[fe$`Unique ID`==28826] <- "Andrea Churna"
+
 
 wapo$name[wapo$id==1778] <- "Jeffrey Martelli" # not reported
 

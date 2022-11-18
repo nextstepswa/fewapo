@@ -104,9 +104,14 @@ fe_clean$url_info[fe_clean$feID==29260] <-
 fe_clean$url_info[fe_clean$feID==28883] <- 
   "https://www.kptv.com/news/investigators-id-suspect-shot-killed-by-officer-during-foot-chase-in-longview/article_8fef5874-076f-11eb-8ba3-833f16033386.html"
 
-# correct state, ID not WA
+# correct city and or state
 wapo_clean$st[wapo_clean$wapoID==6469] <- "ID"
 wapo_clean$state[wapo_clean$wapoID==6469] <- "Idaho"
+
+wapo$city[wapo$id==4655] <- "Kalama"
+wapo$st[wapo$id==4655] <- "WA"
+wapo$state[wapo$id==4655] <- "Washington"
+wapo$state.num[wapo$id==4655] <- 47
 
 # Lat Long input errors ----------------
 
