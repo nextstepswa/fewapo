@@ -202,12 +202,20 @@ fe$Name[fe$`Unique ID`==30865] <- "Alexander Domina"
 fe$Name[fe$`Unique ID`==30886] <- "Jose Angel Francisco Baca"
 fe$Name[fe$`Unique ID`==31002] <- "Irlin Marcloni Cabal Paz"
 fe$Name[fe$`Unique ID`==30875] <- "Omar Lazano Hernandez"
+fe$Name[fe$`Unique ID`==31069] <- "Nurgazy Mamyrov"
+
 
 
 
 # Date corrections
 
 ## not reported
+fe$`Date of injury resulting in death (month/day/year)`[fe$`Unique ID`==29416] <- "12/31/2020"
+fe$`Date of injury resulting in death (month/day/year)`[fe$`Unique ID`==29677] <- "2/15/2021"
+fe$`Date of injury resulting in death (month/day/year)`[fe$`Unique ID`==30299] <- "5/23/2021"
+
+wapo$date[wapo$id==6589] <- lubridate::ymd("2020-08-14") # Aleksandr Rusanovskiy
+
 
 
 ## reported 
@@ -226,6 +234,9 @@ wapo$date[wapo$id==1964] <- lubridate::ymd("2016-10-12") # Patrick D. Reddeck
 wapo$date[wapo$id==1156] <- lubridate::ymd("2016-01-09") # David Jay Kent
 
 fe$`Date of injury resulting in death (month/day/year)`[fe$`Unique ID`==30199] <- "05/08/2021" # Everton Garfield Brown
+fe$`Date of injury resulting in death (month/day/year)`[fe$`Unique ID`==12757] <- "05/07/2013" # Danny Valdes
+fe$`Date of injury resulting in death (month/day/year)`[fe$`Unique ID`==14290] <- "04/03/2014" # Dustin Glover
+
 
 
 # COD fixes
@@ -285,6 +296,8 @@ wapo$city[wapo$id==6175] <- "Spokane Valley" # Joshua Brant
 wapo$city[wapo$id==6199] <- "Spokane" # Erik Mahoney
 
 fe$`Location of death (city)`[fe$`Unique ID`==29038] <- "Hazel Dell" # Kevin Peterson
+fe$`Location of death (city)`[fe$`Unique ID`==31114] <- "Geary" # Unknown
+
 
 wapo$city[wapo$id==6305] <- "Woodinville" # Ronny Dunning
 
@@ -292,10 +305,12 @@ wapo$city[wapo$id==6305] <- "Woodinville" # Ronny Dunning
 # Latitude (removes trailing comma)
 fe$Latitude[fe$`Unique ID`==28891] <- 42.167834
 
+
+# Better url
 fe$`Supporting document link`[fe$`Unique ID`==18333] <- "https://www.seattleweekly.com/news/seattle-man-fatally-shot-by-kent-police-identified/" # William Stokes
 fe$`Supporting document link`[fe$`Unique ID`==25899] <- "https://katu.com/news/local/sheriffs-office-identifies-man-brian-butts-suspected-of-shooting-killing-cowlitz-county-deputy
 " # Brian Butts
-
+fe$`Supporting document link`[fe$`Unique ID`==31069] <- "https://cdllife.com/2021/disturbing-new-details-released-about-truck-driver-fatally-shot-by-pennsylvania-troopers-at-i-80-rest-stop/" #Nurgazy Mamyrov
 
 
 
