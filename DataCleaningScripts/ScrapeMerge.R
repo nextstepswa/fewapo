@@ -296,7 +296,8 @@ fe_clean$url_click <- sapply(fe_clean$url_info, make_url_fn)
 
 # 8416 duplicate case? may be Derrick Ameer Cook (info in 8617)
 # reported on the WaPo github repo issue #53
-wapo <- wapo[wapo$id != 8416,]
+# appears to be deleted now
+# wapo <- wapo[wapo$id != 8416,]
 
 wapo_clean <- wapo %>%
   rename(wapoID = id,
@@ -323,15 +324,19 @@ wapo_clean <- wapo %>%
          gender = ifelse(gender=="", "Unknown", gender),
          gender = fct_relevel(gender, "Unknown", after = Inf)
   ) %>%
-  mutate(race = recode(race,
+  
+  # note race is multiply coded now in V2
+  mutate(race = ifelse(race=="", "U", race),
+         race = recode(race,
                        "A" = "API",
                        "B" = "BAA",
                        "H" = "HL",
                        "N" = "NA",
                        "O" = "Other",
                        "W" = "WEA",
-                       .default = "Unknown"),
-         race = fct_relevel(race, "Unknown", 
+                       "U" = "Unknown",
+                       .default = "Mixed"),
+         race = fct_relevel(race, c("Mixed", "Unknown"), 
                             after = Inf)
   ) %>%
   mutate(wapo_armed = armed_with,
