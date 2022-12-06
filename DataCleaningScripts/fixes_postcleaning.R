@@ -36,14 +36,6 @@ if (wapo_clean$name[wapo_clean$wapoID == 7830] == "Unknown"){
   print("WaPo Yanez fix not needed anymore")
 }
 
-# William Michael Stephens 3/5/2022
-if (wapo_clean$name[wapo_clean$wapoID == 7783] == "Unknown"){
-  wapo_clean$name[wapo_clean$wapoID == 7783] <- "William Michael Stephens"
-  wapo_clean$age[wapo_clean$wapoID == 7783] <- 39
-  print("Fixed William Michael Stephens for WaPo")
-} else {
-  print("WaPo Stephens fix not needed anymore")
-}
 
 # Joseph Sanchez 2/11/2022
 
