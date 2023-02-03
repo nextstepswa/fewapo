@@ -13,6 +13,7 @@ output:
 params:
   from: ["2015"]
   startyr: [2015]
+  startlegyr: ["2015-05-31"]
   rdafile: ["WA2015.rda"]
   caption: ["WA since 2015"]
   smooth_span: [0.5]
@@ -58,7 +59,18 @@ with(homicides, write.csv(cbind(feID,latitude,longitude),
 
 # Introduction {.tabset}
 
-After winning over 60% of the statewide vote, Initiative 940 was passed into WA state law on December 6, 2018.  Then, during the 2021 legislative session (Jan - April) over a dozen bills were passed on a range of issues relating to police reform.  This report tracks the number of persons killed by police in WA state from `r params$from` to the most recent complete month, to show the trends before and after these changes.
+Washington state has enacted a series of statewide police accountability reforms since 2018, beginning with the citizen initiative I-940.
+
+* Initiative 940 passed with over 60% of the statewide vote in the 2018 November general election, becoming WA state law on December 6, 2018.  Certain provisions took effect later: amendments by 
+<a href="https://lawfilesext.leg.wa.gov/biennium/2019-20/Pdf/Bills/Session%20Laws/House/1064-S.SL.pdf?q=20221121125434" target="_top">HB 1064</a>
+took effect February 4, 2019, and the first
+<a href="https://apps.leg.wa.gov/wac/default.aspx?cite=139-12&full=true&pdf=true" target="_top">Washington Administrative Code (WAC)</a>
+requirements took effect January 6, 2020.  The WAC is revised annually.
+
+* During the 2021 legislative session (Jan - April) over a dozen additional bills were passed on a range of issues relating to police reform.  
+
+
+This report tracks the number of persons killed by police in WA state since `r params$from`.  The TOC on the left can be used to navigate through the sections.  There are aggregate breakdowns by demographics, geography, cause of death, agency and time to provide some insight into the patterns and trends, and a list of all persons killed to acknowledge the lives lost and provide a starting point for those seeking more information on specific cases.  Information on the data sources and limitations can be found in the [Data sources](#data-sources) section.  The data and scripts used for this report are available on GitHub, access details can be found in the [Public Access](#public-access) section.
 
 
 ## MOST RECENT DATA UPDATE (`r last_data_update`):
@@ -72,24 +84,16 @@ After winning over 60% of the statewide vote, Initiative 940 was passed into WA 
 
     `r ifelse(last.name == "(Name not released)", "This", last.name)` is the `r paste0(tot.this.yr, num.suffix)` person killed by police in `r tot.yr.is`.  The cause of death is reported as `r last.cod`.  `r last.url`
 
-Before Washington state passed a wide range of police reform legislation in 2021, one out of every 5 persons killed in Washington state was killed by a law enforcement officer.  (Roughly 250 homicide deaths are recorded each year in WA State.  You can find the state's death data
-<a href="https://www.doh.wa.gov/DataandStatisticalReports/HealthDataVisualization/MortalityDashboards/ACHInjuryDeathsDashboards" target="_top">here</a>).  
+Before the 2021 legislative reforms, one out of every 5 persons killed in Washington state was killed by an encounter with law enforcement.  (Roughly 250 homicide deaths were recorded each year in WA State.  You can view and download the state's death data
+<a href="https://doh.wa.gov/data-statistical-reports/washington-tracking-network-wtn/death/ach-injury-deaths-dashboard" target="_top">here</a>).  
 
-The year the reforms passed, the number of people killed by police in Washington dropped by 60%, the largest decline seen in any state.  More information on the temporal trends can be found in [the section on "Trends over time"](#trend) (the TOC on the left displays the sections of this report).
+In 2021, the year these reforms passed, the number of people killed by police in Washington dropped by 60%, the largest decline seen in any state.  More information on the temporal trends can be found in [the section on "Trends over time"](#trend).
 
 ____
 
 > *To find out more about what we do or get involved*, please email us at [Next Steps Washington](mailto:nextstepswa@gmail.com)
 
 ___
-
-
-```{r child='./Common/dataSourcesIntro.Rmd'}
-```
-
-
-```{r child='./Common/homicideDefinition.Rmd'}
-```
 
 
 # Interactive Map
@@ -235,12 +239,12 @@ homicides %>%
 ### Table
 ```{r codtab}
 tab <- homicides %>%
-  group_by(cod.fe) %>%
+  group_by(cod) %>%
   summarize(Number = n(),
             Percent = round(100*Number/nrow(homicides), 1)
   ) %>%
   arrange(desc(Number)) %>%
-  bind_rows(data.frame(cod.fe ="Total", 
+  bind_rows(data.frame(cod ="Total", 
                        Number = sum(.$Number), 
                        Percent = sum(.$Percent))) 
 
@@ -717,7 +721,7 @@ ggplotly(p, tooltip = "text")  %>%
 
 ## Annual totals {.tabset}
 
-### By month and year
+### Cumulative by month
 
 * The lines show the cumulative total fatalities by month as the year progresses, for each year. 
 
@@ -776,8 +780,81 @@ ggplot(data= df %>% filter(year != max(df$year)),
   
 ```
 
+### By year {.tabset .tabset-pills}
 
-### By cause of death 
+#### Calendar year
+
+
+```{r tot.calyr, message=F, warning=F}
+
+graphdf.calyr <- homicides %>%
+  filter(year >= params$startyr) %>%
+  group_by(Year = year) %>%
+  summarize(Num = n())
+
+p <- ggplot(graphdf.calyr,
+       aes(x = Year, y = Num, 
+           fill = Num,
+           text = Num)) +
+  
+  geom_bar(stat = "identity") + 
+
+  scale_fill_gradient(low = "seashell", high = "firebrick",
+                      guide = "none") +
+  
+  scale_x_continuous(breaks = unique(graphdf.calyr$Year)) +
+  
+  annotate("text", 
+           x = graphdf.calyr$Year[nrow(graphdf.calyr)], 
+           y = graphdf.calyr$Num[nrow(graphdf.calyr)] + 1, 
+           size = 3, label = "YTD") +
+  
+  labs(title = "People killed by police in WA by Year",
+       x = "Calendar year",
+       y = "Number killed")
+
+ggplotly(p, tooltip = "text")
+
+```
+#### Legislative year
+
+We start with the first complete legislative year.
+
+```{r tot.legyr, message=F, warning=F}
+
+graphdf.legyr <- homicides %>%
+  filter(date > as.Date(params$startlegyr)) %>%
+  group_by(leg.year) %>%
+  summarize(Num = n())
+
+p <- ggplot(graphdf.legyr,
+       aes(x = leg.year, y = Num, 
+           fill = Num,
+           text = Num)) +
+  
+  geom_bar(stat = "identity") + 
+
+  scale_fill_gradient(low = "seashell", high = "firebrick",
+                      guide = "none") +
+  
+  scale_x_discrete(labels = function(x) 
+    stringr::str_wrap(graphdf.legyr$leg.year, width = 8)) +
+  
+  annotate("text", 
+           x = graphdf.legyr$leg.year[nrow(graphdf.legyr)], 
+           y = graphdf.legyr$Num[nrow(graphdf.legyr)] + 1, 
+           size = 3, label = "YTD") +
+  
+  labs(title = "People killed by police in WA by Legislative Year",
+       x = "Legislative year",
+       y = "Number killed")
+
+ggplotly(p, tooltip = "text")
+
+```
+
+
+### By cause of death {.tabset .tabset-pills}
 
 Here we plot the cumulative totals each year, broken down to show the two leading causes of death.  
 
@@ -787,10 +864,12 @@ Here we plot the cumulative totals each year, broken down to show the two leadin
 
 * This is an interactive plot:  You can hover over bar segments to get the exact values for that cause of death in that year.
 
+#### Calendar year
 
-```{r annual, warning=F}
 
-p <-  homicides %>%
+```{r cod.calyr, warning=F}
+
+graphdf.calyr <-  homicides %>%
   filter(year >= params$startyr) %>%
   mutate(
     cod_3 = factor(
@@ -802,10 +881,10 @@ p <-  homicides %>%
     year = as.character(year)) %>%
   group_by(year, cod_3) %>%
   summarize(n = n()) %>%
-  mutate(percent = round(100*n / sum(n), 1)) %>%
+  mutate(percent = round(100*n / sum(n), 1))
   
-  ggplot(aes(x = year,
-             y = n,
+p <- ggplot(graphdf.calyr,
+            aes(x = year, y = n,
              fill = cod_3, 
              text = paste0("N=", n, 
                            ", (", round(percent),"%)"))
@@ -814,12 +893,14 @@ p <-  homicides %>%
   geom_bar(stat="identity", alpha=.5,
            position = position_stack(reverse=T)) +
   
-  annotate("text", x = "2022", y = tot.this.yr+1, 
+  annotate("text", 
+           x = graphdf.calyr$year[nrow(graphdf.calyr)], 
+           y = sum(graphdf.calyr$n[(nrow(graphdf.calyr)-2):nrow(graphdf.calyr)]) + 1, 
            size = 3, label = "YTD") +
   
   scale_fill_manual(values = c("cadetblue","darkorange3", "goldenrod")) +
   
-  labs(title = paste0("Fatalities by Year and Cause of Death"),
+  labs(title = paste0("Fatalities by Cause of Death and Year"),
        caption = paste("WA since", params$startyr),
        x = "Year",
        y = "Number",
@@ -829,6 +910,55 @@ ggplotly(p, tooltip = "text")
 
 ```
 
+#### Legislative year
+
+We start with the first complete legislative year.
+
+```{r cod.legyr, warning=F}
+
+graphdf.legyr <-  homicides %>%
+  filter(date > as.Date(params$startlegyr)) %>%
+  mutate(
+    cod_3 = factor(
+      case_when(
+        cod == "Gunshot" ~ "shot", 
+        grepl("active", vpursuit) ~ "vehicle pursuit",
+        TRUE ~ "other"),
+      levels = c("shot", "vehicle pursuit", "other")),
+    year = as.character(year)) %>%
+  group_by(leg.year, cod_3) %>%
+  summarize(n = n()) %>%
+  mutate(percent = round(100*n / sum(n), 1))
+  
+p <- ggplot(graphdf.legyr,
+            aes(x = leg.year, y = n,
+                fill = cod_3, 
+                text = paste0("N=", n, 
+                              ", (", round(percent),"%)"))
+            ) +
+  
+  geom_bar(stat="identity", alpha=.5,
+           position = position_stack(reverse=T)) +
+  
+  annotate("text", 
+           x = graphdf.legyr$leg.year[nrow(graphdf.legyr)], 
+           y = sum(graphdf.legyr$n[(nrow(graphdf.legyr)-2):nrow(graphdf.legyr)]) + 1, 
+           size = 3, label = "YTD") +
+  
+  scale_fill_manual(values = c("cadetblue","darkorange3", "goldenrod")) +
+  
+  scale_x_discrete(labels = function(x) 
+    stringr::str_wrap(unique(graphdf.legyr$leg.year), width = 8)) +
+  
+  labs(title = paste0("Fatalities by Cause of Death and Legislative Year"),
+       caption = paste("WA since", params$startyr),
+       x = "Legislative Year",
+       y = "Number",
+       fill = "Cause of\nDeath")
+
+ggplotly(p, tooltip = "text")
+
+```
 
 ## WA vs. other states
 
@@ -1199,11 +1329,16 @@ homicides %>%
 
 ____
 
-# Datasets: discussion
+# Data sources
+
+```{r child='./Common/dataSourcesIntro.Rmd'}
+```
 
 ```{r datasets, child='./Common/datasetDiscussion.Rmd'}
 ```
 
+```{r child='./Common/homicideDefinition.Rmd'}
+```
 
 # Public Access
 

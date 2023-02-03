@@ -94,6 +94,7 @@ wapo$gender[wapo$id==7299] <- "Male"
 wapo$gender[wapo$id==7249] <- "Male"
 wapo$gender[wapo$id==7354] <- "Male"
 wapo$gender[wapo$id==7415] <- "Male"
+wapo$gender[wapo$id==8649] <- "Male"
 
 ## not reported
 wapo$gender[wapo$id==8510] <- "Male" # Jeffrey Smith
@@ -253,6 +254,7 @@ fe$`Location of death (county)`[fe$`Unique ID`==30388] <- "Muscogee"
 
 
 # City fixes
+wapo$city[wapo$id==8766] <- "Olympia" # Neil Costin
 wapo$city[wapo$id==8594] <- "Sunnydale" # ?
 wapo$city[wapo$id==8510] <- "Loon Lake" # Jeffrey Smith
 wapo$city[wapo$id==1084] <- "Olympia" # Nephi  Leiataua
@@ -312,6 +314,15 @@ fe$`Supporting document link`[fe$`Unique ID`==25899] <- "https://katu.com/news/l
 " # Brian Butts
 fe$`Supporting document link`[fe$`Unique ID`==31069] <- "https://cdllife.com/2021/disturbing-new-details-released-about-truck-driver-fatally-shot-by-pennsylvania-troopers-at-i-80-rest-stop/" #Nurgazy Mamyrov
 
+fe$`Supporting document link`[fe$`Unique ID`==28833] <- "https://kimatv.com/news/local/wrong-way-crash-in-i-82-leaves-2-dead-1-injured-in-yakima" #Seth Button
+fe$`Supporting document link`[fe$`Unique ID`==28834] <- "https://kimatv.com/news/local/wrong-way-crash-in-i-82-leaves-2-dead-1-injured-in-yakima" #Neil Sartain
+fe$`Supporting document link`[fe$`Unique ID`==29763] <- "https://www.spokesman.com/stories/2021/mar/09/sheriff-passenger-killed-as-driver-flees-in-grant-/" #Danielle Shockey
+
+
+
+
+
+
 
 
 
@@ -324,6 +335,23 @@ fe$Name[fe$`Unique ID`==23531] <- "Joshua Spottedhorse"
 fe$Name[fe$`Unique ID`==18509] <- "Bruce R. Johnson"
 fe$Name[fe$`Unique ID`==16382] <- "Samuel Toshiro Smith"
 fe$Name[fe$`Unique ID`==28826] <- "Andrea Churna"
+fe$`Location of death (city)`[fe$`Unique ID`==28439] <- "Bothell"
+
+#fe$`Intended use of force (Developing)`[fe$`Unique ID`==15941] <- "Veh/Purs"
+
+# Articles say these are suicides, tho officers are there
+for(i in c(17338, 18751, 26168, 27840)) {
+  fe$`Intended use of force (Developing)`[fe$`Unique ID`==i] <- "Suicide"
+}
+
+# Idiosycratic cases
+# feID 28698  deputy crash while having stroke
+# feID 25804  next 2 killed by suspect in Lake City, not police
+# feID 25805
+
+for(i in c(28698, 25804, 25805)) {
+  fe$`Intended use of force (Developing)`[fe$`Unique ID`==i] <- "Other"
+}
 
 
 wapo$name[wapo$id==1778] <- "Jeffrey Martelli" # not reported

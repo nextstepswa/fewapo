@@ -1,5 +1,6 @@
+## Dataset differences
 
-As noted in the Introduction section, this report relies on data from the Fatal Encounters project and the Washington Post.  Both datasets are "unofficial", in the sense that the data are not drawn from mandatory government reporting on deaths caused by law enforcement officers, because there is no official national data program.  Instead these datasets are based on cases known/discovered by the two project teams.
+This report relies on data from the Fatal Encounters project and the Washington Post.  Both datasets are "unofficial", in the sense that the data are not drawn from mandatory government reporting on deaths caused by law enforcement officers, because there is no official national data program.  Instead these datasets are based on cases known/discovered by the two project teams.
 
 Fatal Encounters includes more cases than the Washington Post, because the Post dataset is restricted to fatal shootings.  
 
@@ -111,18 +112,18 @@ ___
 ```{r datadiff}
 tab <- homicides %>%
   filter(is.na(wapoID)) %>%
-  group_by(cod.fe) %>%
+  group_by(cod) %>%
   summarize(Number = n()
   ) %>%
   arrange(desc(Number)) %>%
-  bind_rows(data.frame(cod.fe ="Total", 
+  bind_rows(data.frame(cod ="Total", 
                        Number = sum(.$Number))) 
 
-pct.shot.missing <- tab$Number[tab$cod.fe=="Gunshot"]/tab$Number[tab$cod.fe=="Total"]
+pct.shot.missing <- tab$Number[tab$cod=="Gunshot"]/tab$Number[tab$cod=="Total"]
 ```
 
 Among the cases missing from the Post dataset, 
-`r tab$Number[tab$cod.fe=="Gunshot"]` (`r scales::percent(pct.shot.missing)`)
+`r tab$Number[tab$cod=="Gunshot"]` (`r scales::percent(pct.shot.missing)`)
 are identified as fatal shootings in the Fatal Encounters dataset.
 
 ```{r datadifftab}
@@ -130,7 +131,7 @@ tab %>%
   kable(caption = "Cause of death for cases missing from WaPo dataset",
         col.names = c("Cause:", "Number")) %>%
   kable_styling(bootstrap_options = c("striped","hover")) %>%
-  row_spec(row=c(which(tab$cod.fe=="Gunshot"),
+  row_spec(row=c(which(tab$cod=="Gunshot"),
                  dim(tab)[1]), bold = T)
 ```
 
@@ -143,7 +144,7 @@ Below is the list of cases identified as gunshot fatalities in Fatal Encounters 
 ```{r casesdiff}
 
 homicides %>%
-  filter(is.na(wapoID) & cod.fe == "Gunshot") %>%
+  filter(is.na(wapoID) & cod == "Gunshot") %>%
   select(name, date, city, county, agency, url_click) %>%
   DT::datatable(rownames = F,
                 caption = "Gunshot cases missing from WaPo dataset",

@@ -14,14 +14,23 @@ homicides <- merged_data %>%
 
 all.cases <- nrow(merged_data)
 
-# For trend plotting -- remove partial months
+# Dates and years ----
+
+## Remember for trend plotting later -- remove partial months
 start_yr <- params$startyr
 start_mo <- 1
-
-# Current date ----
+start_date <- as.Date(paste0(start_yr, "-", start_mo, "-01"))
 
 curr_mo <- month(Sys.Date())
 curr_yr <- year(Sys.Date())
+
+## Calendar years (all)
+cal.yrs <- start_yr:curr_yr
+num.cal.yrs <- length(cal.yrs)
+
+## Legislative years (all)
+leg.yrs <- unique(homicides$leg.year)
+num.leg.yrs <- length(leg.yrs)
 
 # Most recent case info ----
 
@@ -58,7 +67,6 @@ num.suffix <- case_when(tot.this.yr == 1 ~ "st",
 ## ends with last complete month
 ## we use "mo" for numeric month and "mon" for alpha month abb
 
-start_date <- as.Date(paste0(start_yr, "-", start_mo, "-01"))
 numyrs <- last_complete_yr - start_yr + 1
 
 ## set up first year

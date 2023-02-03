@@ -9,6 +9,14 @@
 # I can't tell if the victim died.  Have reported the case to FE.
 # https://www.kiro7.com/news/local/police-investigating-officer-involved-shooting-in-federal-way/930686522/
 
+# Dillion Pugsley 12/30/2022
+
+if (wapo_clean$name[wapo_clean$wapoID == 8786] == "Unknown"){
+  wapo_clean$name[wapo_clean$wapoID == 8786] <- "Dillion Pugsley"
+  print("Dillion Pugsley fix for WaPo")
+} else {
+  print("WaPo Pugsley fix not needed anymore")
+}
 
 # Peter Collins 8/28/2022
 
@@ -71,9 +79,8 @@ if (wapo_clean$name[wapo_clean$wapoID == 7518] == "Unknown"){
 # Werner Anderson 2018, died after injection of ketamine while held down
 # FE classifies Intended use of force as "Undetermined", 
 # we will recode as "Other force"
-fe_clean$circumstances[fe_clean$feID==22065] <- "Other force"
+fe_clean$circumstances[fe_clean$feID==22065] <- "Less lethal force"
 fe_clean$homicide[fe_clean$feID==22065] <- 1
-fe_clean$hotPursuit[fe_clean$feID==22065] <- "Other"
 
 
 # Duplicate case: Alex Martinez 2/27/2011, remove ID 9914 and correct date for ID 9917
