@@ -9,6 +9,15 @@
 # I can't tell if the victim died.  Have reported the case to FE.
 # https://www.kiro7.com/news/local/police-investigating-officer-involved-shooting-in-federal-way/930686522/
 
+# James Blancocotto 1/33/2023
+
+if (wapo_clean$name[wapo_clean$wapoID == 8868] == "Unknown"){
+  wapo_clean$name[wapo_clean$wapoID == 8868] <- "James Blancocotto"
+  print("James Blancocotto fix for WaPo")
+} else {
+  print("WaPo Blancocotto fix not needed anymore")
+}
+
 # Dillion Pugsley 12/30/2022
 
 if (wapo_clean$name[wapo_clean$wapoID == 8786] == "Unknown"){

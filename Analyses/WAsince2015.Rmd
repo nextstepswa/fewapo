@@ -13,10 +13,10 @@ output:
 params:
   from: ["2015"]
   startyr: [2015]
-  startlegyr: ["2015-05-31"]
+  startlegyr: ["2015-08-01"]
   rdafile: ["WA2015.rda"]
   caption: ["WA since 2015"]
-  smooth_span: [0.5]
+  smooth_span: [0.8]
 ---
 
 <base target="_top"/>
@@ -53,7 +53,7 @@ source(here("Analyses", "Common", "waAnalysesPrep.R"))
 # for geocoded LDs
 with(homicides, write.csv(cbind(feID,latitude,longitude),
                           here("data-outputs",
-                               "geocodes940.csv")))
+                               "geocodes2015.csv")))
 
 ```
 
@@ -111,7 +111,8 @@ map <- leaflet(data = homicides, width = "100%") %>%
               ~ latitude,
               popup = ~ url_click,
               label = ~ as.character(paste(name, "by", agency)),
-              clusterOptions = markerClusterOptions())
+              clusterOptions = markerClusterOptions()
+              )
 map
 ```
 
@@ -269,20 +270,9 @@ The data come from the Post dataset, *so this is not available for the additiona
 
 ```{r armedplot}
 homicides %>%
-  mutate(armed = case_when(
-    is.na(armed.wapo) ~ "Unknown",
-    armed.wapo == "undetermined" ~ "Unknown",
-    armed.wapo == "gun" ~ "Gun",
-    armed.wapo == "gun and car" ~ "Gun",
-    armed.wapo == "knife" ~ "Edged Weapon",
-    armed.wapo == "machete" ~ "Edged Weapon",
-    armed.wapo == "sword" ~"Edged Weapon",
-    armed.wapo == "unarmed" ~ "Unarmed",
-    TRUE ~ "Other")
-         ) %>%
-  count(armed) %>%
+  count(weapon) %>%
   mutate(perc = n / nrow(homicides)) %>%
-  ggplot(aes(reorder(armed, perc),
+  ggplot(aes(reorder(weapon, perc),
              y = perc, 
              label = n)) +
   geom_text(aes(y = perc), size = 3, nudge_y = .025) +
@@ -295,33 +285,6 @@ homicides %>%
   ylab("Percent of Total")
 ```
 
-### Table
-
-```{r armed}
-tab <- homicides %>%
-  mutate(armed.wapo = case_when(is.na(armed.wapo) ~ "Unknown",
-                                armed.wapo == "undetermined" ~ "Unknown",
-                                TRUE ~ armed.wapo),
-         armed.wapo = fct_relevel(armed.wapo, "Unknown", 
-                                  after = Inf)
-  ) %>%
-  group_by(armed.wapo) %>%
-  summarize(Number = n(),
-            Percent = round(100*Number/nrow(homicides), 1)
-  ) %>%
-  arrange(desc(Number)) %>%
-  bind_rows(data.frame(armed.wapo ="Total", 
-                       Number = sum(.$Number), 
-                       Percent = sum(.$Percent)))
-
-tab %>%
-  kable(caption = "Breakdown by Report of Victim Weapon (data from WaPo only)",
-        col.names = c("Armed", "Number", "Percent")) %>%
-  kable_styling(bootstrap_options = c("striped","hover")) %>%
-  row_spec(row=dim(tab)[1], bold = T)  %>%
-  add_footnote(label = "Percents may not sum to 100 due to rounding",
-               notation = "symbol")
-```
 
 ## Bodycam
 
@@ -784,6 +747,7 @@ ggplot(data= df %>% filter(year != max(df$year)),
 
 #### Calendar year
 
+We start with January 2019, as the last 3 weeks of December 2018 does not provide an accurate annual count for that year.
 
 ```{r tot.calyr, message=F, warning=F}
 
@@ -858,14 +822,14 @@ ggplotly(p, tooltip = "text")
 
 Here we plot the cumulative totals each year, broken down to show the two leading causes of death.  
 
+* The bars represent totals for each year, divided by cause of death:  gunshot, vehicle pursuit and all other causes.  A case is classified as a vehicle pursuit death if the cause of death was vehicular accident during an active or recently terminated vehicle pursuit.
+
 * Note that the current year only reflects cases for the year to date (`r format(scrape_date, format="%B %d %Y")`), so is not strictly comparable with the previous years. 
-
-* The bars represent totals for each year, divided by cause of death:  gunshot, vehicle pursuit and all other causes.  A case is classified as a vehicle pursuit death if the cause of death was vehicular homicide during an active vehicle pursuit.
-
 * This is an interactive plot:  You can hover over bar segments to get the exact values for that cause of death in that year.
 
 #### Calendar year
 
+We start with January 2019, as the last 3 weeks of December 2018 does not provide an accurate annual count for that year.
 
 ```{r cod.calyr, warning=F}
 
@@ -875,7 +839,7 @@ graphdf.calyr <-  homicides %>%
     cod_3 = factor(
       case_when(
         cod == "Gunshot" ~ "shot", 
-        grepl("active", vpursuit) ~ "vehicle pursuit",
+        grepl("Active|Terminated", vpursuit) ~ "vehicle pursuit",
         TRUE ~ "other"),
       levels = c("shot", "vehicle pursuit", "other")),
     year = as.character(year)) %>%
@@ -922,7 +886,7 @@ graphdf.legyr <-  homicides %>%
     cod_3 = factor(
       case_when(
         cod == "Gunshot" ~ "shot", 
-        grepl("active", vpursuit) ~ "vehicle pursuit",
+        grepl("Active|Terminated", vpursuit) ~ "vehicle pursuit",
         TRUE ~ "other"),
       levels = c("shot", "vehicle pursuit", "other")),
     year = as.character(year)) %>%

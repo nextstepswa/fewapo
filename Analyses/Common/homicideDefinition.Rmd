@@ -1,4 +1,4 @@
-## What is a homicide?
+# What is a homicide?
 
 The deadly force incidents in this report are homicides.  A homicide is simply defined as the killing of one person by another.  In the context of this report it refers to any encounter with law enforcement officers that results in a fatality.  Homicides normally result in a criminal investigation or inquest, but the word does not imply a crime has been committed.
 
@@ -7,9 +7,9 @@ The deadly force incidents in this report are homicides.  A homicide is simply d
 * It does not not mean the officer's actions that led to the death were justified, or that they were unjustified.
 
 
-The law then defines different types of homicides, in order to distinguish levels of intention and criminal culpability.  In the U.S., these types and definitions are broadly similar across states, but do vary somewhat in the the how many different types are specified, and what names are used for each type.
+The law then defines different types of homicides, in order to distinguish levels of intention and criminal culpability.  In the U.S., these types and definitions are broadly similar across states, but do vary somewhat in the the how many different types are specified, and what names are used for each type.  The classifications for WA State can be found in [9A.32 RCW](https://app.leg.wa.gov/RCW/default.aspx?cite=9A.32)
 
-The definitions below are taken from a useful online summary found [here](https://www.steinandmarkuslaw.com/whats-the-difference-between-homicide-murder-and-manslaughter), based on California State laws.
+The definitions below are taken from a [useful online summary](https://www.steinandmarkuslaw.com/whats-the-difference-between-homicide-murder-and-manslaughter) that uses simple language, based on California State laws.
 
 
 **Homicide**  

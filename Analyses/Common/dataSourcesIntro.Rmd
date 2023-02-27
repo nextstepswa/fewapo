@@ -21,6 +21,6 @@ There is typically a 1-2 week lag in the Fatal Encounters and WaPo datasets, but
 While the Fatal Encounters project has paused, we are keeping track of these encounters for WA State by hand.  The most recent known incident was on
 `r format(last_newname_date, format="%B %d %Y")`.
 
-This report is restricted to the cases that can be classified as homicides by police, it excludes cases identified in the Fatal Encounters dataset as suicides (see the [next section](#dataset-differences) for details).
+This report is restricted to the cases that can be classified as homicides by police and vehicular homicides during police pursuits, it excludes cases identified in the Fatal Encounters dataset as suicides and medical emergencies (see the [next section](#dataset-differences) for details).
 
 ___

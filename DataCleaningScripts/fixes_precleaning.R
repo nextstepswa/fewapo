@@ -250,6 +250,8 @@ fe$State[fe$`Unique ID`==30388] <- "GA"
 
 # County fixes
 fe$`Location of death (county)`[fe$`Unique ID`==30388] <- "Muscogee"
+wapo$county[wapo$id==1145] <- "Thurston"
+wapo$county[wapo$id==3026] <- "Thurston"
 
 
 
@@ -307,7 +309,16 @@ wapo$city[wapo$id==6305] <- "Woodinville" # Ronny Dunning
 # Latitude (removes trailing comma)
 fe$Latitude[fe$`Unique ID`==28891] <- 42.167834
 
+# Highest level of force (becomes cod)
+fe$`Highest level of force`[fe$`Unique ID`==22065] <- "Asphyxiated/Restrained" # ketamine
+fe$`Highest level of force`[fe$`Unique ID`==30613] <- "Asphyxiated/Restrained" # ketamine
+fe$`Highest level of force`[fe$`Unique ID`==28269] <- "Asphyxiated/Restrained" # ketamine
 
+# Intended use of force (becomes circumstances -> homicide, suicide, vpursuit)
+fe$`Intended use of force (Developing)`[fe$`Unique ID`==28269] <- "Less-than-lethal force"
+fe$`Intended use of force (Developing)`[fe$`Unique ID`==22065] <- "Less-than-lethal force"
+
+  
 # Better url
 fe$`Supporting document link`[fe$`Unique ID`==18333] <- "https://www.seattleweekly.com/news/seattle-man-fatally-shot-by-kent-police-identified/" # William Stokes
 fe$`Supporting document link`[fe$`Unique ID`==25899] <- "https://katu.com/news/local/sheriffs-office-identifies-man-brian-butts-suspected-of-shooting-killing-cowlitz-county-deputy
@@ -320,6 +331,8 @@ fe$`Supporting document link`[fe$`Unique ID`==29763] <- "https://www.spokesman.c
 
 
 
+# Description
+fe$fe$`Brief description` <- "Three men allegedly stole a Honda at gunpoint near 15th Avenue South and South State Street, police said. Three hours later, a Seattle police officer tried to pull over the vehicle at 21st Avenue Southwest and Southwest Webster Street. The driver took off and was speeding until reaching Highland Park Drive Southwest, where the car crossed the centerline and struck an Acura, killing both drivers."
 
 
 
@@ -344,15 +357,13 @@ for(i in c(17338, 18751, 26168, 27840)) {
   fe$`Intended use of force (Developing)`[fe$`Unique ID`==i] <- "Suicide"
 }
 
-# Idiosycratic cases
-# feID 28698  deputy crash while having stroke
-# feID 25804  next 2 killed by suspect in Lake City, not police
-# feID 25805
+# When subject, not police, kills this person
+# feID 25805 killed by suspect in Lake City; we leave the pursuit related vehicle crash 25804
+# feIE 18751 Pamela Parker shot by subject, who then shot himself; we leave the suicide 18750
 
-for(i in c(28698, 25804, 25805)) {
-  fe$`Intended use of force (Developing)`[fe$`Unique ID`==i] <- "Other"
+for(i in c(18751, 25805)) {
+  fe$`Intended use of force (Developing)`[fe$`Unique ID`==i] <- "Killed by subject"
 }
-
 
 wapo$name[wapo$id==1778] <- "Jeffrey Martelli" # not reported
 

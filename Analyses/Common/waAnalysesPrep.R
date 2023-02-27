@@ -10,9 +10,20 @@
 homicides <- merged_data %>% 
   filter(homicide==1) %>%
   mutate(age = ifelse(age.fe==999, NA_real_, age.fe)) %>%
+  mutate(
+    cause.of.death = case_when(
+      cod == "Vehicle" & pursuit.type == "Pursuit" ~ "accident during a police vehicular pursuit",
+      cod == "Vehicle" & pursuit.type == "Attempted stop" ~ "vehicle accident following an attempted stop by police",
+      cod == "Vehicle" & pursuit.type == "Vehicle accident" ~ "vehicle accident by an on-duty officer",
+      cod == "Vehicle" & pursuit.type == "Involved pursuit" ~ "accident involving a police pursuit", # 2 odd cases, 26719 and 90019
+      pursuit.type == "Involved pursuit" ~ paste(cod, "after a police vehicular pursuit")),
+    cause.of.death = if_else(is.na(cause.of.death), as.character(cod), cause.of.death)
+  ) %>%
   arrange(date)
 
 all.cases <- nrow(merged_data)
+all.homicides <- nrow(homicides)
+
 
 # Dates and years ----
 
@@ -33,25 +44,27 @@ leg.yrs <- unique(homicides$leg.year)
 num.leg.yrs <- length(leg.yrs)
 
 # Most recent case info ----
+# Assumes homicide df is sorted by date
 
 last.case <- nrow(homicides)
+last.case.info <- homicides[last.case,] 
 
-last.date <- max(homicides$date)
-last.name <- ifelse(homicides$lname[last.case] == "Unknown", 
+last.date <- last.case.info$date
+last.name <- ifelse(last.case.info$name == "Unknown", 
                     "(Name not released)",        
-                    paste(homicides$fname[last.case],
-                          homicides$lname[last.case]))
-last.age <- ifelse(is.na(homicides$age[last.case]), 
-                   "not released",
-                   homicides$age[last.case])
-last.agency <- homicides$agency[last.case]
+                    last.case.info$name)
+last.age <- ifelse(is.na(last.case.info$age), 
+                   "(age not released)",
+                   last.case.info$age)
+last.agency <- last.case.info$agency
 
-last.cod <- ifelse(homicides$cod[last.case] == "Vehicle",
-                   "death following a vehicle pursuit",
-                   as.character(homicides$cod[last.case]))
+last.cod <- last.case.info$cause.of.death
 
-last.url <- homicides$url_click[last.case]
 
+
+last.url <- last.case.info$url_click
+
+# Summary info ----
 tot.by.yr <- table(homicides$year)
 tot.this.yr <- tot.by.yr[[length(tot.by.yr)]]
 tot.yr.is <- max(homicides$year)
