@@ -270,11 +270,11 @@ fe_clean <- fe %>%
                                      after = Inf)
        ) %>%
 
-  # homicide:  Exclude suicides and killed by subject (when not during a pursuit)
+  # homicide:  Exclude suicides and killed by subject (when not a pursuit vehicular homicide)
   # Also excludes medical emergencies and overdoses, but this is problematic
   # as the medical emergencies are in custody, and often in the context of the use of force
   # (e.g., cardiac arrest while handcuffed or restrained)
-  # Includes pursuit fatalities, and vehicle accidents (which are homicides)
+  # Includes pursuit vehicular fatalities, and vehicle accidents (which are homicides)
   
   mutate(homicide = case_when(
     grepl("Suicide|Subject", circumstances) ~ 0,
@@ -413,7 +413,6 @@ wapo_clean <- wapo %>%
          year = year(date),
          cod = "Gunshot")
 
-
 ## Final prep -------------------------------------------------
 
 ## Post-cleaning fixes (mostly for WA State) ----
@@ -470,7 +469,7 @@ save(list = c("fe_clean", "wapo_clean", "selection",
               "last_complete_yr", "last_update_is_eoy"),
      file = here("data-outputs", "CleanData.rda"))
 
-
+wapo.update.message <- paste("\n *** Last Wapo update: ", last_date_wapo, "\n\n")
 
 # Merge  -----
 
@@ -647,9 +646,9 @@ if(nrow(aaa)>1){
 
 # Check for errors in final dataset ----
 if(errors > 0){
-  stop(paste(errors, "found, stopping"))
+  stop(paste(errors, "cleaning errors found.  Stopping"))
 } else {
-  cat("\n\n *** No errors during cleaning!! *** \n\n")
+  cleaning.error.message <- "\n\n *** No errors during cleaning!! *** \n\n"
 }
 
 # Only if bad merges identified above that can't be fixed by cleaning (very rare)
@@ -750,6 +749,7 @@ fe_2015 <- left_join(fe_2015%>% select(-c("cod", "description", "url_info")),
 finalmerge$url_click <- sapply(finalmerge$url_info, make_url_fn)
 fe_2015$url_click <- sapply(fe_2015$url_info, make_url_fn)
 
+
 # Save WA clean and merged datasets as Rdata files ----
 ## Note that the fe and wapo data include all cases, not just WA.
 ## For WA only analysis, use the merged_data
@@ -759,6 +759,11 @@ selection <- "2015+"
 fe_data <- fe_clean %>% filter(date > "2014-12-31")
 wapo_data <- wapo_clean
 merged_data <- finalmerge 
+
+last.name.message <- paste("\n *** Last WA fatality: ",
+                           merged_data$name[nrow(merged_data)],
+                           merged_data$date[nrow(merged_data)],
+                           "\n\n")
 
 save(list = c("fe_data", "wapo_data", "merged_data", "selection",
               "scrape_date", "last_date_fe", "last_date_wapo","last_newname_date",
@@ -779,12 +784,11 @@ save(list = c("fe_data", "wapo_data", "merged_data", "selection",
      file = here("data-outputs", "WA940.rda"))
 
 
+# Print summary of run
+message(cleaning.error.message)
+message(pursuit.coding.message)
+message(wtsc.update.message)
 
-
-# Print last name and dates
-cat(paste("\n *** Last Wapo update: ", last_date_wapo, "\n\n\n"))
-cat(paste("\n *** Last WA fatality: ",
-            merged_data$name[nrow(merged_data)],
-            merged_data$date[nrow(merged_data)],
-          "\n\n\n"))
+message(wapo.update.message)
+message(last.name.message)
 

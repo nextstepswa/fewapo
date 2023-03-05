@@ -1,31 +1,27 @@
-.Rproj.user
-.Rhistory
-.RData
-.Ruserdata
 
-# Create empty folder for storing script outputs
-data-outputs/*
+# Ignore everything
+/*
 
-# Exclude these folders
-Downloads/
-FEchecking/
-reprex/
-hotpursuit2015.csv
+# Except:
 
 # Sync some raw data
-data-raw/*
 !data-raw/temp-newnames.csv
 
-# Sync some scripts
+# Key cleaning scripts
 DataCleaningScripts/*
 !DataCleaningScripts/ScrapeMerge.R
 !DataCleaningScripts/fixes_precleaning.R
 !DataCleaningScripts/fixes_postcleaning.R
-!DataCleaningScripts/StateCensusData.R
+!DataCleaningScripts/fixes_postmerge.R
+!DataCleaningScripts/pursuit_coding.R
+!DataCleaningScripts/scrapeMPV.R
 
-# Sync some analysis files
-Analyses/*
-!Analyses/WAsince*.Rmd
+# Key analysis scripts
+!Analyses/WAsince940.Rmd
+!Analyses/WAsince2015.Rmd
 !Analyses/USpercapitaTrends.Rmd
 !Analyses/Common/
 
+# Create empty folder for storing script outputs
+/data-outputs/*
+!data-outputs/
