@@ -8,6 +8,7 @@
 !data-raw/temp-newnames.csv
 
 # Key cleaning scripts
+!/DataCleaningScripts/
 DataCleaningScripts/*
 !DataCleaningScripts/ScrapeMerge.R
 !DataCleaningScripts/fixes_precleaning.R
@@ -17,6 +18,8 @@ DataCleaningScripts/*
 !DataCleaningScripts/scrapeMPV.R
 
 # Key analysis scripts
+!/Analyses/
+Analyses/*
 !Analyses/WAsince940.Rmd
 !Analyses/WAsince2015.Rmd
 !Analyses/USpercapitaTrends.Rmd
