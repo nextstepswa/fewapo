@@ -5,10 +5,10 @@
 # for each of those reports
 #-----------------------------------------------------------------
 
-# Select homicides and use age from FE
+# Select homicides by police and use age from FE
 
 homicides <- merged_data %>% 
-  filter(homicide==1) %>%
+  filter(homicide==1 & not.kbp == 0) %>%
   mutate(age = ifelse(age.fe==999, NA_real_, age.fe)) %>%
   mutate(
     cause.of.death = case_when(
@@ -55,7 +55,7 @@ last.name <- ifelse(last.case.info$name == "Unknown",
                     last.case.info$name)
 last.age <- ifelse(is.na(last.case.info$age), 
                    "(age not released)",
-                   last.case.info$age)
+                   paste(last.case.info$age, "years old"))
 last.agency <- last.case.info$agency
 
 last.cod <- last.case.info$cause.of.death

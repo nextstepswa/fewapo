@@ -17,18 +17,19 @@
 ##  B. In this file:
 ##     1. create pursuit.tag -- uses all info from both FE and WaPo to tag possible pursuit cases
 ##        a. this was initially used to triage and review !is.na(pursuit.tag) cases for vpursuit coding.
-##        b. but as of Feb 14/2023 *all* cases from 2015+ have been reviewed and coded
+##        b. but as of Feb 14/2023 *all* cases from 2015+ are reviewed and coded
 ##           so it is left here for historical interest
 ##
-##     2. check if any new cases need to be reviewed for vpursuit/victim/injury/incident.num coding
+##     2. check if any new active pursuit cases need to be reviewed for vpursuit/victim/injury/incident.num coding
 ##
 ##     3. Review/code/merge in WTSC pursuit fatality data
 ##          Data are released annually in May of the following year
 ##          Request for new data needs to be made here: https://wtsc.wa.gov/request-fatal-crash-data/
 
 ## Notes:
-## A complete independent review of active pursuit cases was completed by SC on 2/1/2023
-## A complete review of all WA cases from 2015 forward was completed Feb ? 2023
+## A complete independent review of 
+###  active pursuit cases was completed by SC on 2/1/2023
+###  all WA cases from 2015 forward was completed by SC on 2/22/2023
 
 # Final vpursuit codes are:
 
@@ -92,7 +93,7 @@
 # 10 Vehicle accident               394
 # 11 Unknown                         49
 
-# Recoded variable:  vpursuit.draft (WA 2015+ cases only), starting place for pursuit tagging  ----
+# Recoded variable:  vpursuit.draft (WA 2015+ cases only), starting place for pursuit review  ----
 
 # > fe_clean %>% group_by(vpursuit.draft) %>% count()
 # vpursuit.draft                   n
@@ -107,7 +108,8 @@
 ######################################################################################
 
 # 1. pursuit.tag: automated selection of possible pursuit cases for WA 2015+ ----
-#    no longer used, but left for comparison here
+#    no longer used, because visual inspection found additional cases
+#    but left for comparison here
 
 all.pursuit.tags <- finalmerge %>%
   mutate(pursuit.tag = case_when(
@@ -117,7 +119,7 @@ all.pursuit.tags <- finalmerge %>%
     cod == "Vehicle" ~ 3 # this doesn't seem to pick up any additional, but may in the future
   )) %>%
   filter(!is.na(pursuit.tag)) %>%
-  select(feID, name, date, homicide, suicide, pursuit.tag,  vpursuit.draft, cod, description, url_info)
+  select(feID, name, date, homicide, suicide, not.kbp, pursuit.tag,  vpursuit.draft, cod, description, url_info)
 write.csv(all.pursuit.tags, here::here("data-outputs", "tagged-pursuits.csv"))
 
 cat(paste("\n\n *** ", nrow(all.pursuit.tags), "possible pursuit cases tagged ****\n\n"))
@@ -125,69 +127,116 @@ cat(paste("\n\n *** ", nrow(all.pursuit.tags), "possible pursuit cases tagged **
 
 # 2. Review/update new cases as needed ----
 
-# Check if we have something new.  
+# Check if we have new active/terminated pursuits to review.  
 # If yes, stop to review before going on; 
 #   this will be an iterative process, rerun ScrapeMerge after new cases are coded
-# If no, we return the coded pursuit data for WTSC merge
+# If no, we construct the coded pursuit data, merge with WTSC tags, and return to ScrapeMerge
 
 #old.file.location <- 'read_xlsx(here::here("data-outputs", "pursuits-coded.xlsx"), sheet = "Coded")'
 
-# google sheet location
+## Read in coded data ----
+
+# google sheet location for pursuit coding
 coded.pursuit.file.location <- "https://docs.google.com/spreadsheets/d/1De0ih8yfbnHVX8iNMa_OGcn03xHrjRYr2m2ql-xSTho/edit?usp=sharing"
+# drive_get("~/PoliceReform/Pursuits/Data/WA pursuit coding/all.case.pursuit.coding")
+
+# google sheet for testing:
+# coded.pursuit.file.location <- "https://docs.google.com/spreadsheets/d/1a7ougZ2ncUn5mOj8mQq8D0hgW9ndn7_dxLBg_Y5oENs/edit?usp=sharing"
+# drive_get("~/PoliceReform/Pursuits/Data/WA pursuit coding/copy.all.case.pursuit.coding")
+
 googlesheets4::gs4_deauth()
-raw.coded.pursuits <- googlesheets4::read_sheet(coded.pursuit.file.location, sheet = "coded_data")
+raw.coded.pursuits <- googlesheets4::read_sheet(coded.pursuit.file.location, 
+                                                sheet = "coded_data")
+
+# Anti-join old and new cases to identify any new cases for review
+# NB: new cases can be earlier cases we missed or the most recent cases, so we can't use dates to filter
+# And we replace NA in vpursuit.draft with a reminder to review
+
+old.coded <- raw.coded.pursuits %>%
+  select(feID, date)
+
+all.cases <- finalmerge %>%
+  select(feID, name, date, homicide, suicide, vpursuit.draft, cod, description, url_info)
+
+new.cases <- anti_join(all.cases, old.coded, by = "feID") %>% 
+  replace_na(list(vpursuit.draft = "Not yet reviewed"))
 
 
-# Read in existing coded results 
+## Update as appropriate ----
+
+## If new cases since last run:
+## output to googlesheet
+## stop and request review for active pursuits, 
+## update message that review is needed for any other new cases
+## otherwise continue
+
+if(nrow(new.cases) != 0){ # pursuit updates are needed
+
+  pursuit.coding.message <- "\n\n *** NEW POSSIBLE PURSUIT CASES TO REVIEW *** \n\n"
+
+  # create df with new cases and correct col structure
+  new_case_df <- bind_rows(raw.coded.pursuits[1,], new.cases)[-1,] 
+
+  # add these to the sheet -- only authorized users can do this
+  googlesheets4::gs4_auth(
+    email = TRUE, #gargle::gargle_oauth_email(),
+    path = NULL,
+    scopes = "https://www.googleapis.com/auth/spreadsheets",
+    cache = gargle::gargle_oauth_cache(),
+    use_oob = gargle::gargle_oob_default(),
+    token = NULL
+  )
+  
+  googlesheets4::sheet_append(ss=coded.pursuit.file.location, 
+                              data = new_case_df, 
+                              sheet = "coded_data")
+  
+  # check for active pursuit cases; these need review before continuing
+  if(any(new_case_df$vpursuit.draft == "Active pursuit", na.rm=T) |
+            any(new_case_df$vpursuit.draft == "Terminated pursuit", na.rm=T)) {
+
+    # Stop if new active pursuit cases
+    stop("Stopping:  There are new active pursuits to review")
+    
+  } else {
+    
+    # Otherwise replace the old raw.coded.pursuits with the updated data
+    googlesheets4::gs4_deauth()
+    raw.coded.pursuits <- googlesheets4::read_sheet(coded.pursuit.file.location, 
+                                                    sheet = "coded_data")
+  }
+  
+} else { # no updates needed for pursuits
+
+pursuit.coding.message <- "\n\n *** No new pursuit coding required *** \n\n"
+
+}
+  
+  
+# Pull final pursuit variables from coded worksheet 
 
 coded.pursuits <-  raw.coded.pursuits %>%
-  
-  # use final values for all variables post-review
-  mutate(cod = if_else(!is.na(cod.final), cod.final, cod),
+  mutate(vpursuit = if_else(!is.na(vpursuit.final), vpursuit.final, vpursuit.draft),
+         cod = if_else(!is.na(cod.final), cod.final, cod),
          victim = if_else(!is.na(victim.final), victim.final, victim),
          description = if_else(!is.na(description.final), description.final, description),
          url_info = if_else(!is.na(url_additional), url_additional, url_info)
   ) %>%
-  select(feID, name, date, vpursuit = vpursuit.final, cod, victim, injury, description, url_info, incident.num,
+  select(feID, name, date, vpursuit, cod, victim, injury, description, url_info, incident.num,
          pursuit.notes = notes)
-
-# Anti-join old and new cases to identify any discrepancies
-# NB: new cases can be earlier or most recent, so we don't use dates to filter
-
-old.coded <- coded.pursuits %>%
-  filter(!is.na(vpursuit)) %>%
-  select(feID, date, vpursuit)
-
-all.cases <- finalmerge %>%
-  select(feID, date, homicide, suicide, vpursuit.draft, cod, description, url_info)
-
-case_check_new <- anti_join(all.cases, old.coded, by = "feID")
-
-# If new cases found, output file for review, otherwise continue
-
-if(nrow(case_check_new) != 0){ # pursuit updates are needed
-  
-  # Output new cases for review and add to pursuits-coded.xlsx as appropriate
-  case_check_new %>% 
-    write.csv(., here::here("data-outputs", "new-pursuits-review.csv"))
-  
-  # Stop until new cases are reviewed
-  stop("Stopping:  There are new pursuits to review")
-  
-} # no updates needed for pursuits
-
-pursuit.coding.message <- "\n\n *** No new pursuit coding required *** \n\n"
-#cat("\n\n *** Don't forget to uncomment the stop after review is finalized *** \n\n")
 
 
 ## 3. WTSC data: only updated annually in May ----
+
+## This is based on an excel extract of pursuit cases only from WTSC, 
+## not the entire WTSC person files.  FE cases were matched by
+## hand/inspection.
 
 if(!file.exists(here::here("data-outputs", "WTSC.rda"))) { # Start from scratch
   
   # Read in WTSC data
   
-  WTSC <- readxl::read_excel(here::here("data-raw", 
-                                        "WTSC_Pursuit_Fatalities/WTSC_pursuit fatalities_MR_2-9-2023.xlsx")) %>%
+  WTSC <- readxl::read_excel(here::here("data-raw", "WTSC_pursuit fatalities_MR_2-9-2023.xlsx")) %>%
     select(feID, agency.wtsc=repag_long, year:co_char, city.num=city, 
            numfatal:vforms, long=x, lat=y, vnumber, pnumber:race,
            race_me, race1:race5,
@@ -249,3 +298,4 @@ if(lubridate::month(Sys.Date()) == 5 &
 
 coded.pursuits <- left_join(coded.pursuits, WTSC %>% select(feID, wtsc), 
                             by="feID")
+

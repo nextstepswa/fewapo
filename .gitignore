@@ -7,7 +7,7 @@
 # Sync some raw data
 !data-raw/temp-newnames.csv
 
-# Key cleaning scripts
+# Key data cleaning scripts
 !/DataCleaningScripts/
 DataCleaningScripts/*
 !DataCleaningScripts/ScrapeMerge.R
@@ -17,7 +17,7 @@ DataCleaningScripts/*
 !DataCleaningScripts/pursuit_coding.R
 !DataCleaningScripts/scrapeMPV.R
 
-# Key analysis scripts
+# Key data analysis scripts
 !/Analyses/
 Analyses/*
 !Analyses/WAsince940.Rmd
@@ -28,3 +28,4 @@ Analyses/*
 # Create empty folder for storing script outputs
 /data-outputs/*
 !data-outputs/
+.Rproj.user

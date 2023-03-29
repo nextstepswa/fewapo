@@ -321,7 +321,15 @@ fe_clean <- fe %>%
          longitude = as.numeric(Longitude)) %>%
   mutate(url_info = `Supporting document link`) %>%
   mutate(description = `Brief description`) %>%
-  mutate(state.num = num[match(st, states)])
+  mutate(state.num = num[match(st, states)]) %>%
+  
+  # When civilian/subject, not police, kills this person
+  # We only have this info for WA for now
+  # feID 25805 killed by suspect in Lake City; we leave the pursuit related vehicle crash 25804
+  # feID 18751 Pamela Parker shot by subject, who then shot himself; we leave the suicide 18750
+  # feID 90059 Trooper Schaffer hit by fleeing vehicle during pursuit while laying spike strips
+  
+  mutate(not.kbp = ifelse(feID %in% c(18751, 25805, 90059), 1, 0))
 
 ### create clickable url for Rpubs reports
 fe_clean$url_click <- sapply(fe_clean$url_info, make_url_fn)
@@ -338,7 +346,7 @@ fe_clean <- fe_clean %>%
     latitude, longitude,
     raceOrig, raceImp, gender, age, ageChr, foreknowledge,
     cod, armed, weapon.fe, fleeing,
-    circumstances, homicide, suicide, medical, vpursuit.draft,
+    circumstances, homicide, suicide, not.kbp, medical, vpursuit.draft,
     agency, agency.type,
     description, url_info, url_click, officer_names, officer_url
   )
@@ -478,10 +486,7 @@ wapo.update.message <- paste("\n *** Last Wapo update: ", last_date_wapo, "\n\n"
 # But we've found some errors in their merge for WA, so we're
 # not relying on their merge for now.
 
-# Removing a few problem cases:
-
-## When subject kills the victim, but not in a pursuit
-## example: Tad Norman case in Lake City
+# Removing problem cases:
 
 ## WaPo 4568
 ## This is the only WAPO case not found in FE.
@@ -566,6 +571,8 @@ if (dim(aaa)[1] > 0) {
            circumstances = "Deadly force",
            weapon.fe = wapo_weapon,
            homicide = 1,
+           suicide = 0,
+           not.kbp = 0,
            armed = wapo_armed,
            weapon = wapo_weapon)
   
@@ -709,8 +716,10 @@ finalmerge <- initialmerge %>%
          age.fe = age.x, age.wapo = age.y,
          mental_illness.fe = foreknowledge, 
          mental_illness.wapo = mental_illness,
-         circumstances, homicide, suicide, medical, vpursuit.draft,
-         cod = cod.x, homicide, 
+         circumstances, homicide, suicide, not.kbp, 
+         medical, 
+         vpursuit.draft,
+         cod = cod.x,
          agency, agency.type,
          armed.wapo = wapo_armed, weapon.wapo = wapo_weapon, weapon.fe,
          weapon,
@@ -731,7 +740,7 @@ source(here::here("DataCleaningScripts", "pursuit_coding.R"))
 
 ## Add vpursuit codes to both finalmerge & fe_2015
 ## Since the cod, url_info and description may have been improved during pursuit
-##   review, we use those versions in the coded.pursuits df.
+##   review, we use final versions in the coded.pursuits df.
 ## pursuit.type merges Active and Terminated pursuits into "Pursuit"
 
 finalmerge <- left_join(finalmerge %>% select(-c("cod", "description", "url_info")), 
@@ -786,9 +795,10 @@ save(list = c("fe_data", "wapo_data", "merged_data", "selection",
 
 # Print summary of run
 message(cleaning.error.message)
-message(pursuit.coding.message)
-message(wtsc.update.message)
 
 message(wapo.update.message)
 message(last.name.message)
+
+message(pursuit.coding.message)
+message(wtsc.update.message)
 

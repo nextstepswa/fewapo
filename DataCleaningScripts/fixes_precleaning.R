@@ -353,16 +353,8 @@ fe$`Location of death (city)`[fe$`Unique ID`==28439] <- "Bothell"
 #fe$`Intended use of force (Developing)`[fe$`Unique ID`==15941] <- "Veh/Purs"
 
 # Articles say these are suicides, tho officers are there
-for(i in c(17338, 18751, 26168, 27840)) {
+for(i in c(17338, 26168, 27840)) {
   fe$`Intended use of force (Developing)`[fe$`Unique ID`==i] <- "Suicide"
-}
-
-# When subject, not police, kills this person
-# feID 25805 killed by suspect in Lake City; we leave the pursuit related vehicle crash 25804
-# feIE 18751 Pamela Parker shot by subject, who then shot himself; we leave the suicide 18750
-
-for(i in c(18751, 25805)) {
-  fe$`Intended use of force (Developing)`[fe$`Unique ID`==i] <- "Killed by subject"
 }
 
 wapo$name[wapo$id==1778] <- "Jeffrey Martelli" # not reported
@@ -372,5 +364,6 @@ wapo$name[wapo$id==6989] <- "Dwayne Michael Fields" #reported
 wapo$name[wapo$id==4967] <- "Collin Osborn" # reported
                 
 wapo$date[wapo$id==5778] <- as.Date("2020-04-29") # reported
+wapo$date[wapo$id==9021] <- as.Date("2023-03-11")
 
 wapo$city[wapo$id==3164] <- "Tieton"
