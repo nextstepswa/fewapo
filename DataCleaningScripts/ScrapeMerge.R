@@ -328,8 +328,9 @@ fe_clean <- fe %>%
   # feID 25805 killed by suspect in Lake City; we leave the pursuit related vehicle crash 25804
   # feID 18751 Pamela Parker shot by subject, who then shot himself; we leave the suicide 18750
   # feID 90059 Trooper Schaffer hit by fleeing vehicle during pursuit while laying spike strips
+  # feID 90062-3 Children killed in pursuit-involved crash, pursuit terminated 10 min before
   
-  mutate(not.kbp = ifelse(feID %in% c(18751, 25805, 90059), 1, 0))
+  mutate(not.kbp = ifelse(feID %in% c(18751, 25805, 90059, 90062, 90063), 1, 0))
 
 ### create clickable url for Rpubs reports
 fe_clean$url_click <- sapply(fe_clean$url_info, make_url_fn)
