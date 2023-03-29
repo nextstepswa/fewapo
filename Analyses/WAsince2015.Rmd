@@ -80,11 +80,11 @@ This report tracks the number of persons killed by police in WA state since `r p
 `r last.case`__
 
 * __Last reported case: 
-`r last.name`, age `r last.age`, on `r last.date` by `r last.agency`__
+`r last.name`, `r last.age`, on `r format(last.date, format="%B %d, %Y")` by `r last.agency`__
 
     `r ifelse(last.name == "(Name not released)", "This", last.name)` is the `r paste0(tot.this.yr, num.suffix)` person killed by police in `r tot.yr.is`.  The cause of death is reported as `r last.cod`.  `r last.url`
 
-Before the 2021 legislative reforms, one out of every 5 persons killed in Washington state was killed by an encounter with law enforcement.  (Roughly 250 homicide deaths were recorded each year in WA State.  You can view and download the state's death data
+Before the 2021 legislative reforms, one out of every 5 persons killed in Washington state was killed during an encounter with law enforcement.  (Roughly 250 homicide deaths were recorded each year in WA State, with roughly 50 homicides by police.  You can view and download the state's death data
 <a href="https://doh.wa.gov/data-statistical-reports/washington-tracking-network-wtn/death/ach-injury-deaths-dashboard" target="_top">here</a>).  
 
 In 2021, the year these reforms passed, the number of people killed by police in Washington dropped by 60%, the largest decline seen in any state.  More information on the temporal trends can be found in [the section on "Trends over time"](#trend).
@@ -208,7 +208,7 @@ ____
 
 ## Cause of death {.tabset}
 
-The table shows all of the causes that appear in the Fatal Encounters dataset.  The plot aggregates these into three categories, as the first two (shot and vehicle-related) account for the large majority of cases.  Vehicle-related refers to deaths caused by vehicle crashes or getting run over by a car, and typically occur in the context of vehicle pursuits/chases.
+The table shows all of the causes that appear in the Fatal Encounters dataset.  The plot aggregates these into three categories, as the first two (shot and vehicle-related) account for the large majority of cases.  Vehicle-related refers to deaths caused by vehicle crashes or getting run over by a car.  Typically these occur in the context of vehicle pursuits/chases, but sometimes they are the result of fatal accidents caused by on-duty officers.
 
 ### Plot
 
