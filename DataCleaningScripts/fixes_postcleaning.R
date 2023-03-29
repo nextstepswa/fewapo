@@ -9,6 +9,15 @@
 # I can't tell if the victim died.  Have reported the case to FE.
 # https://www.kiro7.com/news/local/police-investigating-officer-involved-shooting-in-federal-way/930686522/
 
+# Brandon Vorak 3/24/2023
+
+if (wapo_clean$name[wapo_clean$wapoID == 9049] == "Unknown"){
+  wapo_clean$name[wapo_clean$wapoID == 9049] <- "Brandon Vorak"
+  print("Brandon Vorak fix for WaPo")
+} else {
+  print("WaPo Vorak fix not needed anymore")
+}
+
 # James Blancocotto 1/33/2023
 
 if (wapo_clean$name[wapo_clean$wapoID == 8868] == "Unknown"){
