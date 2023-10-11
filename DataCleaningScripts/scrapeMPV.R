@@ -5,13 +5,20 @@
 #   * https://mappingpoliceviolence.us/  
 #     "The Official Mapping Police Violence Database"
 #     stored as xlsx, reasonably current
+#     This is the file we use here
+
+#     Note that there are frequent changes to the colnames and fields as MPV
+#     updates their data, so this script will often generate errors.  Most
+#     are easily fixed to incorporate the MPV updates.
 
 #   * https://mappingpoliceviolence.org/ 
 #     from Campaign Zero
 #     stored as an "airtable", delayed updates
 
+
 #############################################################################
 
+rm(list=ls())
 
 library(tidyverse)
 library(kableExtra)
@@ -38,35 +45,44 @@ url <- "https://mappingpoliceviolence.us/s/MPVDatasetDownload.xlsx"
 destfile <- "Downloads/MPVDatasetDownload.xlsx"
 curl::curl_download(url, destfile)
 
-# we specify coltypes to make sure cols with missing data in first
-# row are read correctly.
-# also modify the coltypes for age, date, zip since these
-# don't get identified correctly by default
+# Note some cols don't read in properly if the first row is missing --
+# dx by coltype = logi
 
-# note this generates warnings for age b/c it has 'Unknown' for missing
+# To fix:
+# Specify coltypes when excel file is read in interactively.
+# But a bit of a PITA and needs to be updated if cols change in MPV.
+# 8/2023 MPV added 2 cols at end for agency name grouping that are not needed,
+#        so we will skip these
 
-# Bit of a PITA and may need to be updated if 
-# cols change in MPV.  
-# Read in with point and click, Use lapply(data, class)
-# to get names/classes, futz in word and excel to get the list
+# Check using lapply(data, class)
 
+# Also need to modify the coltypes for age, date, zip since these
+# don't get identified correctly by default.  But we do that in the
+# cleaning loop below.
+# Note this generates warnings for age b/c it has 'Unknown' for missing
 
-MPV1_raw <- read_excel(
-  destfile,
-  col_types = c("text", "numeric", "text", "text", "text", 
-  "date" , "text", "text", "text", 
-  "numeric", "text", "text", "text", "text", 
-  "text", "text", "text", "text", "text", 
-  "text", "text", "text", "text", "text", 
-  "text", "numeric", "text", "text", "numeric", "numeric", 
-  "text", "text", "text", "text", "text", 
-  "text", "numeric", "text", "text", "numeric", "numeric", 
-  "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", 
-  "numeric", "numeric", "text", "text", "text", "text", 
-  "text", "text", "text", "text", "numeric", "text", 
-  "text", "text", "text", "numeric")
-)
+  
 
+library(readxl)
+#MPV1_raw <- read_excel(destfile)
+
+MPV1_raw <- read_excel("Downloads/MPVDatasetDownload.xlsx", 
+                       col_types = c("text", "text", "text", 
+                                     "text", "text", "date", "text", 
+                                     "text", "text", "text", "text", "text", 
+                                     "text", "text", "text", "text", "text", 
+                                     "text", "text", "text", "text", "text", 
+                                     "text", "text", "text", "numeric", 
+                                     "text", "text", "numeric", "numeric", 
+                                     "text", "text", "text", "text", "numeric", 
+                                     "text", "numeric", "text", "text", 
+                                     "numeric", "numeric", "numeric", 
+                                     "numeric", "numeric", "numeric", 
+                                     "numeric", "numeric", "numeric", 
+                                     "numeric", "numeric", "text", "text", 
+                                     "skip", "text", "text", "text", "text", 
+                                     "text", "numeric", "text", "text", 
+                                     "text", "text", "numeric"))
 
 # MPV1 cleaning ----
 
@@ -74,13 +90,14 @@ MPV1_clean <- MPV1_raw %>%
   
   mutate(
     mpvID = `MPV ID`,
-    feID = `Fatal Encounters ID`,
+    feID = as.numeric(`Fatal Encounters ID`),
     wapoID = `WaPo ID (If included in WaPo database)`,
-    kbp = `Killed by Police 2013-22`
+    kbp = `Killed by Police 2013-23` # note this is a column of all 1's
   ) %>%
   
-  rename_with(.fn = ~sub(" \\(Source.*\\)", "", .),               .cols = contains("Source:") 
-  ) %>% 
+  rename_with(.fn = ~sub(" \\(Source.*\\)", "", .), .cols = contains("Source:")) %>% 
+  rename_with(.fn = ~sub(" \\(https.*\\)", "", .), .cols = contains("https")) %>% 
+  rename_with(.fn = ~sub(" \\(DRAFT\\)", "", .), .cols = contains("DRAFT")) %>% 
   
   # Victim info ----
 
@@ -101,63 +118,45 @@ MPV1_clean <- MPV1_raw %>%
          lname = "NA"
   ) %>%
   
-  # age is a mess, chr num mix in orig file, read in as num so all
-  # chr entries are NA
+  ## Age 
+  ## uses "Unknown" for NA which turns this into a character
   
-  mutate(age = replace_na(`Victim's age`, 999)
-  ) %>%
-  
-  mutate(raceImp = `Victim's race`,
-         
-         raceImp = case_when(
-           raceImp == "Asian" ~ "API",
-           raceImp == "Black" ~ "BAA",
-           raceImp == "Hispanic" ~ "HL",
-           raceImp == "Native American" ~ "NAA",
-           raceImp == "Pacific Islander" ~ "PI",
-           raceImp == "White" ~ "WEA",
-           raceImp == "Unknown race" ~ "Unknown",
-           TRUE ~ raceImp),
-         raceImp = fct_relevel(raceImp, "Unknown", after = Inf)
+  mutate(age = as.numeric(`Victim's age`),
+         age = replace_na(age, 999)
   ) %>%
   
   mutate(gender = `Victim's gender`,
          gender = fct_relevel(gender, "Unknown", after = Inf)
   ) %>%
   
-  mutate(date = date(`Date of Incident (month/day/year)`),
+  ## Race - not sure what's happening with imputation
+  mutate(race = `Victim's race`,
+         
+         race = case_when(
+           race == "Asian" ~ "API",
+           race == "Black" ~ "BAA",
+           race == "Hispanic" ~ "HL",
+           race == "Native American" ~ "NAA",
+           race == "Pacific Islander" ~ "PI",
+           race == "White" ~ "WEA",
+           grepl("Unknown", race) ~ "Unknown",
+           TRUE ~ race),
+         race = fct_relevel(race, "Unknown", after = Inf)
+  ) %>%
+  
+  mutate(date = `Date of Incident (month/day/year)`,
          month = month(date, label=T),
          day = day(date),
          year = year(date)
   ) %>%
-  
-  # COD info ----
-
-  ## Note that this records the types of force used
-  ## Not the official cause of death
-
-  mutate(cod = `Cause of death`,
-         
-         cod = case_when(
-           grepl(",", cod) ~ "Multiple types of force used",
-           grepl("Gunshot", cod) ~ "Gunshot",
-           grepl("Asph|Physical|Spray|spray", cod) ~ "Asphyxiate/restrain/CW",
-           grepl("Beaten", cod) ~ "Beaten",
-           grepl("Taser", cod) ~ "Taser",
-           grepl("Bomb|Bean", cod) ~ "Other",
-           TRUE ~ cod),
-         cod = factor(cod),
-         cod = fct_relevel(cod, "Multiple types of force used", after = Inf),
-         cod = fct_relevel(cod, "Other", after = Inf)
-  ) %>%
-  
+ 
   # Location info ----
 
   mutate(city = City,
          st = State,
          state = state_translate_fn(st),
          state.num = num[match(st, states)],
-         zip = Zipcode,
+         zip = as.numeric(Zipcode),
          county = County
   ) %>%
   
@@ -192,6 +191,48 @@ MPV1_clean <- MPV1_raw %>%
          agency.ori = `ORI Agency Identifier (if available)`
   ) %>%
 
+  # COD info ----
+  ## Note that this records the types of force used
+  ## Not the official cause of death
+
+  mutate(cod = `Cause of death`,
+       
+       cod = case_when(
+         grepl(",", cod) ~ "Multiple types of force used",
+         grepl("Gunshot", cod) ~ "Gunshot",
+         grepl("Asph|Physical|Spray|spray", cod) ~ "Asphyxiate/restrain/CW",
+         grepl("Beaten", cod) ~ "Beaten",
+         grepl("Taser", cod) ~ "Taser",
+         grepl("Bomb|Bean", cod) ~ "Other",
+         TRUE ~ cod),
+       cod = factor(cod),
+       cod = fct_relevel(cod, "Multiple types of force used", after = Inf),
+       cod = fct_relevel(cod, "Other", after = Inf)
+  ) %>%
+  
+  ## Description ----
+  mutate(description = `Media description of the circumstances surrounding the death`) %>%
+  
+  ## Case disposition  ----
+  
+  mutate(case.disposition = `Official disposition of death (justified or other)`,
+         
+         case.disposition = case_when(
+           is.na(case.disposition) ~ "Unknown",
+           grepl("Just|Clear|accident|Accident|Excusable", case.disposition) ~ "Justified or cleared",
+           grepl("Convicted|convicted|guilty", case.disposition) ~ "Criminal conviction",
+           grepl("Charged", case.disposition) ~ "Criminal charge",
+           grepl("Civil.*award", case.disposition) ~ "Civil award",
+           grepl("Civil", case.disposition) ~ "Civil suit filed",
+           grepl("Pend|Under", case.disposition) ~ "Pending",
+           grepl("Suicide|suicide", case.disposition) ~ "Murder/suicide",
+           grepl("unknown|Unreported", case.disposition) ~ "Unknown",
+           grepl("Unjustified", case.disposition) ~ "Administrative discipline",
+           TRUE ~ case.disposition),
+         case.disposition = factor(case.disposition),
+         
+         case.charges = `Criminal Charges?`
+  ) %>%
   
   ## LE narrative ----
   
@@ -227,8 +268,12 @@ MPV1_clean <- MPV1_raw %>%
          weapon = fct_relevel(weapon, "unknown", after = Inf)
   ) %>%
   
+  mutate(threat.level = `Alleged Threat Level`,
+         threat.description = `Threat Level Description`,
+         fleeing = Fleeing
+  ) %>%
+  
   mutate(bodycam = `Body Camera`,
-         
          bodycam = case_when(
            grepl("Bystand", bodycam) ~ "Bystander",
            grepl("Dash", bodycam) ~ "Dashcam",
@@ -241,101 +286,34 @@ MPV1_clean <- MPV1_raw %>%
          bodycam = fct_relevel(bodycam, "Unknown", after = Inf)
   ) %>%
   
-  ## Case processing/disposition info 
   
-  mutate(case.disposition = `Official disposition of death (justified or other)`,
-         
-         case.disposition = case_when(
-           is.na(case.disposition) ~ "Unknown",
-           grepl("Just|Clear|accident|Accident|Excusable", case.disposition) ~ "Justified or cleared",
-           grepl("Convicted|convicted|guilty", case.disposition) ~ "Criminal conviction",
-           grepl("Charged", case.disposition) ~ "Criminal charge",
-           grepl("Civil.*award", case.disposition) ~ "Civil award",
-           grepl("Civil", case.disposition) ~ "Civil suit filed",
-           grepl("Pend|Under", case.disposition) ~ "Pending",
-           grepl("Suicide|suicide", case.disposition) ~ "Murder/suicide",
-           grepl("unknown|Unreported", case.disposition) ~ "Unknown",
-           grepl("Unjustified", case.disposition) ~ "Administrative discipline",
-           TRUE ~ case.disposition),
-         case.disposition = factor(case.disposition),
-         
-         case.charges = `Criminal Charges?`,
-         
-         chief.prosecutor = `Officer Prosecuted by (Chief Prosecutor)`,
-         court.prosecutor = `Officer Prosecuted by (Prosecutor in Court)`,
-         prosecutor.race = `Prosecutor Race`,
-         prosecutor.gender = `Prosecutor Gender`,
-         prosecutor.term = `Chief Prosecutor Term`,
-         prosector.party = `Chief Prosecutor Political Party`,
-         prosecutor.special = `Special Prosecutor?`,
-
-         case.ind.investigation = `Independent Investigation?`
-  ) %>%
-  
-  # The following FE vars are not included in MPV
-  
-  # # see email chain with Burghardt re "Intended use of force (Developing)".  
-  # # Veh/Purs is the unclean mix category that he is slowly working through
-  # # Vehicle is the clean non-pursuit category (e.g., accident)
-  # # Pursuit is the clean hot pursuit category
-  # mutate(hotPursuit = `Intended use of force (Developing)`,
-  #        hotPursuit = case_when(
-  #          hotPursuit == "" ~ "Unknown",
-  #          hotPursuit == "Undetermined" ~ "Unknown",
-  #          hotPursuit == "Vehic/Purs" | hotPursuit == "Pursuit" ~ "Vehicle Pursuit",
-  #          TRUE ~ "Other"),
-#        hotPursuit = fct_relevel(hotPursuit, "Unknown", 
-#                                 after = Inf)
-#) %>%
-# mutate(circumstances = `Intended use of force (Developing)`,
-#        circumstances = case_when(
-#          circumstances == "" ~ "Unknown",
-#          circumstances == "Undetermined" ~ "Unknown",
-#          circumstances == "Vehic/Purs" ~ "Mix of Vehicle hot pursuits and accidents",
-#          circumstances == "Pursuit" ~ "Vehicle hot pursuits",
-#          circumstances == "Vehicle" ~ "Vehicle accidents",
-#          circumstances == "No" ~ "Unintended",
-#          TRUE ~ circumstances),
-#        circumstances = fct_relevel(circumstances, "Unknown", 
-#                                    after = Inf)
-#) %>%
-# # Here we do not classify "suicide" as a homicide.
-# mutate(homicide = circumstances,
-#        homicide = case_when(
-#          circumstances == "Suicide" ~ 0,
-#          circumstances == "Unknown" ~ NA_real_,
-#          TRUE ~ 1)
-#) %>%
-
-# NOTE: in FE the `Symptoms of mental illness? INTERNAL USE, NOT FOR ANALYSIS`
-# field only flags cases where a mental health issue was known before the
-# officers arrived on the scene.
-mutate(symptoms = `Symptoms of mental illness?`,
-       symptoms = case_when(
-         symptoms %in% c("", "Unknown", "Unclear", "unknown") ~ "Unknown",
-         symptoms == "Yes" ~ "Mental Illness",
-         symptoms == "No" ~ "None",
-         grepl("Drug", symptoms) ~ "Drugs or Alcohol",
-         TRUE ~ symptoms) 
+  # NOTE: in FE the `Symptoms of mental illness? INTERNAL USE, NOT FOR ANALYSIS`
+  # field only flags cases where a mental health issue was known before the
+  # officers arrived on the scene.
+  mutate(symptoms = `Symptoms of mental illness?`,
+         symptoms = case_when(
+           symptoms %in% c("", "Unknown", "Unclear", "unknown") ~ "Unknown",
+           symptoms == "Yes" ~ "Mental Illness",
+           symptoms == "No" ~ "None",
+           grepl("Drug", symptoms) ~ "Drugs or Alcohol",
+           TRUE ~ symptoms) 
 ) %>%
 
   ## Officer info ----
 
-  mutate(officer.names = `Names of Officers Involved (DRAFT)`,
-         officer.races = `Race of Officers Involved (DRAFT)`,
-         officer.previous = `Known Past Shootings of Officer(s) (DRAFT)`
+  mutate(offduty = `Off-Duty Killing?`,
+         offduty = ifelse(grepl("duty", offduty), "Yes", "Unknown"),
+         offduty = fct_relevel(offduty, "Unknown", after = Inf),
+         
+         officer.names = `Names of Officers Involved`,
+         officer.races = `Race of Officers Involved`,
+         officer.previous = `Known Past Shootings of Officer(s)`
   ) %>%  
   
-  mutate(offduty = `Off-Duty Killing?`,
-         
-         offduty = ifelse(grepl("duty", offduty), "Yes", "Unknown"),
-         offduty = fct_relevel(offduty, "Unknown", after = Inf)
-         
-  ) %>%
   
   ## Context info ----
 
-  mutate(context = `Encounter Type (DRAFT)`,
+  mutate(context = `Encounter Type`,
          
          context = case_when(
            is.na(context) ~ "None or unknown",
@@ -356,14 +334,12 @@ mutate(symptoms = `Symptoms of mental illness?`,
            grepl("people", context) ~ "Nonviolent-Crime against person",
            TRUE ~ context),
          
-         context.detail = `Initial Reported Reason for Encounter (DRAFT)`,
-         
          context = fct_relevel(context, "None or unknown", after = Inf),
-         context.violent = fct_relevel(context.violent, "None or unknown", after = Inf)
-  ) %>%
-  
-  mutate(call4svc = `Call for Service? (DRAFT)`,
+         context.violent = fct_relevel(context.violent, "None or unknown", after = Inf),
          
+         context.detail = `Initial Reported Reason for Encounter`,
+         
+         call4svc = `Call for Service?`,
          call4svc = case_when(
            call4svc=="yes" ~ "Yes",
            call4svc == "Unavailable" ~ "Unknown",
@@ -374,11 +350,11 @@ mutate(symptoms = `Symptoms of mental illness?`,
   # Geographic-related info
   
   mutate(census.tract = `Census Tract Code`,
-         latitude = as.numeric(Latitude),
-         longitude = as.numeric(Longitude),
-         #community.trulia = MPV1_raw[, grep("Trulia", names(MPV1_raw))][[1]],
          community.hud = `HUD UPSAI Geography`,
          community.nchs = MPV1_raw[, grep("NCHS", names(MPV1_raw))][[1]],
+         medhhinc.acs = `Median household income ACS Census Tract`,
+         latitude = Latitude,
+         longitude = Longitude,
          census.pop = `Total Population of Census Tract 2019 ACS 5-Year Estimates`,
          census.nhw = `White Non-Hispanic Percent of the Population ACS`,
          census.nhb = `Black Non-Hispanic Percent of the Population ACS`,
@@ -387,31 +363,39 @@ mutate(symptoms = `Symptoms of mental illness?`,
          census.pi = `Pacific Islander Percent of the Population ACS`,
          census.om = `Other/Two or More Race Percent of the Population ACS`,
          census.hisp = `Hispanic Percent of the Population ACS`,
-         census.medhhinc = `Median household income ACS Census Tract`,
          congress.dist = `Congressional District`,
-         congress.rep.lname = `Congressional Representative Last name`,
-         congress.rep.fname = `Congressional Representative First name`,
+         congress.rep = `Congressional Representative Full Name`,
          congress.rep.party = `Congressional Representative Party`
   ) %>%
   
-  ## Media links and description ----
-
-  mutate(url_info = `Link to news article or photo of official document`,
-         url_pic = `URL of image of victim`,
-         url.prosecutor = `Prosecutor Source Link`,
+  ## Prosecutor info ----
+  mutate(chief.prosecutor = `Officer Prosecuted by (Chief Prosecutor)`,
+         prosecutor.race = `Prosecutor Race`,
+         prosecutor.gender = `Prosecutor Gender`,
+         prosector.party = `Chief Prosecutor Political Party`,
+         prosecutor.term = `Chief Prosecutor Term`,
+         court.prosecutor = `Officer Prosecuted by (Prosecutor in Court)`,
+         prosecutor.special = `Special Prosecutor?`,
+         independent.investigation = `Independent Investigation?`,
+         url.prosecutor = `Prosecutor Source Link`
   ) %>%
   
-  mutate(description = `A brief description of the circumstances surrounding the death`) %>%
-  
+  ## Media links ----
+
+  mutate(url_pic = `URL of image of victim`,
+         url_info = `Link to news article or photo of official document`,
+  ) %>%
+
   ## Create date/state/city-sorted rowID for cleaning ----
   arrange(date, st, city) %>%
   mutate(rowID = row_number()) %>%
   
-  ## Pull cleaned variables into the new df ----
-  select(c(rowID, mpvID:description))
+  ## Select the cleaned variables into the new df ----
+  select(c(rowID, mpvID:cod, case.disposition:url_info, description)) %>%
+  select(-kbp) # all 1's
 
 
-# Create clickable url for Rpubs reports ----
+# Create clickable source url for Rpubs reports ----
 
 MPV1_clean$url_click <- sapply(MPV1_clean$url_info, make_url_fn)
 
@@ -427,6 +411,9 @@ for(i in 1:length(name.list)) {
 ## Create tidy officer name dataframe with all IDs
 ## one record per officer name (NAs stripped at the end)
 ## This is saved as a separate df
+
+# temp adds for WA
+MPV1_clean$officer.names[MPV1_clean$name == "Ethan Austin Murray"] <- "Deputy Joseph Wallace"
 
 officer_names <- MPV1_clean %>% 
   select(rowID, feID, wapoID, mpvID, st, year, officer.names) %>%
