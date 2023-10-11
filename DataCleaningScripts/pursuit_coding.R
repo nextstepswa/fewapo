@@ -35,8 +35,8 @@
 
 ## Active pursuit - fatality occurred during pursuit
 ## Terminated pursuit - active pursuit, crash/fatality happened shortly after pursuit terminated 
-## Involved pursuit - death occurred post pursuit, cod not vehicle (often shot)
-## Attempted stop - lights/siren activated, subject fled, not pursued, crashed
+## Involved pursuit - death occurred post pursuit, cod typically not vehicle (often shot)
+## Attempted stop - lights/siren activated, subject fled, not pursued or pursuit terminated well before accident, crashed
 ## Vehicle accident - non-pursuit, non-fleeing incidents; on duty officer accident
 ## Reviewed not related - case was reviewed, no vehicle/pursuit relevance
 ## NA - case not reviewed or coded
@@ -115,7 +115,7 @@ all.pursuit.tags <- finalmerge %>%
   mutate(pursuit.tag = case_when(
     !is.na(vpursuit.draft) ~ 1, # All DBB pursuit related codes and 2022+ codes
     grepl('vehicle|car|crash|speed|chase|pursuit|flee|fled', description) |
-      grepl('car|Car', flee.wapo) ~ 2, # any other indication of vehicle or pursuit
+      grepl('Vehicle|Other', flee) ~ 2, # any other indication of vehicle or pursuit
     cod == "Vehicle" ~ 3 # this doesn't seem to pick up any additional, but may in the future
   )) %>%
   filter(!is.na(pursuit.tag)) %>%
@@ -172,7 +172,7 @@ new.cases <- anti_join(all.cases, old.coded, by = "feID") %>%
 
 if(nrow(new.cases) != 0){ # pursuit updates are needed
 
-  pursuit.coding.message <- "\n\n *** NEW POSSIBLE PURSUIT CASES TO REVIEW *** \n\n"
+  pursuit.coding.message <- "\n\n *** NEW POSSIBLE PURSUIT CASES TO REVIEW *** \n\n https://docs.google.com/spreadsheets/d/1De0ih8yfbnHVX8iNMa_OGcn03xHrjRYr2m2ql-xSTho/edit?usp=sharing \n\n"
 
   # create df with new cases and correct col structure
   new_case_df <- bind_rows(raw.coded.pursuits[1,], new.cases)[-1,] 
@@ -196,7 +196,7 @@ if(nrow(new.cases) != 0){ # pursuit updates are needed
             any(new_case_df$vpursuit.draft == "Terminated pursuit", na.rm=T)) {
 
     # Stop if new active pursuit cases
-    stop("Stopping:  There are new active pursuits to review")
+    stop(paste("Stopping: ", pursuit.coding.message))
     
   } else {
     
@@ -288,7 +288,7 @@ if(!file.exists(here::here("data-outputs", "WTSC.rda"))) { # Start from scratch
 # Should we check for a WTSC update (in May)?
 
 wtsc.update.message <- NULL
-if(lubridate::month(Sys.Date()) == 5 & 
+if(lubridate::month(Sys.Date()) > 5 & 
    last.wtsc.update < lubridate::year(Sys.Date())) {
   wtsc.message <- "\n\n *** CHECK FOR WTSC ANNUAL UPDATE **** \n\n\n"
   

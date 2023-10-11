@@ -9,23 +9,36 @@
 # I can't tell if the victim died.  Have reported the case to FE.
 # https://www.kiro7.com/news/local/police-investigating-officer-involved-shooting-in-federal-way/930686522/
 
-# Brandon Vorak 3/24/2023
+# Travis L. Hammons
 
-if (wapo_clean$name[wapo_clean$wapoID == 9049] == "Unknown"){
-  wapo_clean$name[wapo_clean$wapoID == 9049] <- "Brandon Vorak"
-  print("Brandon Vorak fix for WaPo")
+if (wapo_clean$name[wapo_clean$wapoID == 9415] == "Unknown"){
+  wapo_clean$name[wapo_clean$wapoID == 9415] <- "Cody Kuzior"
+  wapo_clean$age[wapo_clean$wapoID == 9415] <- 41
+  print("Kuzior fix for WaPo")
 } else {
-  print("WaPo Vorak fix not needed anymore")
+  print("WaPo Kuzior fix not needed anymore")
 }
 
-# James Blancocotto 1/33/2023
+# Travis L. Hammons
 
-if (wapo_clean$name[wapo_clean$wapoID == 8868] == "Unknown"){
-  wapo_clean$name[wapo_clean$wapoID == 8868] <- "James Blancocotto"
-  print("James Blancocotto fix for WaPo")
+if (wapo_clean$age[wapo_clean$wapoID == 9242] == 24){
+  wapo_clean$name[wapo_clean$wapoID == 9242] <- "Travis L. Hammons"
+  wapo_clean$age[wapo_clean$wapoID == 9242] <- 34
+  print("Hammons age fix for WaPo")
 } else {
-  print("WaPo Blancocotto fix not needed anymore")
+  print("WaPo Hammons fix not needed anymore")
 }
+
+# Dylan Wallace
+
+if (wapo_clean$name[wapo_clean$wapoID == 9140] == "Unknown"){
+  wapo_clean$name[wapo_clean$wapoID == 9140] <- "Dylan Wallace"
+  print("Dylan Wallace fix for WaPo")
+} else {
+  print("WaPo Dylan Wallace fix not needed anymore")
+}
+
+
 
 # Dillion Pugsley 12/30/2022
 
@@ -43,6 +56,7 @@ if (wapo_clean$name[wapo_clean$wapoID == 8367] == "Unknown"){
   wapo_clean$age[wapo_clean$wapoID == 8367] <- 40
   wapo_clean$gender[wapo_clean$wapoID == 8367] <- "Male"
   print("Peter Collins fix for WaPo")
+  
 } else {
   print("WaPo Collins fix not needed anymore")
 }
@@ -77,7 +91,7 @@ if (wapo_clean$name[wapo_clean$wapoID == 7735] == "Unknown"){
 if (fe_clean$name[fe_clean$feID == 31462] == "Unknown"){
   fe_clean$name[fe_clean$feID == 31462] <- "Sorin Ardelean"
   fe_clean$age[fe_clean$feID == 31462] <- 43
-  fe_clean$COD[fe_clean$feID == 31462] <- "Gunshot"
+  fe_clean$cod[fe_clean$feID == 31462] <- "Gunshot"
   fe_clean$agency[fe_clean$feID == 31462] <- "Algona Police Department"
   fe_clean$url_info[fe_clean$feID == 31462] <- "https://www.auburn-reporter.com/news/fatal-police-shooting-of-suspect-in-algona-hostage-taking-incident-is-subject-of-investigation/"
   fe_clean$url_click[fe_clean$feID == 31462] <- make_url_fn(fe_clean$url_info[fe_clean$feID == 31462])
@@ -124,11 +138,13 @@ fe_clean$url_info[fe_clean$feID==28883] <-
 # correct city and or state
 wapo_clean$st[wapo_clean$wapoID==6469] <- "ID"
 wapo_clean$state[wapo_clean$wapoID==6469] <- "Idaho"
+wapo_clean$state.num[wapo_clean$id==6469] <- match(wapo_clean$st[wapo_clean$id==6469], st.abb51)
 
-wapo$city[wapo$id==4655] <- "Kalama"
-wapo$st[wapo$id==4655] <- "WA"
-wapo$state[wapo$id==4655] <- "Washington"
-wapo$state.num[wapo$id==4655] <- 47
+
+wapo_clean$city[wapo_clean$id==4655] <- "Kalama"
+wapo_clean$st[wapo_clean$id==4655] <- "WA"
+wapo_clean$state[wapo_clean$id==4655] <- "Washington"
+wapo_clean$state.num[wapo_clean$id==4655] <- match(wapo_clean$st[wapo_clean$id==4655], st.abb51)
 
 # Lat Long input errors ----------------
 
