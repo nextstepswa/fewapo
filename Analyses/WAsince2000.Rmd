@@ -246,21 +246,21 @@ of the original data.  Fatal Encounters employs an algorithm to try to impute th
 ```{r racetab}
 
 tab <- homicides %>%
-  mutate(raceImp = recode(raceImp,
+  mutate(race = recode(race,
     "API" = "Asian/Pacific Islander",
     "BAA" = "Black/African American",
     "HL" = "Hispanic/Latinx",
     "NAA" = "Native American/Indigenous",
     "WEA" = "White/European American")
   ) %>%
-group_by(raceImp) %>%
+group_by(race) %>%
   summarize(Number = n(),
             Percent = round(100*Number/nrow(homicides), 1)
   ) %>%
-  bind_rows(data.frame(raceImp="Total", 
+  bind_rows(data.frame(race="Total", 
                        Number = sum(.$Number), 
                        Percent = sum(.$Percent))) %>%
-  rename(Race = raceImp) 
+  rename(Race = race) 
 
 tab %>%
   kable(caption = "Breakdown by Race") %>%
@@ -273,16 +273,16 @@ tab %>%
 ### Plots
 ```{r raceplots, message=F}  
 homicides %>%
-  mutate(raceImp = recode(raceImp,
+  mutate(race = recode(race,
     "API" = "Asian",
     "BAA" = "Black",
     "HL" = "Latinx",
     "NA" = "Native",
     "WEA" = "White")
   ) %>%
-  count(raceImp) %>%
+  count(race) %>%
   mutate(perc = n / nrow(homicides)) %>%
-  ggplot(aes(x=raceImp, 
+  ggplot(aes(x=race, 
              y = perc, 
              label = n)) +
   # label = round(100*perc, 1))) +
@@ -294,8 +294,8 @@ homicides %>%
          ylab("Percent of Total")
 
 homicides %>%
-  mutate(raceb = case_when(raceImp == "WEA" ~ "White",
-                           raceImp == "Unknown" ~ "Unknown",
+  mutate(raceb = case_when(race == "WEA" ~ "White",
+                           race == "Unknown" ~ "Unknown",
                            TRUE ~ "BIPOC"),
          raceb = fct_relevel(raceb, "Unknown", 
                              after = Inf)) %>%
@@ -328,7 +328,7 @@ For the Fatal Encounters dataset, about
 `r scales::percent(prop.table(table(homicides$raceOrig, 
 useNA = "al"))[["Unknown"]])`
 of the cases for WA State do not have information that explicitly identifies the race of the person killed.  It's worth remembering that the Fatal Encounters project relies primarily on media reports (and some public records requests) to find these cases, so they are limited by the information provided in those sources.  The Fatal Encounters team uses an "imputation" model to try to predict race for the missing cases.  A brief description of the methodology is online [here](https://docs.google.com/spreadsheets/d/1dKmaV_JiWcG8XBoRgP8b4e9Eopkpgt7FL7nyspvzAsE/edit#gid=1359780841&range=A9).  They are able to impute just over half of the missing cases with reasonable confidence, and we include these imputations in the breakdowns we report.  After imputation, about 
-`r scales::percent(prop.table(table(homicides$raceImp))[["Unknown"]])`
+`r scales::percent(prop.table(table(homicides$race))[["Unknown"]])`
 of cases in WA are still missing race.
 
 *Bottom line:* This makes it impossible to say exactly how many people killed by police are in each racial group.
@@ -337,11 +337,11 @@ ____
 
 #### We are reporting the raw counts in this report, not per capita rates
 
-Breaking the total count down by race, the largest single group of persons killed by police are identified as White/European-American: `r scales::percent(prop.table(table(homicides$raceImp))[["WEA"]])`
+Breaking the total count down by race, the largest single group of persons killed by police are identified as White/European-American: `r scales::percent(prop.table(table(homicides$race))[["WEA"]])`
 
 So, does this mean that we can say: "There aren't any racial disparities in persons killed by police?".  
   
-No. This raw count can not be used to assess racial disparities, because the word disparity implies the risk is "disproportionate" -- that is, higher (or lower) than proportional.  Proportional is a comparative term: it compares the proportion of fatalities by race, to the proportion of the population by race.  If the two proportions are the same, then we can say there are no disparities.  In this case, if `r scales::percent(prop.table(table(homicides$raceImp))[["WEA"]])` of the WA population is White, then we can say that their risk of being killed by police is proportional to their share of the population.
+No. This raw count can not be used to assess racial disparities, because the word disparity implies the risk is "disproportionate" -- that is, higher (or lower) than proportional.  Proportional is a comparative term: it compares the proportion of fatalities by race, to the proportion of the population by race.  If the two proportions are the same, then we can say there are no disparities.  In this case, if `r scales::percent(prop.table(table(homicides$race))[["WEA"]])` of the WA population is White, then we can say that their risk of being killed by police is proportional to their share of the population.
 
 The population of Washington State overwhelmingly identifies as White -- almost 80% as of 2020 [source: WA State OFM](https://www.ofm.wa.gov/washington-data-research/statewide-data/washington-trends/population-changes/population-race).  If we exclude Hispanics (which the Census treats as ethnicity, not race), non-Hispanic Whites comprise 70% of the WA state population [source: Statistical Atlas of the US](https://statisticalatlas.com/state/Washington/Race-and-Ethnicity).  
 
@@ -350,8 +350,8 @@ So there is a disparity in the risk of being killed by police -- for non-Hispani
 The "risk ratio" is a common way to combine this information into a single number that is easy to understand:  the ratio of the fatality share, to the population share.  When the two shares are the same, the risk ratio equals 1.  When it is less than one, this means the share of fatalities is lower than the population share; they are disproportionately low.  When the risk ratio is greater than one it means the share of fatalities is larger than the population share; they are disproportionately high.  Then, taking 100*(risk ratio-1) tells you the percent lower (or higher) the ratio is than expected, if the risk was proportional to their share of population. 
 
 ```{r include=F}
-prop.wea <- prop.table(table(homicides$raceImp))[["WEA"]]
-prop.baa <- prop.table(table(homicides$raceImp))[["BAA"]]
+prop.wea <- prop.table(table(homicides$race))[["WEA"]]
+prop.baa <- prop.table(table(homicides$race))[["BAA"]]
 rr.wea <- round(prop.wea/.7, 2)
 rr.baa <- round(prop.baa/.04, 2)
 

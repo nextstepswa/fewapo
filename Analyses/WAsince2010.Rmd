@@ -224,21 +224,21 @@ of the original data.  Fatal Encounters employs an algorithm to try to impute th
 ```{r racetab}
 
 tab <- homicides %>%
-  mutate(raceImp = recode(raceImp,
+  mutate(race = recode(race,
     "API" = "Asian/Pacific Islander",
     "BAA" = "Black/African American",
     "HL" = "Hispanic/Latinx",
     "NA" = "Native American/Indigenous",
     "WEA" = "White/European American")
   ) %>%
-group_by(raceImp) %>%
+group_by(race) %>%
   summarize(Number = n(),
             Percent = round(100*Number/nrow(homicides), 1)
   ) %>%
-  bind_rows(data.frame(raceImp="Total", 
+  bind_rows(data.frame(race="Total", 
                        Number = sum(.$Number), 
                        Percent = sum(.$Percent))) %>%
-  rename(Race = raceImp) 
+  rename(Race = race) 
 
 tab %>%
   kable(caption = "Breakdown by Race") %>%
@@ -251,16 +251,16 @@ tab %>%
 ### Plots
 ```{r raceplots, message=F}  
 homicides %>%
-  mutate(raceImp = recode(raceImp,
+  mutate(race = recode(race,
     "API" = "Asian",
     "BAA" = "Black",
     "HL" = "Latinx",
     "NA" = "Native",
     "WEA" = "White")
   ) %>%
-  count(raceImp) %>%
+  count(race) %>%
   mutate(perc = n / nrow(homicides)) %>%
-  ggplot(aes(x=raceImp, 
+  ggplot(aes(x=race, 
              y = perc, 
              label = n)) +
   # label = round(100*perc, 1))) +
@@ -272,8 +272,8 @@ homicides %>%
          ylab("Percent of Total")
 
 homicides %>%
-  mutate(raceb = case_when(raceImp == "WEA" ~ "White",
-                           raceImp == "Unknown" ~ "Unknown",
+  mutate(raceb = case_when(race == "WEA" ~ "White",
+                           race == "Unknown" ~ "Unknown",
                            TRUE ~ "BIPOC"),
          raceb = fct_relevel(raceb, "Unknown", 
                              after = Inf)) %>%
@@ -305,8 +305,7 @@ For the Fatal Encounters dataset, about
 `r scales::percent(prop.table(table(homicides$raceOrig, 
 useNA = "al"))[["Unknown"]])`
 of the cases for WA State since 2010 do not have information that explicitly identifies the race of the person killed.  The Fatal Encounters team uses an "imputation" model to try to predict race for these cases.  A brief description of the methodology is online [here](https://docs.google.com/spreadsheets/d/1dKmaV_JiWcG8XBoRgP8b4e9Eopkpgt7FL7nyspvzAsE/edit#gid=1359780841&range=A9).  They are able to impute just over half of the missing cases with reasonable confidence, and we include these imputations in the breakdowns reported here.  After imputations, about 
-`r scales::percent(prop.table(table(homicides$raceImp, 
-useNA = "al"))[["Unknown"]])`
+`r scales::percent(prop.table(table(homicides$race, useNA = "al"))[["Unknown"]])`
 of cases are still missing race.
 
 2. We are reporting the counts here, not per capita rates
@@ -316,8 +315,7 @@ Breaking the total count down by race, the largest single group of persons kille
 This might be used to support a statement like, "The majority of persons killed by police in WA state are white, there aren't any racial disparities".  That would be incorrect, for two reasons.
 
 * First, the fraction of cases with unknown race,
-`r scales::percent(prop.table(table(homicides$raceImp, 
-useNA = "al"))[["Unknown"]])`,
+`r scales::percent(prop.table(table(homicides$race, useNA = "al"))[["Unknown"]])`,
 is large enough that it is possible that the majority of persons killed in WA state are BIPOC.  If two-thirds of the unknown cases are persons of color, that would mean the majority of victims are BIPOC.  *Using the case counts, we are not able to say with certainty whether the majority of persons killed by police in WA state are White.*
 
 * Second, the question of disparity can only be answered after controlling for the size of the WA state populations by race.  The population of Washington State is overwhelmingly white -- almost 80% as of 2020 [source: WA State OFM](https://www.ofm.wa.gov/washington-data-research/statewide-data/washington-trends/population-changes/population-race).  On that basis alone, *even if all of the unknown race cases where White, their rate of fatal encounters with police would still be 23% lower than expected, given their population share.*  On a per capita basis, the rate of persons killed by police is therefore higher for BIPOC.  In particular, Black/African Americans comprise only 4% of the WA population, but 15% of the persons killed by police: they are 3.7 times more likely to be killed by police on a per capita basis.
