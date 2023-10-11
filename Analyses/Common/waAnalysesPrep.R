@@ -9,7 +9,7 @@
 
 homicides <- merged_data %>% 
   filter(homicide==1 & not.kbp == 0) %>%
-  mutate(age = ifelse(age.fe==999, NA_real_, age.fe)) %>%
+  mutate(age = ifelse(age==999, NA_real_, age)) %>%
   mutate(
     cause.of.death = case_when(
       cod == "Vehicle" & pursuit.type == "Pursuit" ~ "accident during a police vehicular pursuit",
@@ -123,3 +123,4 @@ date.lastbillsign <- lubridate::ymd("2021-04-26")
 date.sarey.charged <- lubridate::ymd("2020-08-20")
 date.ellis.ago <- lubridate::ymd("2020-06-23")
 date.ellis.charged <- lubridate::ymd("2021-05-27")
+

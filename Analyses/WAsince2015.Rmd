@@ -29,7 +29,7 @@ knitr::opts_chunk$set(echo = TRUE, message=FALSE, fig.height = 4)
 ```{r installs, include=FALSE}
 
 ## This is for the R/Markdown/GitHub icons in the public access section (Analyses/Common/access.Rmd)
-## only needed if running for the first time
+## only needed if running for the first time or R version is updated
 # remotes::install_github("mitchelloharawild/icons")
 ```
 
@@ -42,6 +42,7 @@ library(here)
 library(leaflet)
 library(lubridate)
 library(icons)
+library(htmlwidgets)
 
 
 # get cleaned, merged data for WA
@@ -59,9 +60,9 @@ with(homicides, write.csv(cbind(feID,latitude,longitude),
 
 # Introduction {.tabset}
 
-Washington state has enacted a series of statewide police accountability reforms since 2018, beginning with the citizen initiative I-940.
+Washington state has enacted a series of statewide police accountability reforms since 2018.  This report tracks the trend in people killed by police in WA before and after those reforms.
 
-* Initiative 940 passed with over 60% of the statewide vote in the 2018 November general election, becoming WA state law on December 6, 2018.  Certain provisions took effect later: amendments by 
+* The first legislative reform was Initiative 940.  It passed with over 60% of the statewide vote in the 2018 November general election, becoming WA state law on December 6, 2018.  Certain provisions took effect later: amendments by 
 <a href="https://lawfilesext.leg.wa.gov/biennium/2019-20/Pdf/Bills/Session%20Laws/House/1064-S.SL.pdf?q=20221121125434" target="_top">HB 1064</a>
 took effect February 4, 2019, and the first
 <a href="https://apps.leg.wa.gov/wac/default.aspx?cite=139-12&full=true&pdf=true" target="_top">Washington Administrative Code (WAC)</a>
@@ -84,7 +85,8 @@ This report tracks the number of persons killed by police in WA state since `r p
 
     `r ifelse(last.name == "(Name not released)", "This", last.name)` is the `r paste0(tot.this.yr, num.suffix)` person killed by police in `r tot.yr.is`.  The cause of death is reported as `r last.cod`.  `r last.url`
 
-Before the 2021 legislative reforms, one out of every 5 persons killed in Washington state was killed during an encounter with law enforcement.  (Roughly 250 homicide deaths were recorded each year in WA State, with roughly 50 homicides by police.  You can view and download the state's death data
+Before the 2021 legislative reforms, one out of every 6 persons killed in Washington state was killed during an encounter with law enforcement.  (On average,
+about 250 homicide deaths were recorded each year in WA State from 2015-2020, with about 40 killed during encounters with police.  You can view and download the state's official death data
 <a href="https://doh.wa.gov/data-statistical-reports/washington-tracking-network-wtn/death/ach-injury-deaths-dashboard" target="_top">here</a>).  
 
 In 2021, the year these reforms passed, the number of people killed by police in Washington dropped by 60%, the largest decline seen in any state.  More information on the temporal trends can be found in [the section on "Trends over time"](#trend).
@@ -105,7 +107,8 @@ You can click the numbered circles to reach the individual map pointers for each
 * _Clicking_ the pointer will bring up a url to a news article on the case (if available).
 
 ```{r map, message=F, warning=F}
-map <- leaflet(data = homicides, width = "100%") %>% 
+map <- leaflet(data = homicides, #%>% filter(year==2023), 
+               width = "100%") %>% 
   addTiles() %>%
   addMarkers( ~ longitude,
               ~ latitude,
@@ -114,6 +117,8 @@ map <- leaflet(data = homicides, width = "100%") %>%
               clusterOptions = markerClusterOptions()
               )
 map
+ 
+
 ```
 
 
@@ -123,28 +128,28 @@ map
 
 ### Table
 
-The race of the victim is missing in 
-`r scales::percent(prop.table(table(homicides$raceOrig, 
-useNA = "al"))[["Unknown"]])`
-of the original data.  Fatal Encounters employs an algorithm to try to impute these cases.  Over half of the missing values are successfully imputed.  These imputations are included in the analysis here.
+See the "Discussion" tab for more information on how race is ascertained and why the number of missing cases is so high.
+
 ```{r racetab}
 
 tab <- homicides %>%
-  mutate(raceImp = recode(raceImp,
-    "API" = "Asian/Pacific Islander",
-    "BAA" = "Black/African American",
-    "HL" = "Hispanic/Latinx",
-    "NAA" = "Native American/Indigenous",
-    "WEA" = "White/European American")
+  mutate(race = case_match(race,
+    "API" ~ "Asian/Pacific Islander",
+    "BAA" ~ "Black/African American",
+    "HL" ~ "Hispanic/Latinx",
+    "NAA" ~ "Native American/Indigenous",
+    "WEA" ~ "White/European American",
+    .default = race),
+    race = fct_relevel(race,  "Unknown", after = Inf)
   ) %>%
-group_by(raceImp) %>%
+group_by(race) %>%
   summarize(Number = n(),
             Percent = round(100*Number/nrow(homicides), 1)
   ) %>%
-  bind_rows(data.frame(raceImp="Total", 
+  bind_rows(data.frame(race="Total", 
                        Number = sum(.$Number), 
                        Percent = sum(.$Percent))) %>%
-  rename(Race = raceImp) 
+  rename(Race = race) 
 
 tab %>%
   kable(caption = "Breakdown by Race") %>%
@@ -157,21 +162,28 @@ tab %>%
 ### Plots
 ```{r raceplots, message=F}  
 homicides %>%
-  mutate(raceImp = recode(raceImp,
-    "API" = "Asian",
-    "BAA" = "Black",
-    "HL" = "Latinx",
-    "NAA" = "Native American",
-    "WEA" = "White")
+  mutate(race = case_match(race,
+    "API" ~ "Asian/Pacific Islander",
+    "BAA" ~ "Black/African American",
+    "HL" ~ "Hispanic/Latinx",
+    "NAA" ~ "Native American/Indigenous",
+    "WEA" ~ "White/European American",
+    .default = race),
+    race = fct_relevel(race,  "Unknown", after = Inf)
   ) %>%
-  count(raceImp) %>%
+  count(race) %>%
   mutate(perc = n / nrow(homicides)) %>%
-  ggplot(aes(x=raceImp, 
+  
+  ggplot(aes(x=race, 
              y = perc, 
              label = n)) +
-  # label = round(100*perc, 1))) +
   geom_bar(stat="identity", fill="blue", alpha=.5) +
   geom_text(aes(y = perc), size = 3, nudge_y = .025) +
+  
+  theme(axis.text.x = element_text(size=5.5)) +
+  
+  scale_y_continuous(labels = scales::percent_format(acc=1)) +
+  
   labs(title = "Fatalities by Race",
        caption = paste0("WA State since ", 
                         params$from, 
@@ -180,8 +192,8 @@ homicides %>%
          ylab("Percent of Total")
 
 homicides %>%
-  mutate(raceb = case_when(raceImp == "WEA" ~ "White",
-                           raceImp == "Unknown" ~ "Unknown",
+  mutate(raceb = case_when(race == "WEA" ~ "White",
+                           race == "Unknown" ~ "Unknown",
                            TRUE ~ "BIPOC"),
          raceb = fct_relevel(raceb, "Unknown", 
                              after = Inf)) %>%
@@ -192,6 +204,9 @@ homicides %>%
              label = n)) +
   geom_text(aes(y = perc), size = 3, nudge_y = .025) +
   geom_bar(stat="identity", fill="blue", alpha=.5) +
+  
+  scale_y_continuous(labels = scales::percent_format(acc=1)) +
+  
   labs(title = "Fatalities by Race",
        caption = paste0("WA State since ", 
                         params$from, 
@@ -292,15 +307,15 @@ This information comes from the Post dataset, *so is missing for the additional 
 
 ```{r bodycam}
 homicides %>%
-  mutate(bodycam.wapo = ifelse(bodycam.wapo, "Yes", "No"),
-         bodycam.wapo = tidyr::replace_na(bodycam.wapo, "Unknown"),
-         bodycam.wapo = fct_relevel(bodycam.wapo, "Unknown", 
+  mutate(bodycam = ifelse(bodycam, "Yes", "No"),
+         bodycam = tidyr::replace_na(bodycam, "Unknown"),
+         bodycam = fct_relevel(bodycam, "Unknown", 
                              after = Inf)) %>%
-  group_by(bodycam.wapo) %>%
+  group_by(bodycam) %>%
   summarize(Number = n(),
             Percent = round(100*Number/nrow(homicides), 1)
   ) %>%
-  bind_rows(data.frame(bodycam.wapo ="Total", 
+  bind_rows(data.frame(bodycam ="Total", 
                        Number = sum(.$Number), 
                        Percent = sum(.$Percent))) %>%
   kable(caption = "Breakdown by Bodycam",
@@ -928,13 +943,15 @@ ggplotly(p, tooltip = "text")
 
 ### Annual totals and change {.tabset}
 
-Cumulative annual totals up to the last complete year, 
-`r last_complete_yr`, with percentage change from 
-`r last_complete_yr - 1` to `r last_complete_yr`. 
+Cumulative annual totals up to the last complete year,
+`r last_complete_yr`, with percentage change from
+`r last_complete_yr - 1` to `r last_complete_yr`.
 
-Here we report the results from the Fatal Encounters project and the Washington Post data separately.  Recall that Washington Post data only include persons shot and killed by police, while Fatal Encounters includes all persons who are killed by police (including deaths due to asphyxiation, tasers, vehicle chases, etc).
+<!-- Here we report the results from the Fatal Encounters project and the Washington Post data separately.   -->
 
-```{r wavsus, warning=F}
+Here we report the results for the Washington Post data only.  Recall that Washington Post data only include persons shot and killed by police, while Fatal Encounters includes all persons who are killed by police (including deaths due to asphyxiation, tasers, vehicle chases, etc).
+
+```{r wavsus, warning=F, include=F}
 # Here we need the full FE and WaPo datasets, not just WA state
 
 fe_tab <- fe_data %>% 
@@ -968,9 +985,9 @@ wapo_tab[nrow(wapo_tab), 1] <- paste("Pct change",
                                      "to", last_complete_yr)
 ```
 
-#### Fatal Encounters data
+<!-- #### Fatal Encounters data -->
 
-```{r wavsusfe, warning=F}
+```{r wavsusfe, warning=F, include=F}
 kable(fe_tab,
       caption = "Persons killed by police in FE: WA vs. all other states",
       col.names = c("Year", "All Other States", "WA")) %>%
@@ -996,7 +1013,7 @@ kable(wapo_tab,
 
 ### State rankings {.tabset}
 
-Here we also report the results from the Fatal Encounters project and the Washington Post data separately.  Recall that Washington Post data only include persons shot and killed by police, while Fatal Encounters includes all persons who are killed by police (including deaths due to asphyxiation, tasers, vehicle chases, etc).
+Here we report the results from the Fatal Encounters project (through 2021) and the Washington Post data (through the most recent complete year) separately.  Recall that Washington Post data only include persons shot and killed by police, while Fatal Encounters includes all persons who are killed by police (including deaths due to asphyxiation, tasers, vehicle chases, etc).
 
 * States are ranked by the percent change in persons killed from `r last_complete_yr-1` to `r last_complete_yr`.
 
@@ -1079,6 +1096,8 @@ wapo_dat <- wapo_data %>%
 
 ```{r barplotfe, warning = F}
 
+# For now, just through 2021
+
 p <- ggplot(data = fe_dat %>% 
               filter(average >= 10 & !is.infinite(pct.chg_2021)),
             aes(x=pct.chg_2021, y=reorder(st, pct.chg_2021), 
@@ -1099,8 +1118,7 @@ p <- ggplot(data = fe_dat %>%
   scale_x_continuous(labels = scales::percent) +
   
   theme(axis.text.y=element_text(size=rel(0.6)), legend.position = "none") +
-  labs(title = paste("State ranking: % Change from",
-                     last_complete_yr-1, "to", last_complete_yr, "in persons killed by police"),
+  labs(title = paste("State ranking: % Change from 2020 to 2021 in persons killed by police"),
        x="Percent change in persons killed",
        y="State")
 
@@ -1132,8 +1150,7 @@ p <- ggplot(data = fe_dat %>% filter(!is.infinite(pct.chg_2021)),
   scale_x_continuous(labels = scales::percent) +
   
   theme(axis.text.y=element_text(size=rel(.5)), legend.position = "none") +
-  labs(title = paste("State ranking: % Change from",
-                     last_complete_yr-1, "to", last_complete_yr, "in persons killed by police"),
+  labs(title = paste("State ranking: % Change from 2020 to 2021 in persons killed by police"),
        x="Percent change in persons killed",
        y="State")
 
