@@ -1013,7 +1013,7 @@ kable(wapo_tab,
 
 ### State rankings {.tabset}
 
-Here we report the results from the Fatal Encounters project (through 2021) and the Washington Post data (through the most recent complete year) separately.  Recall that Washington Post data only include persons shot and killed by police, while Fatal Encounters includes all persons who are killed by police (including deaths due to asphyxiation, tasers, vehicle chases, etc).
+Here we report the results from the Fatal Encounters project (through 2021, when it stopped reporting) and the Washington Post data (through the most recent complete year) separately.  Recall that Washington Post data only include persons shot and killed by police, while Fatal Encounters includes all persons who are killed by police (including deaths due to asphyxiation, tasers, vehicle chases, etc).
 
 * States are ranked by the percent change in persons killed from `r last_complete_yr-1` to `r last_complete_yr`.
 
@@ -1091,6 +1091,8 @@ wapo_dat <- wapo_data %>%
 ```
 
 #### FE Data {.tabset .tabset-pills}
+
+Reminder that FE stopped reporting in 2021, so this comparison is for the last 2 years of reporting:  2021 vs. 2020.
 
 ##### States with 10+ cases
 
