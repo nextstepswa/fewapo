@@ -71,6 +71,8 @@ wapo$age[wapo$id==7308] <- 48
 wapo$age[wapo$id==7336] <- 33
 wapo$age[wapo$id==7355] <- 36
 wapo$age[wapo$id==7410] <- 45
+wapo$age[wapo$id==9725] <- 27 # WP added late with no age info
+wapo$age[wapo$id==9831] <- 43 # article says "born in 1980"
 
 
 # Gender corrections note orig v2 gender is not capitalized ----
@@ -89,6 +91,7 @@ wapo$gender[wapo$id==8649] <- "male"
 
 wapo$gender[wapo$id==8510] <- "male" # Jeffrey Smith
 wapo$gender[wapo$id==6887] <- "transgender"
+wapo$gender[wapo$id==9725] <- "male"
 
 
 
@@ -176,6 +179,11 @@ wapo$name[wapo$id==8310] <- "Dominic A. Shears"
 wapo$name[wapo$id==7765] <- "Murdock J. Phillips"
 wapo$name[wapo$id==6689] <- "James Wright"
 wapo$name[wapo$id==6790] <- "Ma'Khia Bryant"
+wapo$name[wapo$id==8582] <- "Name Notknown"
+
+
+
+
 
 
 # Date corrections (name and format pre-fixed in ScrapeMerge)

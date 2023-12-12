@@ -9,6 +9,14 @@
 # I can't tell if the victim died.  Have reported the case to FE.
 # https://www.kiro7.com/news/local/police-investigating-officer-involved-shooting-in-federal-way/930686522/
 
+# Franklin Ross
+if (wapo_clean$name[wapo_clean$wapoID == 9831] == "Unknown"){
+  wapo_clean$name[wapo_clean$wapoID == 9831] <- "Franklin O Ross"
+  print("Ross fix for WaPo")
+} else {
+  print("WaPo Ross fix not needed anymore")
+}
+
 # Travis L. Hammons
 
 if (wapo_clean$name[wapo_clean$wapoID == 9415] == "Unknown"){
