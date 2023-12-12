@@ -627,7 +627,7 @@ wapo_2015 <- wapo_clean %>%
 initialmerge <- stringdist_full_join(
   fe_2015, wapo_2015,
   by = c("lname", "fname", "date", "gender", 
-         "cod", "month", "city"),
+         "cod", "month", "day", "city"),
   max_dist = 2,
   ignore_case = T) %>%
   rename_with(~gsub(".x", ".fe", .x, fixed=T)) %>%
