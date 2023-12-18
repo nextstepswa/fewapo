@@ -23,6 +23,8 @@ fe$age[fe$`Unique ID`==28776] <- 56 # WTSC par 3876377
 fe$age[fe$`Unique ID`==28777] <- 56 # WTSC par 3876377
 fe$age[fe$`Unique ID`==29763] <- 32 # WTSC par EB12826
 
+fe$age[fe$`Unique ID` == 28476] <- 34 # MPV matching
+
 wapo$age[wapo$id==6646] <- 42
 wapo$age[wapo$id==6712] <- 36
 wapo$age[wapo$id==6837] <- 50 #both ages reported, obit says 50
@@ -134,9 +136,48 @@ fe$Race[fe$`Unique ID`==28883] <- "Native American/Alaskan" # Justin Lee Aguilar
 fe$Race[fe$`Unique ID`==28501] <- "Hispanic/Latino" # Juan Rene Hummel, from media photo https://www.seattletimes.com/seattle-news/eastside/family-of-man-killed-by-bothell-police-officer-says-they-still-dont-have-answers-2-months-after-fatal-shooting/
 fe$Race[fe$`Unique ID`==15865] <- "European-American/White" # Jamison Edward Childress, from media photo https://www.ctvnews.ca/canada/border-patrol-agent-justified-in-fatal-shooting-of-b-c-man-prosecutor-1.2381699
 
+# Gender corrections ----
+
+fe$Gender[fe$`Unique ID` %in% c(12617, 15664)] <- "Female"
+
+fe$Gender[fe$`Unique ID` %in%
+            c(14053, 16077, 20388, 24130, 25285, 28476,
+              28857, 29393, 29577, 29808, 29434, 30741,
+              25490, 28892)] <- "Male"
+
+fe$Gender[fe$`Unique ID` == 22438] <- "Nonbinary"
+
+fe$Gender[fe$`Unique ID` %in%
+            c(17219, 18658, 28146, 30298)] <- "Transgender man"
+
+fe$Gender[fe$`Unique ID` %in%
+            c(15916, 22098, 24948, 25568, 25822,
+              28017)] <- "Transgender woman"
+
+wapo$gender[wapo$id %in% 
+              c(9904, 8208, 8119)] <- "Female"
+
+wapo$gender[wapo$id %in% 
+              c(8574, 8103, 8109, 7947, 
+                8871, 9296, 8563, 7683, 
+                7970, 7965, 8006, 8324, 
+                8343, 8459, 8494, 8503, 
+                8629, 8712, 8746, 8769, 
+                8801, 8881, 9148, 9363)] <- "Male"
+
+wapo$gender[wapo$id == 2956] <- "Nonbinary"
+
+wapo$gender[wapo$id %in% 
+              c(9057, 6887, 8202, 1236, 2197, 5843)] <- "Transgender man"
+
+wapo$gender[wapo$id %in% 
+              c(5798, 4453, 2887, 263, 4608, 8042)] <- "Transgender woman"
+
+
 
 # Name corrections ----
 
+fe$Name[fe$`Unique ID` == 8584] <- "Rodrick Jones aka Roderick Jones" # consistency
 fe$Name[fe$`Unique ID`==30271] <- "Raul Rosas Zarose"
 fe$Name[fe$`Unique ID`==30775] <- "Steven Dean Primm"
 fe$Name[fe$`Unique ID`==30280] <- "Zaekwon Malik Gullatte"
@@ -150,9 +191,23 @@ fe$Name[fe$`Unique ID`==30886] <- "Jose Angel Francisco Baca"
 fe$Name[fe$`Unique ID`==31002] <- "Irlin Marcloni Cabal Paz"
 fe$Name[fe$`Unique ID`==30875] <- "Omar Lazano Hernandez"
 fe$Name[fe$`Unique ID`==31069] <- "Nurgazy Mamyrov"
+fe$Name[fe$`Unique ID`==29183] <- "Javon Brice"
+fe$Name[fe$`Unique ID`==28915] <- "John Hare"
+fe$Name[fe$`Unique ID`==30798] <- "Setha Phangdy"
+fe$Name[fe$`Unique ID`==29557] <- "Steven Emmet Crosby"
+
 
 # after wapo changes 6/2023
 fe$Name[fe$`Unique ID`==16382] <- "Samuel Toshiro Smith"
+
+
+fe$Name[fe$`Unique ID` == 12617] <- "Stacey Stout"
+fe$Name[fe$`Unique ID` == 15664] <- "Jessica Hernandez"
+fe$Name[fe$`Unique ID` == 28476] <- "Matthew Blake Dixon"
+fe$Name[fe$`Unique ID` == 29577] <- "Eric Kessler"
+fe$Name[fe$`Unique ID` == 29808] <- "Charles Ray Phillips"
+fe$Name[fe$`Unique ID` == 30741] <- "Michael Adams"
+fe$Name[fe$`Unique ID` == 25568] <- "Joshua Rembert Williams"
 
 
 wapo$name[wapo$id==6483] <- "Isaac Matheney"
@@ -180,13 +235,16 @@ wapo$name[wapo$id==7765] <- "Murdock J. Phillips"
 wapo$name[wapo$id==6689] <- "James Wright"
 wapo$name[wapo$id==6790] <- "Ma'Khia Bryant"
 wapo$name[wapo$id==8582] <- "Name Notknown"
+wapo$name[wapo$id == 9415] <- "Cody Kuzior"
+wapo$name[wapo$id == 6235] <- "Richard Romero"
+wapo$name[wapo$id == 7120] <- "Setha Phangdy"
+wapo$name[wapo$id == 8927] <- "Steven Emmet Crosby"
+wapo$name[wapo$id == 6234] <- "George Ludrou Job"
+
+wapo$name[wapo$id == 4453] <- "Joshua Rembert Williams"
 
 
-
-
-
-
-# Date corrections (name and format pre-fixed in ScrapeMerge)
+# Date corrections (name, format pre-fixed in ScrapeMerge) ----
 
 fe$date[fe$`Unique ID`==29416] <- as.Date("2020-12-31") 
 fe$date[fe$`Unique ID`==29677] <- as.Date("2021-02-15") 
@@ -206,14 +264,21 @@ wapo$date[wapo$id==7309] <- as.Date("2021-08-06") # Hayden  McIlvain
 wapo$date[wapo$id==5224] <- as.Date("2019-11-25") # Anthony Chilcott
 wapo$date[wapo$id==1964] <- as.Date("2016-10-12") # Patrick D. Reddeck
 wapo$date[wapo$id==1156] <- as.Date("2016-01-09") # David Jay Kent
+wapo$date[wapo$id==484] <- as.Date("2015-05-20") # MPV match
 
+# State fixes ----
+fe$State[fe$`Unique ID`==28896] <- "FL"
 
-# County fixes
+wapo$state[wapo$id==4934] <- "KS"
+wapo$state[wapo$id==4655] <- "WA"
+wapo$state[wapo$id==1874] <- "AR"
+
+# County fixes ----
 wapo$county[wapo$id==1145] <- "Thurston"
 wapo$county[wapo$id==3026] <- "Thurston"
 
 
-# City fixes
+# City fixes ----
 
 fe$`Location of death (city)`[fe$`Unique ID`==18333] <- "Muckelshoot Reservation" # Renee Davis
 fe$`Location of death (city)`[fe$`Unique ID`==19583] <- "Des Moines" # William Stokes
@@ -250,19 +315,20 @@ wapo$city[wapo$id==5224] <- "Enumclaw" # Anthony Chilcott
 wapo$city[wapo$id==6175] <- "Spokane Valley" # Joshua Brant
 wapo$city[wapo$id==6199] <- "Spokane" # Erik Mahoney
 wapo$city[wapo$id==6305] <- "Woodinville" # Ronny Dunning
+wapo$city[wapo$id==4655] <- "Kalama"
+wapo$city[wapo$id==1874] <- "West Memphis"
 
-
-# Highest level of force (becomes cod)
+# Highest level of force (becomes cod) ----
 fe$`Highest level of force`[fe$`Unique ID`==22065] <- "Asphyxiated/Restrained" # ketamine
 fe$`Highest level of force`[fe$`Unique ID`==30613] <- "Asphyxiated/Restrained" # ketamine
 fe$`Highest level of force`[fe$`Unique ID`==28269] <- "Asphyxiated/Restrained" # ketamine
 
-# Intended use of force (becomes circumstances -> homicide, suicide, vpursuit)
+# Intended use of force (becomes circumstances -> homicide, suicide, vpursuit) ----
 fe$`Intended use of force (Developing)`[fe$`Unique ID`==28269] <- "Less-than-lethal force"
 fe$`Intended use of force (Developing)`[fe$`Unique ID`==22065] <- "Less-than-lethal force"
 
   
-# Better url
+# Better url ----
 fe$`Supporting document link`[fe$`Unique ID`==18333] <- "https://www.seattleweekly.com/news/seattle-man-fatally-shot-by-kent-police-identified/" # William Stokes
 fe$`Supporting document link`[fe$`Unique ID`==25899] <- "https://katu.com/news/local/sheriffs-office-identifies-man-brian-butts-suspected-of-shooting-killing-cowlitz-county-deputy
 " # Brian Butts
@@ -272,8 +338,12 @@ fe$`Supporting document link`[fe$`Unique ID`==28833] <- "https://kimatv.com/news
 fe$`Supporting document link`[fe$`Unique ID`==28834] <- "https://kimatv.com/news/local/wrong-way-crash-in-i-82-leaves-2-dead-1-injured-in-yakima" #Neil Sartain
 fe$`Supporting document link`[fe$`Unique ID`==29763] <- "https://www.spokesman.com/stories/2021/mar/09/sheriff-passenger-killed-as-driver-flees-in-grant-/" #Danielle Shockey
 
+fe$`Supporting document link`[fe$`Unique ID`==14053] <- "https://www.theadvertiser.com/story/news/local/2014/02/08/lincoln-deputy-shoots-kills-23-year-old/5293441/" #Johnny Rico Richardson
 
-# Description
+
+
+  
+# Description ----
 ## 2 pursuit deaths
 fe$`Brief description`[fe$`Unique ID`==17518] <- "Three men allegedly stole a Honda at gunpoint near 15th Avenue South and South State Street, police said. Three hours later, a Seattle police officer tried to pull over the vehicle at 21st Avenue Southwest and Southwest Webster Street. The driver took off and was speeding until reaching Highland Park Drive Southwest, where the car crossed the centerline and struck an Acura, killing both drivers."
 fe$`Brief description`[fe$`Unique ID`==17519] <- "Three men allegedly stole a Honda at gunpoint near 15th Avenue South and South State Street, police said. Three hours later, a Seattle police officer tried to pull over the vehicle at 21st Avenue Southwest and Southwest Webster Street. The driver took off and was speeding until reaching Highland Park Drive Southwest, where the car crossed the centerline and struck an Acura, killing both drivers."

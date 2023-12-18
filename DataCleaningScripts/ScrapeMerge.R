@@ -94,10 +94,15 @@ wapo_cases_url = "https://github.com/washingtonpost/data-police-shootings/raw/ma
 wapo_cases_save_file = here("Downloads", "wapo_raw.csv")
 wapo_cases <- scrape_data_fn(wapo, wapo_cases_url, wapo_cases_save_file)
 
+# wapo_cases <- rio::import(wapo_cases_save_file)
+
 wapo_agency_url = "https://github.com/washingtonpost/data-police-shootings/raw/master/v2/fatal-police-shootings-agencies.csv"
 wapo_agency_save_file = here("Downloads", "wapo_agency_names.csv")
 wapo_agency <- scrape_data_fn(wapo, wapo_agency_url, wapo_agency_save_file) %>%
   rename("agency_ids" = "id", "agency_name" = "name")
+
+# wapo_agency <- rio::import(wapo_agency_save_file) %>%
+#   rename("agency_ids" = "id", "agency_name" = "name")
 
 
 ## Transform agency ids to matrix (may be multiple agencies) and match agency names
@@ -143,13 +148,20 @@ fe_draft <- fe %>%
            is.na(name) ~ "Unknown",
            TRUE ~ name),
          name = str_remove(name, " Jr."),
+         name = str_remove(name, " Jr$"),
          name = str_remove(name, " Sr."),
          name = str_remove(name, " III"),
          name = str_remove(name, " II"),
          name = str_remove(name, " IV"),
          name = str_remove(name, " V$"),
+         
+         # preserve aka names as "name2"
+         name2 = if_else(grepl(" aka ", name), str_remove(name, ".* aka "), ""),
+         # and remove the aka from the primary name
          name = str_remove(name, " aka.*"),
+         
          name = str_replace_all(name, "-"," "),
+         name = str_remove(name, "\\."),
          fname = "NA", # prep for assignment
          lname = "NA") %>%
   mutate(
@@ -188,7 +200,7 @@ fe_draft <- fe %>%
   mutate(gender = str_to_sentence(Gender),
          gender = case_when(
            is.na(gender) | gender == "" ~ "Unknown",
-           grepl("Trans", gender) ~ "Other",
+           #grepl("Trans", gender) ~ "Other",
            TRUE ~ gender),
          gender = fct_relevel(`gender`, "Unknown", after = Inf)
   ) %>%
@@ -397,7 +409,7 @@ fe_draft$url_click <- sapply(fe_draft$url_info, make_url_fn)
 
 fe_clean <- fe_draft %>%
   select(
-    feID, name, fname, lname,
+    feID, name, name2, fname, lname,
     date, month, day, year,
     city, county, st, state, state.num, zip, 
     latitude, longitude,
@@ -424,13 +436,15 @@ wapo_draft <- wapo %>%
          bodycam = body_camera
   ) %>%
   mutate(name = ifelse(name == "", "Unknown", name),
-         name = str_remove(name, " Jr."),
-         name = str_remove(name, " Sr."),
+         name = str_remove(name, " Jr.*$"),
+         name = str_remove(name, ", Jr.$"),
+         name = str_remove(name, " Jr$"),
+         name = str_remove(name, " Sr.$"),
          name = str_remove(name, " III"),
          name = str_remove(name, " II"),
-         name = str_remove(name, " IV"),
+         name = str_remove(name, " IV$"),
          name = str_remove(name, " V$"),
-         name = str_remove(name, " aka.*"),
+         #name = str_remove(name, " aka.*"),
          name = str_replace_all(name, "-"," "),
          fname = "NA",
          lname = "NA"
@@ -440,7 +454,7 @@ wapo_draft <- wapo %>%
   mutate(gender = str_to_sentence(gender),
          gender = case_when(
            gender == "" ~ "Unknown",
-           grepl("Non|Trans", gender) ~ "Other",
+           #grepl("Non|Trans", gender) ~ "Other",
            TRUE ~ gender)
   ) %>%
   

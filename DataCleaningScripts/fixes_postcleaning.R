@@ -17,36 +17,6 @@ if (wapo_clean$name[wapo_clean$wapoID == 9831] == "Unknown"){
   print("WaPo Ross fix not needed anymore")
 }
 
-# Travis L. Hammons
-
-if (wapo_clean$name[wapo_clean$wapoID == 9415] == "Unknown"){
-  wapo_clean$name[wapo_clean$wapoID == 9415] <- "Cody Kuzior"
-  wapo_clean$age[wapo_clean$wapoID == 9415] <- 41
-  print("Kuzior fix for WaPo")
-} else {
-  print("WaPo Kuzior fix not needed anymore")
-}
-
-# Travis L. Hammons
-
-if (wapo_clean$age[wapo_clean$wapoID == 9242] == 24){
-  wapo_clean$name[wapo_clean$wapoID == 9242] <- "Travis L. Hammons"
-  wapo_clean$age[wapo_clean$wapoID == 9242] <- 34
-  print("Hammons age fix for WaPo")
-} else {
-  print("WaPo Hammons fix not needed anymore")
-}
-
-# Dylan Wallace
-
-if (wapo_clean$name[wapo_clean$wapoID == 9140] == "Unknown"){
-  wapo_clean$name[wapo_clean$wapoID == 9140] <- "Dylan Wallace"
-  print("Dylan Wallace fix for WaPo")
-} else {
-  print("WaPo Dylan Wallace fix not needed anymore")
-}
-
-
 
 # Dillion Pugsley 12/30/2022
 

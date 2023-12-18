@@ -21,6 +21,7 @@
 rm(list=ls())
 
 library(tidyverse)
+library(readxl)
 library(kableExtra)
 library(lubridate)
 
@@ -61,12 +62,10 @@ curl::curl_download(url, destfile)
 # cleaning loop below.
 # Note this generates warnings for age b/c it has 'Unknown' for missing
 
-  
 
-library(readxl)
-#MPV1_raw <- read_excel(destfile)
+#mpv_raw <- read_excel(destfile)
 
-MPV1_raw <- read_excel("Downloads/MPVDatasetDownload.xlsx", 
+mpv_raw <- read_excel(destfile, 
                        col_types = c("text", "text", "text", 
                                      "text", "text", "date", "text", 
                                      "text", "text", "text", "text", "text", 
@@ -82,18 +81,22 @@ MPV1_raw <- read_excel("Downloads/MPVDatasetDownload.xlsx",
                                      "numeric", "numeric", "text", "text", 
                                      "skip", "text", "text", "text", "text", 
                                      "text", "numeric", "text", "text", 
-                                     "text", "text", "numeric"))
-
-# MPV1 cleaning ----
-
-MPV1_clean <- MPV1_raw %>%
+                                     "text", "text", "numeric")) 
+# MPV cleaning ----
   
-  mutate(
-    mpvID = `MPV ID`,
-    feID = as.numeric(`Fatal Encounters ID`),
-    wapoID = `WaPo ID (If included in WaPo database)`,
-    kbp = `Killed by Police 2013-23` # note this is a column of all 1's
+  # to facilitate scripted cleaning
+mpv_temp <- mpv_raw %>%  
+  mutate(mpvID = `MPV ID`, 
+         feID = as.numeric(`Fatal Encounters ID`),
+         wapoID = `WaPo ID (If included in WaPo database)`,
+         name = `Victim's name`,
+         date = as.Date(`Date of Incident (month/day/year)`)
   ) %>%
+  select(mpvID:date, `Victim's name`:`Prosecutor Source Link`) #omits KBP, col of 1's
+
+source(here::here("DataCleaningScripts", "fixes_mpv.R"))
+
+mpv_draft <- mpv_temp %>%
   
   rename_with(.fn = ~sub(" \\(Source.*\\)", "", .), .cols = contains("Source:")) %>% 
   rename_with(.fn = ~sub(" \\(https.*\\)", "", .), .cols = contains("https")) %>% 
@@ -101,19 +104,24 @@ MPV1_clean <- MPV1_raw %>%
   
   # Victim info ----
 
-  mutate(name = `Victim's name`,
-         
-         name = case_when(
+  mutate(name = case_when(
            name == "Name withheld by police" ~ "Unknown",
            TRUE ~ name),
-         name = str_remove(name, " Jr."),
-         name = str_remove(name, " Sr."),
+         name = str_remove(name, " Jr"),
+         name = str_remove(name, " Sr"),
          name = str_remove(name, " III"),
          name = str_remove(name, " II"),
-         name = str_remove(name, " IV"),
+         name = str_remove(name, " IV$"),
          name = str_remove(name, " V$"),
          name = str_remove(name, " aka.*"),
          name = str_replace_all(name, "-"," "),
+         name = str_replace_all(name, "\\.|,",""),
+         
+         # preserve aka names as "name2"
+         name2 = if_else(grepl(" or ", name), str_remove(name, ".* or "), ""),
+         # and remove the aka from the primary name
+         name = str_remove(name, " or .*"),
+         
          fname = "NA", # prep for assignment below
          lname = "NA"
   ) %>%
@@ -125,7 +133,7 @@ MPV1_clean <- MPV1_raw %>%
          age = replace_na(age, 999)
   ) %>%
   
-  mutate(gender = `Victim's gender`,
+  mutate(gender = str_to_sentence(`Victim's gender`),
          gender = fct_relevel(gender, "Unknown", after = Inf)
   ) %>%
   
@@ -144,8 +152,7 @@ MPV1_clean <- MPV1_raw %>%
          race = fct_relevel(race, "Unknown", after = Inf)
   ) %>%
   
-  mutate(date = `Date of Incident (month/day/year)`,
-         month = month(date, label=T),
+  mutate(month = month(date, label=T),
          day = day(date),
          year = year(date)
   ) %>%
@@ -351,7 +358,7 @@ MPV1_clean <- MPV1_raw %>%
   
   mutate(census.tract = `Census Tract Code`,
          community.hud = `HUD UPSAI Geography`,
-         community.nchs = MPV1_raw[, grep("NCHS", names(MPV1_raw))][[1]],
+         community.nchs = mpv_temp[, grep("NCHS", names(mpv_temp))][[1]],
          medhhinc.acs = `Median household income ACS Census Tract`,
          latitude = Latitude,
          longitude = Longitude,
@@ -391,20 +398,20 @@ MPV1_clean <- MPV1_raw %>%
   mutate(rowID = row_number()) %>%
   
   ## Select the cleaned variables into the new df ----
-  select(c(rowID, mpvID:cod, case.disposition:url_info, description)) %>%
-  select(-kbp) # all 1's
+  select(rowID, mpvID:date, name2:cod,
+         case.disposition:url_info, description) 
 
 
 # Create clickable source url for Rpubs reports ----
 
-MPV1_clean$url_click <- sapply(MPV1_clean$url_info, make_url_fn)
+mpv_draft$url_click <- sapply(mpv_draft$url_info, make_url_fn)
 
 # Victim first and last name processing ----
 
-name.list <- str_split(MPV1_clean$name, " ")
+name.list <- str_split(mpv_draft$name, " ")
 for(i in 1:length(name.list)) {
-  MPV1_clean$fname[i] <- name.list[[i]][1]
-  MPV1_clean$lname[i] <- name.list[[i]][length(name.list[[i]])]
+  mpv_draft$fname[i] <- name.list[[i]][1]
+  mpv_draft$lname[i] <- name.list[[i]][length(name.list[[i]])]
 }
 
 # Officer name data ----
@@ -413,9 +420,9 @@ for(i in 1:length(name.list)) {
 ## This is saved as a separate df
 
 # temp adds for WA
-MPV1_clean$officer.names[MPV1_clean$name == "Ethan Austin Murray"] <- "Deputy Joseph Wallace"
+mpv_draft$officer.names[mpv_draft$name == "Ethan Austin Murray"] <- "Deputy Joseph Wallace"
 
-officer_names <- MPV1_clean %>% 
+officer_names <- mpv_draft %>% 
   select(rowID, feID, wapoID, mpvID, st, year, officer.names) %>%
   mutate(name = officer.names,
          
@@ -571,7 +578,7 @@ officer_name_table_wa <- officer_names %>%
 # Save clean data ----
 
 scrape_date_mpv <- Sys.Date()
-last_date_mpv <- max(MPV1_clean$date)
+last_date_mpv <- max(mpv_draft$date)
 last_date_eoy_mpv <- ifelse(
   last_date_mpv == ymd(paste0(year(last_date_mpv),"-12-31")), 1, 0)
 
@@ -582,8 +589,8 @@ last_complete_yr_mpv <- ifelse(last_date_eoy_mpv == 1,
                            year(last_date_mpv), 
                            year(last_date_mpv)-1)
 
-mpv_clean <- MPV1_clean
-mpv_clean_wa <- MPV1_clean %>% filter(st == "WA")
+mpv_clean <- mpv_draft
+mpv_clean_wa <- mpv_draft %>% filter(st == "WA")
 
 save(list = c("mpv_clean", "mpv_clean_wa", 
               "officer_names", "officer_names_wa", 
