@@ -1,9 +1,10 @@
 # Pre-cleaning fixes for all cases ---------------------------------------------
 
+# The cleaning script creates new variables based on these fields
+# so the fixes need to be made before the cleaning
+
 # These create merge errors if not fixed, 
 # and merging is typically where these problems are first identified
-# The cleaning often creates new variables based on these fields
-# so the fixes should be made before the cleaning
 
 # Many errors were reported to the dataset maintainers,
 # but WaPo does not fix, and FE no longer updates
@@ -11,7 +12,8 @@
 # Errors for all cases (most identified during 2021 EOY merge) fixed first
 # Some errors for WA 2015- fixed at end
 
-# Two fe variables use names pre-fixed in ScrapeMerge:  "age" and "date"
+# Two fe variables use names already modified in ScrapeMerge:  
+# "age" and "date"
 
 # Age corrections, using pre-corrected variable "fe$age" ----
 
@@ -23,7 +25,15 @@ fe$age[fe$`Unique ID`==28776] <- 56 # WTSC par 3876377
 fe$age[fe$`Unique ID`==28777] <- 56 # WTSC par 3876377
 fe$age[fe$`Unique ID`==29763] <- 32 # WTSC par EB12826
 
-fe$age[fe$`Unique ID` == 28476] <- 34 # MPV matching
+# KCME
+fe$age[fe$`Unique ID`==18537] <- 41 # George Alexander
+fe$age[fe$`Unique ID`==23500] <- 47 # Curtis Elroy Tade
+fe$age[fe$`Unique ID`==25615] <- 51 # Peter Morgan
+fe$age[fe$`Unique ID`==29500] <- 25 # Abdulahi Aroni
+fe$age[fe$`Unique ID`==31223] <- 28 # Alexander Whittall
+
+# MPV matching
+fe$age[fe$`Unique ID` == 28476] <- 34 
 
 wapo$age[wapo$id==6646] <- 42
 wapo$age[wapo$id==6712] <- 36
@@ -76,25 +86,9 @@ wapo$age[wapo$id==7410] <- 45
 wapo$age[wapo$id==9725] <- 27 # WP added late with no age info
 wapo$age[wapo$id==9831] <- 43 # article says "born in 1980"
 
-
-# Gender corrections note orig v2 gender is not capitalized ----
-
-fe$Gender[fe$`Unique ID`==29700] <- "female"
-fe$Gender[fe$`Unique ID`==27067] <- "male"
-fe$Gender[fe$`Unique ID`==26981] <- "male" # WTSC par 3796019
-
-wapo$gender[wapo$id==7007] <- "male"
-wapo$gender[wapo$id==7107] <- "male"
-wapo$gender[wapo$id==7299] <- "male"
-wapo$gender[wapo$id==7249] <- "male"
-wapo$gender[wapo$id==7354] <- "male"
-wapo$gender[wapo$id==7415] <- "male"
-wapo$gender[wapo$id==8649] <- "male"
-
-wapo$gender[wapo$id==8510] <- "male" # Jeffrey Smith
-wapo$gender[wapo$id==6887] <- "transgender"
-wapo$gender[wapo$id==9725] <- "male"
-
+# KCME
+wapo$age[wapo$id==8403] <- 54 
+wapo$age[wapo$id==3225] <- 47 # KCME Tade
 
 
 # Race corrections ----
@@ -130,13 +124,33 @@ wapo$race[wapo$id==7372] <- "H"
 wapo$race[wapo$id==7381] <- "W"
 wapo$race[wapo$id==7410] <- "H"
 
+# KCME
+wapo$race[wapo$id==3225] <- "W" # Curtis Tade
+wapo$race[wapo$id==7341] <- "W" # Alexander Whittall
+wapo$race[wapo$id==8403] <- "H" # Vince Torres
+
+
 fe$Race[fe$`Unique ID`==31345] <- "" # Christopher Anthony Alexander name in race field
 fe$Race[fe$`Unique ID`==25367] <- "Asian/Pacific Islander" # Iosia Faletogo
 fe$Race[fe$`Unique ID`==28883] <- "Native American/Alaskan" # Justin Lee Aguilar Tofte, from FB post https://www.facebook.com/lastrealindians/posts/pfbid02vkG5oNWeMVdbrCVce5qF5aBTNMxjj1nTQ1barwYbCS15TXF2fPJC2rkMennMqZ4ol?__cft__[0]=AZVxzrdMUO_GpvTTZLXVjMSUrZBYklPZ641hzmhgZQ0wVPWTg4XuUUCtzVYCE612cYgc3sOqAned7ikDHBO5uIai4k039t42LlSky8rkYpaRCOwf-g4Wq0MdRBLZahxxQ2w&__tn__=%2CO%2CP-R
 fe$Race[fe$`Unique ID`==28501] <- "Hispanic/Latino" # Juan Rene Hummel, from media photo https://www.seattletimes.com/seattle-news/eastside/family-of-man-killed-by-bothell-police-officer-says-they-still-dont-have-answers-2-months-after-fatal-shooting/
 fe$Race[fe$`Unique ID`==15865] <- "European-American/White" # Jamison Edward Childress, from media photo https://www.ctvnews.ca/canada/border-patrol-agent-justified-in-fatal-shooting-of-b-c-man-prosecutor-1.2381699
 
+
+# KCME
+fe$Race[fe$`Unique ID`==18537] <- "Native American/Alaskan" # George Alexander
+fe$Race[fe$`Unique ID`==23500] <- "European-American/White" # Curtis Elroy Tade
+fe$Race[fe$`Unique ID`==25615] <- "African-American/Black" # Peter Morgan
+fe$Race[fe$`Unique ID`==29500] <- "African-American/Black" # Abdulahi Aroni
+fe$Race[fe$`Unique ID`==31223] <- "European-American/White" # Alexander Whittall
+
 # Gender corrections ----
+# note orig wapo v2 gender is not capitalized
+
+fe$Gender[fe$`Unique ID`==29700] <- "female"
+fe$Gender[fe$`Unique ID`==27067] <- "male"
+fe$Gender[fe$`Unique ID`==26981] <- "male" # WTSC par 3796019
+
 
 fe$Gender[fe$`Unique ID` %in% c(12617, 15664)] <- "Female"
 
@@ -153,6 +167,18 @@ fe$Gender[fe$`Unique ID` %in%
 fe$Gender[fe$`Unique ID` %in%
             c(15916, 22098, 24948, 25568, 25822,
               28017)] <- "Transgender woman"
+
+wapo$gender[wapo$id==7007] <- "male"
+wapo$gender[wapo$id==7107] <- "male"
+wapo$gender[wapo$id==7299] <- "male"
+wapo$gender[wapo$id==7249] <- "male"
+wapo$gender[wapo$id==7354] <- "male"
+wapo$gender[wapo$id==7415] <- "male"
+wapo$gender[wapo$id==8649] <- "male"
+
+wapo$gender[wapo$id==8510] <- "male" # Jeffrey Smith
+wapo$gender[wapo$id==6887] <- "transgender"
+wapo$gender[wapo$id==9725] <- "male"
 
 wapo$gender[wapo$id %in% 
               c(9904, 8208, 8119)] <- "Female"
@@ -177,7 +203,7 @@ wapo$gender[wapo$id %in%
 
 # Name corrections ----
 
-fe$Name[fe$`Unique ID` == 8584] <- "Rodrick Jones aka Roderick Jones" # consistency
+fe$Name[fe$`Unique ID`==8584] <- "Rodrick Jones aka Roderick Jones" # consistency
 fe$Name[fe$`Unique ID`==30271] <- "Raul Rosas Zarose"
 fe$Name[fe$`Unique ID`==30775] <- "Steven Dean Primm"
 fe$Name[fe$`Unique ID`==30280] <- "Zaekwon Malik Gullatte"
@@ -200,7 +226,6 @@ fe$Name[fe$`Unique ID`==29557] <- "Steven Emmet Crosby"
 # after wapo changes 6/2023
 fe$Name[fe$`Unique ID`==16382] <- "Samuel Toshiro Smith"
 
-
 fe$Name[fe$`Unique ID` == 12617] <- "Stacey Stout"
 fe$Name[fe$`Unique ID` == 15664] <- "Jessica Hernandez"
 fe$Name[fe$`Unique ID` == 28476] <- "Matthew Blake Dixon"
@@ -208,6 +233,13 @@ fe$Name[fe$`Unique ID` == 29577] <- "Eric Kessler"
 fe$Name[fe$`Unique ID` == 29808] <- "Charles Ray Phillips"
 fe$Name[fe$`Unique ID` == 30741] <- "Michael Adams"
 fe$Name[fe$`Unique ID` == 25568] <- "Joshua Rembert Williams"
+
+# KCME info
+fe$Name[fe$`Unique ID`==18537] <- "George Alexander"
+fe$Name[fe$`Unique ID`==23500] <- "Curtis Elroy Tade"
+fe$Name[fe$`Unique ID`==25615] <- "Peter Morgan"
+fe$Name[fe$`Unique ID`==29500] <- "Abdulahi Aroni"
+fe$Name[fe$`Unique ID`==31223] <- "Alexander Whittall"
 
 
 wapo$name[wapo$id==6483] <- "Isaac Matheney"
@@ -242,6 +274,11 @@ wapo$name[wapo$id == 8927] <- "Steven Emmet Crosby"
 wapo$name[wapo$id == 6234] <- "George Ludrou Job"
 
 wapo$name[wapo$id == 4453] <- "Joshua Rembert Williams"
+
+# KCME
+wapo$name[wapo$id == 3225] <- "Curtis Elroy Tade"
+wapo$name[wapo$id == 7341] <- "Alexander Whittall"
+wapo$name[wapo$id == 8403] <- "Vince Torres"
 
 
 # Date corrections (name, format pre-fixed in ScrapeMerge) ----
@@ -339,6 +376,12 @@ fe$`Supporting document link`[fe$`Unique ID`==28834] <- "https://kimatv.com/news
 fe$`Supporting document link`[fe$`Unique ID`==29763] <- "https://www.spokesman.com/stories/2021/mar/09/sheriff-passenger-killed-as-driver-flees-in-grant-/" #Danielle Shockey
 
 fe$`Supporting document link`[fe$`Unique ID`==14053] <- "https://www.theadvertiser.com/story/news/local/2014/02/08/lincoln-deputy-shoots-kills-23-year-old/5293441/" #Johnny Rico Richardson
+
+# Curtis Elroy Tade (KCME ID, use ST article on KC inquest)
+fe$`Supporting document link`[fe$`Unique ID`==23500] <- "http://komonews.com/news/local/police-man-wielding-assault-rifle-shot-and-killed-by-officer-in-kirkland
+"
+fe$additional_url[fe$`Unique ID`==23500] <-"https://www.theadvertiser.com/story/news/local/2014/02/08/lincoln-deputy-shoots-kills-23-year-old/5293441/" #Johnny Rico Richardson
+
 
 
 
