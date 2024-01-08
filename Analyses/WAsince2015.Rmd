@@ -60,22 +60,14 @@ with(homicides, write.csv(cbind(feID,latitude,longitude),
 
 # Introduction {.tabset}
 
-Washington state has enacted a series of statewide police accountability reforms since 2018.  This report tracks the trend in people killed by police in WA before and after those reforms.
+Washington State has enacted a series of statewide police accountability reforms since 2018.  A brief overview of these changes is given in the [Legislative History](#legislative-history) section.  This report tracks the trend in people killed by police in WA since `r params$from`, before and after those reforms.
 
-* The first legislative reform was Initiative 940.  It passed with over 60% of the statewide vote in the 2018 November general election, becoming WA state law on December 6, 2018.  Certain provisions took effect later: amendments by 
-<a href="https://lawfilesext.leg.wa.gov/biennium/2019-20/Pdf/Bills/Session%20Laws/House/1064-S.SL.pdf?q=20221121125434" target="_top">HB 1064</a>
-took effect February 4, 2019, and the first
-<a href="https://apps.leg.wa.gov/wac/default.aspx?cite=139-12&full=true&pdf=true" target="_top">Washington Administrative Code (WAC)</a>
-requirements took effect January 6, 2020.  The WAC is revised annually.
-
-* During the 2021 legislative session (Jan - April) over a dozen additional bills were passed on a range of issues relating to police reform.  
-
-
-This report tracks the number of persons killed by police in WA state since `r params$from`.  The TOC on the left can be used to navigate through the sections.  There are aggregate breakdowns by demographics, geography, cause of death, agency and time to provide some insight into the patterns and trends, and a list of all persons killed to acknowledge the lives lost and provide a starting point for those seeking more information on specific cases.  Information on the data sources and limitations can be found in the [Data sources](#data-sources) section.  The data and scripts used for this report are available on GitHub, access details can be found in the [Public Access](#public-access) section.
+The TOC on the left can be used to navigate through the sections of this report.  There are breakdowns by demographics, geography, cause of death, agency and time to provide some insight into the patterns and trends, and a list of all persons killed to acknowledge the lives lost and provide a starting point for those seeking more information on specific cases.  Information on the data sources and limitations can be found in the [Data sources](#data-sources) section.  The data and scripts used for this report are available on GitHub, access details can be found in the [Public Access](#public-access) section.
 
 
 ## MOST RECENT DATA UPDATE (`r last_data_update`):
 
+This is the end of year report for 2023
 
 * __Total homicides by police since `r params$from`: 
 `r last.case`__
@@ -517,9 +509,9 @@ ggplotly(p, tooltip = "text") %>%
 
 This plot highlights key dates for legislation and legal actions related to police practices and accountability. 
 
-* The $\color{blue}{\textsf{blue lines}}$ are legislative/regulatory actions  (940 legislation, 940 WACs, first bill passes in 2021, first & last bills signed by Gov 2021, legislation takes effect)
+* The $\color{blue}{\textsf{blue lines}}$ are legislative/regulatory actions  (940 passes, 940 WACs, and effective dates of legislation from 2021 forward).  Solid lines are reform policies aimed at reducing police violence; dashed lines are partial rollbacks of these reforms.
 
-* The $\color{red}{\textsf{red lines}}$ are legal actions (Ellis investigation taken over by AGO, Nelson charged in Jesse Sarey case, 3 officers charged in Ellis case) 
+* The $\color{red}{\textsf{red lines}}$ are legal actions (Ellis investigation taken over by AGO, ex-Officer Nelson charged in Jesse Sarey case, Officers Burbank Collins and Rankine charged in Ellis case). Solid lines are actions taken to hold officers accountable; dashed lines are acquittals and exonerations.
 
 * This is an interactive plot:  You can hover over points to get the number of cases for that month, and hovering at the top or bottom of the vertical lines will identify the action.
 
@@ -550,21 +542,26 @@ p <- ggplot(df_by_month,
   geom_vline(aes(xintercept = as.numeric(date.ellis.charged),
                  text = "Ellis case officers charged"),
              col="red", alpha=.8) +
+    geom_vline(aes(xintercept = as.numeric(date.ellis.acquit),
+                 text = "Ellis case officers acquitted"),
+             col="red", lty=2, alpha=.8) +
   
   # key dates for legislation
+  geom_vline(aes(xintercept = as.numeric(date.940.pass), 
+                 text = "940 passes"), 
+             col="blue", alpha=.8) +
   geom_vline(aes(xintercept = as.numeric(date.940.WAC), 
                  text = "940 WACs take effect"), 
              col="blue", alpha=.8) +
-  geom_vline(aes(xintercept = as.numeric(date.firstbillpass), 
-                 text = "First bill passes in session"), 
+  geom_vline(aes(xintercept = as.numeric(date.2021.law), 
+                 text = "2021 laws"), 
              col="blue", alpha=.8) +
-  geom_vline(aes(xintercept = as.numeric(date.firstbillsign), 
-                 text = "Governor signs first bill"), 
-             col="blue", alpha=.8) +
-  geom_vline(aes(xintercept = as.numeric(date.lastbillsign), 
-                 text = "Governor signs last bill"), 
-             col="blue", alpha=.8) +
-
+  geom_vline(aes(xintercept = as.numeric(date.2022.law), 
+                 text = "2022 laws"), 
+             col="blue", lty=2, alpha=.8) +
+  geom_vline(aes(xintercept = as.numeric(date.2023.law), 
+                 text = "2023 laws"), 
+             col="blue", lty=2, alpha=.8) +
 
   # zero axis
   geom_hline(yintercept = 0, col="grey") +
@@ -762,8 +759,6 @@ ggplot(data= df %>% filter(year != max(df$year)),
 
 #### Calendar year
 
-We start with January 2019, as the last 3 weeks of December 2018 does not provide an accurate annual count for that year.
-
 ```{r tot.calyr, message=F, warning=F}
 
 graphdf.calyr <- homicides %>%
@@ -844,7 +839,6 @@ Here we plot the cumulative totals each year, broken down to show the two leadin
 
 #### Calendar year
 
-We start with January 2019, as the last 3 weeks of December 2018 does not provide an accurate annual count for that year.
 
 ```{r cod.calyr, warning=F}
 
@@ -1309,6 +1303,46 @@ homicides %>%
                   dom = 'Bfrtip',
                   buttons = c('copy', 'csv', 'excel', 'pdf', 'print')) )
 ```
+
+____
+
+# Legislative history
+
+Police accountability and reform has been an active topic in the Washington state legislature since 2018.  Changes have been achieved via both citizen initiative and traditional bills.
+
+One of the first major legislative reforms was Initiative 940. I-940 established de-escalation training requirements, independent investigations of all homicides by police and changed the criminal accountability standard from malice to reasonable officer. It passed with over 60% of the statewide vote in the 2018 November general election, becoming WA state law on December 6, 2018.  Certain provisions took effect later: amendments by 
+<a href="https://lawfilesext.leg.wa.gov/biennium/2019-20/Pdf/Bills/Session%20Laws/House/1064-S.SL.pdf?q=20221121125434" target="_top">HB 1064</a>
+took effect February 4, 2019, and the first
+<a href="https://apps.leg.wa.gov/wac/default.aspx?cite=139-12&full=true&pdf=true" target="_top">Washington Administrative Code (WAC)</a>
+requirements took effect January 6, 2020.  The WAC is reviewed and updated annually.
+
+In the 2021 legislative session (Jan - April) several bills were passed on a range of issues relating to police reform.
+
+* [HB 1054](https://app.leg.wa.gov/billsummary?BillNumber=1054&Initiative=false&Year=2021) Established limits on the use of police tactics like neck restraints, canines, tear gas and pursuits, prohibited the use of military equipment, and required police to be identifiable.
+
+* [HB 1088]() Required agencies to forward Brady impeachment information for their officers to the local county prosecutor,  request Brady information from prosecutors during the hiring process, and report the hiring of officers with prior potential impeachment disclosure to the prosecutor.
+
+* [HB 1267](https://app.leg.wa.gov/billsummary?BillNumber=1267&Initiative=false&Year=2021) Established a statewide Office of Independent Investigations to investigate all incidents of police use of deadly force.
+
+* [HB 1089](https://app.leg.wa.gov/billsummary?BillNumber=1089&Initiative=false&Year=2021) Established state audits of all independent investigations of police use of deadly force.
+
+* [HB 1310](https://app.leg.wa.gov/billsummary?BillNumber=1310&Initiative=false&Year=2021) Established requirements for deescalation and restrictions on the use of force and deadly force.
+
+* [SB 5051](https://app.leg.wa.gov/billsummary?BillNumber=5051&Initiative=false&Year=2021) Provided oversight and decertification authority for the WA Criminal Justice Training Commission.
+
+* [SB 5259](https://app.leg.wa.gov/billsummary?BillNumber=5259&Year=2021&Initiative=false) Established a statewide police use of force data collection program.
+
+Other important bills passed in 2021 include [SB 5066](https://app.leg.wa.gov/billsummary?BillNumber=5066&Initiative=false&Year=2021) which established a duty for officers to intervene when their colleagues use excessive force, and [HB 1140](https://app.leg.wa.gov/billsummary?BillNumber=1140&Initiative=false&Year=2021) which requires that juveniles be provided access to attorneys.
+
+The year these reforms passed the number of people killed by police in Washington dropped by 60%, the largest decline seen in any state.  More information on the temporal trends can be found in [the section on "Trend over time"](#trend).
+
+Some changes have been made to the 2021 reforms in subsequent sessions:
+
+* In 2022 [HB 2037](https://app.leg.wa.gov/billsummary?BillNumber=2037&Year=2021) modified the [policy on use of force during Terry Stops](https://app.leg.wa.gov/RCW/default.aspx?cite=10.120.020) allowing force to be used to prevent a person from fleeing.
+
+* In 2023 [SB 5352](https://lawfilesext.leg.wa.gov/biennium/2023-24/Pdf/Bills/Session%20Laws/Senate/5352.SL.pdf?q=20231220183138) modified the [policy on vehicular pursuits](https://app.leg.wa.gov/RCW/default.aspx?cite=10.116.060) was modified, reducing the standard of evidence from probable cause to reasonable suspicion, adding some offenses to the list of pursuit-eligible offenses, and relaxing the supervisory authorization requirements.
+
+Additional bills and initiatives are in process for the 2024 session.
 
 ____
 
