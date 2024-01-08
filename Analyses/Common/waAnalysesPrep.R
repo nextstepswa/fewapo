@@ -114,13 +114,18 @@ index <- data.frame(year = year,
 # Significant dates ----
 
 ## Legislation
+date.940.pass <- lubridate::ymd("2018-11-06")
 date.940.WAC <- lubridate::ymd("2020-01-06")
 date.firstbillpass <- lubridate::ymd("2021-03-09")
 date.firstbillsign <- lubridate::ymd("2021-04-20")
 date.lastbillsign <- lubridate::ymd("2021-04-26")
+date.2021.law <- lubridate::ymd("2021-07-25")
+date.2022.law <- lubridate::ymd("2022-03-17")
+date.2023.law <- lubridate::ymd("2023-05-04")
 
 ## Prosecution
 date.sarey.charged <- lubridate::ymd("2020-08-20")
 date.ellis.ago <- lubridate::ymd("2020-06-23")
 date.ellis.charged <- lubridate::ymd("2021-05-27")
+date.ellis.acquit <- lubridate::ymd("2023-12-21")
 
