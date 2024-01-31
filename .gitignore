@@ -4,30 +4,44 @@
 
 # Except:
 
-# Sync some raw data
-!data-raw/temp-newnames.csv
+# Raw data that can't be scraped
+!Data/Raw/fe-newnames.csv
+!Data/Raw/gz_2010_us_040_00_20m.json
 
-# Key data cleaning scripts
-!/DataCleaningScripts/
-DataCleaningScripts/*
-!DataCleaningScripts/ScrapeMerge.R
-!DataCleaningScripts/fixes_precleaning.R
-!DataCleaningScripts/fixes_postcleaning.R
-!DataCleaningScripts/fixes_postmerge.R
-!DataCleaningScripts/fixes_mpv.R
-!DataCleaningScripts/pursuit_coding.R
-!DataCleaningScripts/scrapeMPV.R
+# Key data construction scripts
+!/Construction/
+Construction/*
+
+!Construction/MakeData.R
+!Construction/ScrapeDataSets.R
+
+!Construction/fixes_preclean_fe.R
+!Construction/fixes_preclean_mpv.R
+!Construction/fixes_preclean_wapo.R
+
+!Construction/clean_fe.R
+!Construction/clean_mpv.R
+!Construction/clean_wapo.R
+
+!Construction/fixes_postcleaning.R
+
+!Construction/fixes_postmerge.R
+!Construction/pursuit_coding.R
+
 
 # Key data analysis scripts
 !/Analyses/
 Analyses/*
-!Analyses/WAsince940.Rmd
+
 !Analyses/WAsince2015.Rmd
-!Analyses/WAsince2015_eoy.Rmd
 !Analyses/USpercapitaTrends.Rmd
 !Analyses/Common/
 
-# Create empty folder for storing script outputs
-/data-outputs/*
-!data-outputs/
+# Clean Data required inputs
+!/Data/Clean/
+/Data/Clean/*
+
+!Data/Clean/StatePop2000-2021.rda
+!Data/Clean/LegInfo_Clean.rda
+
 .Rproj.user
