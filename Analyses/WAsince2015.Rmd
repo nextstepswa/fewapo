@@ -46,23 +46,23 @@ library(htmlwidgets)
 
 
 # get cleaned, merged data for WA
-load(file = here("data-outputs", params$rdafile))
+load(file = here("Data", "Clean", params$rdafile))
 
 # Data prep (common)
 source(here("Analyses", "Common", "waAnalysesPrep.R"))
 
 # for geocoded LDs
 with(homicides, write.csv(cbind(feID,latitude,longitude),
-                          here("data-outputs",
+                          here("Data", "Clean",
                                "geocodes2015.csv")))
 
 ```
 
 # Introduction {.tabset}
 
-Washington State has enacted a series of statewide police accountability reforms since 2018.  A brief overview of these changes is given in the [Legislative History](#legislative-history) section.  This report tracks the trend in people killed by police in WA since `r params$from`, before and after those reforms.
+This report tracks the trends in people killed by police in WA since `r params$from`, a period that spans before and after a series of legislative reforms intended to reduce police violence and increase accountability for misconduct.  A brief overview of these changes is given in the [Legislative History](#legislative-history) section of this report.  
 
-The TOC on the left can be used to navigate through the sections of this report.  There are breakdowns by demographics, geography, cause of death, agency and time to provide some insight into the patterns and trends, and a list of all persons killed to acknowledge the lives lost and provide a starting point for those seeking more information on specific cases.  Information on the data sources and limitations can be found in the [Data sources](#data-sources) section.  The data and scripts used for this report are available on GitHub, access details can be found in the [Public Access](#public-access) section.
+The TOC on the left can be used to navigate through the sections of the report.  There are interactive maps with links to media reports, breakdowns by demographics, geography, cause of death, agency and time to provide some insight into the patterns and trends, and a list of all persons killed to acknowledge the lives lost and provide a starting point for those seeking more information on specific cases.  Information on the data sources and limitations can be found in the [Data sources](#data-sources) section.  The data and scripts used for this report are available on GitHub, access details can be found in the [Public Access](#public-access) section.
 
 
 ## MOST RECENT DATA UPDATE (`r last_data_update`):
@@ -81,7 +81,7 @@ Before the 2021 legislative reforms, one out of every 6 persons killed in Washin
 about 250 homicide deaths were recorded each year in WA State from 2015-2020, with about 40 killed during encounters with police.  You can view and download the state's official death data
 <a href="https://doh.wa.gov/data-statistical-reports/washington-tracking-network-wtn/death/ach-injury-deaths-dashboard" target="_top">here</a>).  
 
-In 2021, the year these reforms passed, the number of people killed by police in Washington dropped by 60%, the largest decline seen in any state.  More information on the temporal trends can be found in [the section on "Trends over time"](#trend).
+In 2021, the year many reforms passed, the number of people killed by police in Washington dropped by 60%, the largest decline seen in any state.  More information on the temporal trends can be found in [the section on "Trends over time"](#trend).
 
 ____
 
@@ -320,6 +320,7 @@ homicides %>%
 
 ## County {.tabset}
 
+Washington State has 39 Counties.  Since 2015 there have been people killed by police in `r length(unique(homicides$county))` of them.
 
 ### Plot
 
@@ -361,11 +362,47 @@ homicides %>%
 
 ```
 
-## Agency/PD involved
+## Agency involved  {.tabset}
 
-This information comes from Fatal Encounters.
+We use the information from Fatal Encounters.  Given the number of agencies, for legibility we only plot those with more than two fatalities since 2015.  Incidents with more than one agency involved are grouped together and labeled "Multiple Agencies".
 
-```{r agency}
+The table includes all agencies, all fatalities, and identifies the full list of agencies when there is more than one involved in the incident(s).
+
+### Plot
+
+```{r agencyplot}
+homicides %>%
+  mutate(agencyR = ifelse(grepl(",", agency), "Multiple agencies", agency)) %>%
+  group_by(agencyR) %>%
+  summarize(n = n(),
+            perc = n / nrow(homicides)) %>%
+  filter(n > 2) %>%
+  
+  ggplot(aes(reorder(agencyR, perc),
+             y = perc, 
+             label = n)) +
+  geom_text(aes(y = perc), size = 2, nudge_y = .003) +
+  geom_bar(stat="identity", fill="blue", alpha=.5) +
+  
+  labs(title = "Agency responsible (agencies with > 2 fatalities only)",
+       caption = paste0("WA State since ", 
+                        params$from, 
+                        "; x-axis=pct of all incidents, bar label=count")) +
+  xlab("") +
+  ylab("Percent of Total") +
+  
+  # this works with the flipped axis id
+  theme(axis.text.y = element_text(size=6)) +
+  
+  scale_y_continuous(labels = scales::percent_format(acc=1)) +
+  
+  coord_flip()
+
+```
+
+### Table
+
+```{r agencytab}
 
 homicides %>%
   group_by(agency) %>%
@@ -373,7 +410,69 @@ homicides %>%
             Percent = round(100*Number/nrow(homicides), 1)
   ) %>%
   DT::datatable(rownames = F,
-                caption = "Breakdown by Agency/PD of Involved Officer",
+                caption = "Breakdown of Fatalities by Agency of Involved Officer",
+                filter = 'top',
+                escape = FALSE, 
+                extensions = 'Buttons', 
+                options = list(
+                  dom = 'Bfrtip',
+                  buttons = c('copy', 'csv', 'excel', 'pdf', 'print')) )
+
+```
+
+## Legislative Districts  {.tabset}
+
+This information is obtained by geocoding the latitude and longitude data on the
+[geocodio](https://www.geocod.io/) platform.  
+
+Washington State has 49 legislative districts.  Since 2015 there have been people killed by police in `r length(unique(homicides$WA_District))` of them.
+
+Given the number of districts involved, we only plot those with more than one fatality since 2015 for legibility .
+
+The table includes all districts and all incidents.
+
+### Plot
+
+```{r ldplot}
+homicides %>%
+  group_by(WA_District) %>%
+  summarize(n = n(),
+            perc = n / nrow(homicides)) %>%
+  filter(n > 1) %>%
+  
+  ggplot(aes(reorder(WA_District, perc),
+             y = perc, 
+             label = n)) +
+  geom_text(aes(y = perc), size = 2, nudge_y = .003) +
+  geom_bar(stat="identity", fill="blue", alpha=.5) +
+  
+  labs(title = "WA Legislative District (LDs with > 1 fatality only)",
+       caption = paste0("WA State since ", 
+                        params$from, 
+                        "; x-axis=pct of all incidents, bar label=count")) +
+  xlab("") +
+  ylab("Percent of Total") +
+  
+  # this works with the flipped axis id
+  theme(axis.text.y = element_text(size=6)) +
+  
+  scale_y_continuous(labels = scales::percent_format(acc=1)) +
+  
+  coord_flip()
+
+```
+
+### Table
+
+```{r ldtab}
+
+homicides %>%
+  group_by(WA_District) %>%
+  summarize(Number = n(),
+            Percent = round(100*Number/nrow(homicides), 1)
+  ) %>%
+  DT::datatable(rownames = F,
+                caption = "Breakdown of Fatalities by WA Legislative District",
                 filter = 'top',
                 escape = FALSE, 
                 extensions = 'Buttons', 
@@ -413,6 +512,7 @@ tab %>%
 
 
 ```
+
 
 <a id="mydate"></a>
 
@@ -814,6 +914,8 @@ p <- ggplot(graphdf.legyr,
   scale_x_discrete(labels = function(x) 
     stringr::str_wrap(graphdf.legyr$leg.year, width = 8)) +
   
+  theme(axis.text.x = element_text(size = 5)) +
+  
   annotate("text", 
            x = graphdf.legyr$leg.year[nrow(graphdf.legyr)], 
            y = graphdf.legyr$Num[nrow(graphdf.legyr)] + 1, 
@@ -922,6 +1024,8 @@ p <- ggplot(graphdf.legyr,
   
   scale_x_discrete(labels = function(x) 
     stringr::str_wrap(unique(graphdf.legyr$leg.year), width = 8)) +
+  
+  theme(axis.text.x = element_text(size = 5)) +
   
   labs(title = paste0("Fatalities by Cause of Death and Legislative Year"),
        caption = paste("WA since", params$startyr),
@@ -1261,14 +1365,15 @@ wapo_dat %>%
 ## Name known
 
 Of the `r last.case` persons killed by police, 
-`r table(homicides$name != "Unknown")[[2]]` 
-of the victim's names are known at this time.
+`r sum(homicides$name!="Unknown")` 
+of the victim's names are known at this time.  In the table below "WA-LD" refers to the Washington state legislative district.
 
 ```{r names}
 
 homicides %>%
   filter(name != "Unknown") %>%
-  select(name, date, age=age, county, agency, url = url_click) %>%
+  select(name, date, age=age, county, `WA-LD`=WA_District, 
+         agency, link = url_click) %>%
   arrange(desc(date)) %>%
   DT::datatable(rownames = F,
                 caption = paste("The Names We Know:  as of", scrape_date),
@@ -1286,13 +1391,14 @@ ____
 ## Name Unknown
 
 The remaining 
-`r (last.case-table(homicides$name != "Unknown")[[2]])` 
-of the victim's names are not known at this time.
+`r sum(homicides$name=="Unknown")` 
+of the victim's names are not known at this time.  In the table below "WA-LD" refers to the Washington state legislative district.
 
 ```{r namesUnk}
 homicides %>%
   filter(name == "Unknown") %>%
-  select(name, date, age=age, county, agency, url = url_click) %>%
+  select(name, date, age=age, county, `WA-LD`=WA_District, 
+         agency, link = url_click) %>%
   arrange(desc(date)) %>%
   DT::datatable(rownames = F,
                 caption = paste("The Names We Don't Know:  as of", scrape_date),
@@ -1306,7 +1412,9 @@ homicides %>%
 
 ____
 
-# Legislative history
+# Appendices
+
+## Legislative history
 
 Police accountability and reform has been an active topic in the Washington state legislature since 2018.  Changes have been achieved via both citizen initiative and traditional bills.
 
@@ -1346,7 +1454,7 @@ Additional bills and initiatives are in process for the 2024 session.
 
 ____
 
-# Data sources
+## Data sources
 
 ```{r child='./Common/dataSourcesIntro.Rmd'}
 ```

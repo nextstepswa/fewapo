@@ -1,8 +1,8 @@
-## Dataset features
+### Dataset features
 
 Both the Fatal Encounters project and the Washington Post are open-source, "unofficial" datasets.  Their data are not drawn from mandatory government reporting on deaths caused by law enforcement officers because there is no official national data program designed for this purpose.  The datasets are based instead on cases known/discovered by the two project teams, primarily through online searches.  You can find more details about the methodology used by each project on their websites:  [Fatal Encounters](https://fatalencounters.org/methodology/) and [Washington Post](https://www.washingtonpost.com/investigations/2022/12/05/washington-post-fatal-police-shootings-methodology/).  
 
-### Open-source vs. Official
+#### Open-source vs. Official
 
 In theory, deaths caused by police should also be captured by several official data collection programs:  
 
@@ -25,7 +25,7 @@ Research has also shown that the methodology used by the open-source data sets i
 
 _____
 
-> At this point, it is widely acknowleged that the open-source datasets have the most complete coverage of these cases.  This is why we use them here.
+> At this point, it is widely acknowleged that the open-source datasets have the most complete coverage of these cases.  That is why we use them here.
 
 _____
 
@@ -33,7 +33,7 @@ The other key benefit to the Fatal Encounters data in particular is that every c
 
 That said, it is important to keep in mind that these open-source datasets, too, are not perfect.   They will miss cases that have not generated a digital signature that can be found using their search methodologies.  So it would be accurate to say that our open-source data provide a lower bound estimate of the number of people killed by police; the true value is likely higher, but it can not be lower.
 
-### Dataset differences
+#### Dataset differences
 
 Fatal Encounters includes more cases than the Washington Post, because the Post dataset is restricted to fatal shootings.  
 
@@ -69,7 +69,7 @@ tab %>%
                notation = "symbol")
 ```
   
-## Suicides and "Medical Emergencies" excluded
+### Suicides and "Medical Emergencies" excluded
 
 The Fatal Encounters data includes some cases classified as "suicides" that occur during an encounter with police.  These are not cases of "suicide by cop", where the victim appears to have provoked the police in order to be shot by police.  They are cases where the victim shoots or otherwise kills themself.  **We have excluded these from the analyses in this report, because the report focuses on persons killed by police.**  
 
@@ -108,7 +108,7 @@ There are also a couple of cases where the cause of death is coded as "Medical e
 ___
 
 
-## Homicide case comparison
+### Homicide case comparison
 
 Restricting the Fatal Encounters dataset to the homicide cases, it still has 
 `r paste0(round(100*prop.table(table(is.na(homicides$wapoID)))[[2]]), "%")`
@@ -139,9 +139,9 @@ tab %>%
 
 ___
 
-### Missing cases in WaPo {.tabset}
+#### Missing cases in WaPo {.tabset}
 
-#### By cause of death
+##### By cause of death
 
 
 ```{r datadiff}
@@ -172,7 +172,7 @@ tab %>%
 
 ____
 
-#### By name, for fatal shootings
+##### By name, for fatal shootings
 
 Below is the list of cases identified as gunshot fatalities in Fatal Encounters that are missing from the Washington Post dataset.
 

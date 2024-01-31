@@ -25,11 +25,11 @@ library(leaflet)
 library(sp)
 
 
-load(file = here("data-outputs", "CleanData.rda"))
-load(file = here("data-outputs", "StatePop2000-2021.rda"))
+load(file = here("Data", "Clean", "CleanData.rda"))
+load(file = here("Data", "Clean", "StatePop2000-2021.rda"))
 
 homicides <- fe_clean %>%
-  filter(year < last_complete_yr) %>% # restrict to last complete yr 
+  filter(year < 2022) %>% # restrict to last complete yr 
   filter(cod != "suicide") %>%
   mutate(age = ifelse(age < 999, age, NA_real_))
 
@@ -46,8 +46,7 @@ This report examines the changes in the risk of being killed by police from 2000
 
 We measure risk in term of a standardized per capita rate, constructed by taking the ratio of persons killed to population size in each year, and multiplied by 1 million to get the annual risk per 1M residents for each state.
 
-Since we are working with annual summary metrics, our last full year of data from the Fatal Encounters Project is `r last_complete_yr`.  For the census population data, we extrapolate the growth rate from 2018-2019 (by age, race, sex and state) to estimate the 
-`r last_complete_yr` population.
+Since we are working with annual summary metrics, our last full year of data from the Fatal Encounters Project is 2021 (they stopped updating that year.  For the census population data, we extrapolate the growth rate from 2018-2019 (by age, race, sex and state) to estimate the 2021 population.
 
 ____
 
@@ -109,7 +108,7 @@ ggplot() +
   
   scale_y_continuous(labels = scales::percent_format(accuracy=0.1)) +
   labs(title=paste0("Age distribution of people killed by police: 2000-",
-                   last_complete_yr),
+                   2021),
        fill = "Persons killed",
        color = "US Population") +
   guides(fill = guide_legend(order = 1),
@@ -117,14 +116,13 @@ ggplot() +
 
 ```
 
-### State age distributions in `r last_complete_yr` {.tabset .tabset-pills}
+### State age distributions in 2021 {.tabset .tabset-pills}
 
 Age distributions vary substantially by state: some have higher fractions in the 15-64 year age range, some have higher fractions of elderly, and others have higher fractions of youth.  Over time, the average age of the population is increasing in all states.  The states with higher fractions in the 15-64 year age range have a greater share of their population in the age range that puts them at the highest risk of being killed by police, and as that share of the population changes over time, the risk also changes.
 
 
 ```{r message=F, warning=F}
 pop.age.dist <- popdata$pop.st.age.yr %>%
-  filter(year !=last_complete_yr) %>%
   pivot_wider(id_cols = c(st, year),
               names_from = age.grp,
               values_from = pop) %>%
@@ -137,7 +135,7 @@ pop.age.dist <- popdata$pop.st.age.yr %>%
 #### Percent 15-64
 
 ```{r}
-p<- ggplot(data = pop.age.dist %>% filter(year==last_complete_yr),
+p<- ggplot(data = pop.age.dist %>% filter(year==2021),
             aes(x=pct.middle, y=reorder(st, pct.middle), 
                 col=factor(ifelse(st=="WA", 1, 0)),
                 text=paste(st, scales::percent(pct.middle, accuracy=.1)))) +
@@ -155,7 +153,7 @@ ggplotly(p, tooltip = "text")
 #### Percent <15
 
 ```{r}
-p <- ggplot(data = pop.age.dist %>% filter(year==last_complete_yr),
+p <- ggplot(data = pop.age.dist %>% filter(year==2021),
             aes(x=pct.young, y=reorder(st, pct.young), 
                 col=factor(ifelse(st=="WA", 1, 0)),
                 text=paste(st, scales::percent(pct.young, accuracy=.1)))) +
@@ -174,7 +172,7 @@ ggplotly(p, tooltip = "text")
 #### Percent 65+
 
 ```{r}
-p<- ggplot(data = pop.age.dist %>% filter(year==last_complete_yr),
+p<- ggplot(data = pop.age.dist %>% filter(year==2021),
             aes(x=pct.old, y=reorder(st, pct.old), 
                 col=factor(ifelse(st=="WA", 1, 0)),
                 text=paste(st, scales::percent(pct.old, accuracy=.1)))) +
@@ -242,10 +240,10 @@ ggplot(pop.age.dist,
 
 ### Population size
 
-It's worth getting a sense of the difference in population size across states.  We use `r last_complete_yr` for comparison below.
+It's worth getting a sense of the difference in population size across states.  We use 2021 for comparison below.
 
 ```{r statepopsize, message=F, warning=F}
-p <- ggplot(data = popdata$pop.st.yr %>% filter(year==last_complete_yr),
+p <- ggplot(data = popdata$pop.st.yr %>% filter(year==2021),
             aes(x=pop, y=reorder(st, pop),
                 col=factor(ifelse(st=="WA", 1, 0)),
                 text=paste(st, scales::comma(pop)))) +
@@ -253,7 +251,7 @@ p <- ggplot(data = popdata$pop.st.yr %>% filter(year==last_complete_yr),
   scale_color_manual(values = c("lightsteelblue3", "gold")) +
   theme(axis.text.y=element_text(size=rel(.5)), legend.position = "none") +
   scale_x_continuous(labels=scales::comma) +
-  labs(title = paste("State populations ", last_complete_yr),
+  labs(title = "State populations 2021",
        x="Population size",
        y="State")
 
@@ -300,13 +298,12 @@ In this section we will compare states in terms of the risk of being killed by p
 
 ```{r, message=F, warning=F}
 df.all <- popdata$pop.st.yr %>%
-  filter(year != last_complete_yr) %>%
   left_join(fe.st.yr) %>%
   rename(num.killed = num) %>%
   mutate(fe.rate = 1000000*num.killed/pop)
 
 change <- df.all %>%
-  filter(year< 2006 | year>2014 & year !=last_complete_yr) %>%
+  filter(year< 2006 | year>2014) %>%
   pivot_wider(id_cols=st, names_from=year, values_from=c(pop:fe.rate)) %>%
   rowwise() %>%
   mutate(
@@ -348,7 +345,7 @@ df.st <- df.all %>%
 
 ### Start vs. End
 
-We calculate an average over the first 5 years (start, 2000-2005), and the last 5 years (end, 2015-`r last_complete_yr`) to reduce the year-to-year variability and get a more stable estimate of the changes in risk over the two decades.
+We calculate an average over the first 5 years (start, 2000-2005), and the last 5 years (end, 2015-2021) to reduce the year-to-year variability and get a more stable estimate of the changes in risk over the two decades.
 
 * The plot shows the risk of getting killed by police at the end of the 2010's (y-axis) vs. the risk at the beginning of the 2000's (x-axis) for each state.
 
@@ -376,8 +373,8 @@ p <- ggplot(df.st,
   geom_hline(yintercept = mean(change$risk.end, na.rm=T), alpha=0.5) +
   xlim(c(0,15)) + ylim(c(0,15)) +
   labs(title="Risk of being killed by police by state: 2000-5 vs 2015-20",
-       x="persons killed per M residents 2000-2005 average",
-       y = paste0("persons killed per M residents 2015-", last_complete_yr, "average"),
+       x="persons killed per M residents: 2000-2005 average",
+       y = "persons killed per M residents: 2015-2021 average",
        color = "Change in risk")
 
 ggplotly(p, tooltip="text")
@@ -395,8 +392,7 @@ p <- ggplot(df.all, aes(x=year, y=fe.rate, group=st,
                         col=risk.ratio.grp, text=st)) +
   geom_smooth(se=F, span=2, lwd=0.5) +
   scale_color_brewer(palette="Spectral", direction= -1) +
-  labs(title=paste0("Trends in the risk of being killed by police by state: 2000-",
-                    last_complete_yr),
+  labs(title="Trends in the risk of being killed by police by state: 2000-2021",
        y="rate per million persons",
        color="Change in risk")
 
@@ -439,8 +435,7 @@ p <- ggplot(df.st,
   geom_vline(xintercept = mean(change$pop.ratio, na.rm=T), alpha=0.5) +
   geom_hline(yintercept = mean(change$num.killed.ratio, na.rm=T), alpha=0.5) +
   xlim(c(0.5,4)) + ylim(c(0.5,4)) +
-  labs(title=paste0("Relative changes in population and fatalities: 2000-",
-                   last_complete_yr),
+  labs(title="Relative changes in population and fatalities: 2000-2021",
        x="Population change ratio",
        y = "Persons killed by police change ratio",
        color = "Risk change ratio")
@@ -476,7 +471,7 @@ ggplotly(p, tooltip = "text")
 
 ### Ending risk
 
-This shows the average rate for the 2015-`r last_complete_yr` period for each state.
+This shows the average rate for the 2015-2021 period for each state.
 
 * This is an interactive plot: hover over the point to get the state abbreviation, rate and rank.
 
@@ -492,7 +487,7 @@ p <- ggplot(data = df.st,
   geom_bar(stat="identity", fill="lightsteelblue") +
   scale_color_manual(values = c("lightsteelblue3", "gold")) +
   theme(axis.text.y=element_text(size=rel(.5)), legend.position = "none") +
-  labs(title = paste0("State rankings:  2015-", last_complete_yr, "average"),
+  labs(title = "State rankings:  2015-2021 average",
        x="Number of persons killed per million residents",
        y="State")
 
@@ -518,7 +513,7 @@ p <- ggplot(data = df.st,
   geom_bar(stat="identity", fill="lightsteelblue") +
   scale_color_manual(values = c("lightsteelblue3", "gold")) +
   theme(axis.text.y=element_text(size=rel(.5)), legend.position = "none") +
-  labs(title = paste0("State rankings:  Change in risk 2000-", last_complete_yr),
+  labs(title = "State rankings:  Change in risk 2000-2021",
        x="Risk ratio: end/start of period",
        y="State")
 
@@ -559,7 +554,7 @@ If you flip back and forth between the start and end tabs, you can get a visual 
 ```{r mapprep, message=F, warning=F}
 
 states <- geojsonio::geojson_read(
-  here::here("data-raw","gz_2010_us_040_00_20m.json"), what = "sp") %>%
+  here::here("Data", "Raw","gz_2010_us_040_00_20m.json"), what = "sp") %>%
   subset(NAME != "Puerto Rico") %>%
   sp::merge(., 
             popdata$st.info %>% select(-STATE), 
