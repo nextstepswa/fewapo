@@ -5,7 +5,7 @@
 # Except:
 
 # Raw data that can't be scraped
-!Data/Raw/fe-newnames.csv
+!Data/Raw/fe_newnames.csv
 !Data/Raw/gz_2010_us_040_00_20m.json
 
 # Key data construction scripts
