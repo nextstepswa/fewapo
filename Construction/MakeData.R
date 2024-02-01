@@ -176,158 +176,151 @@ initialmerge <- stringdist_full_join(
 
 ## This is a multi-stage process, output needs to be carefully reviewed for errors
 ## every time the script is run
-## If they are found, fixes are made to the pre- and/or post- cleaning fix files
-## and this script is run again until it runs cleanly
 
-## Check for unmatched WAPO records ----
-## WAPO is a subset of FE, so all WAPO cases should be in FE
-## Missing cases are due to delays in FE updating
-## So the fixes are temporary, 
+## If errors are found, fixes are made either to the 
+## * pre- and/or post- cleaning fix files, if they are data errors
+## * additions to the fe_newnames.xlsx file, if new record is needed
+## * postmerge fix file, if they are bad matches after all other fixes
+## And this script is run again until it runs cleanly
 
+### 1. Unmatched wapo cases ----
 
-errors <- 0
+## Should be none b/c wapo is a subset of FE
+## Stop if found, and fix by inspection 
 
-aaa <- initialmerge %>% 
+## A.  If there is no matching FE record at all, add one to fe_newnames.xlsx
+
+## B. If there is an FE record, but info needed for match is missing/inconsistent
+## This is usually temporary, and fix (WaPo and/or FE) is implemented in fixes_postcleaning.
+## That fix is deleted when no longer needed.
+
+unmatched.wapo <- initialmerge %>% 
   filter(is.na(feID)) %>% 
   select(wapoID, fname.wapo, lname.wapo)
 
-matching.message <- ifelse(nrow(aaa) > 0,
-                           "*** Unmatched WAPO records ***",
-                           "*** No unmatched WAPO records ***")
-
-if(nrow(aaa) > 0){
-  cat("\n *** Unmatched WAPO records (expect none):")
-  print(aaa)
-  if(nrow(aaa) > 1) {
-    errors <- errors+1
-  } 
+if(nrow(unmatched.wapo) > 0){
+  
+    message("\n *** Unmatched WAPO records: *** \n\n")
+    print(unmatched.wapo)
+    stop("\n\n Stopping to fix unmatched WAPO records \n\n")
+    
 } else {
-  cat("\n *** No unmatched WAPO records *** \n\n")
+  message("\n *** No unmatched WAPO records *** \n\n")
 }
 
-### START TEMPORARY FIXES for unmatched WaPo records ##############
+### 2. Duplicate matches from the merge ----
 
-## Should only be temporary b/c WAPO is a subset of FE
-## Assign WAPO info to FE fields, since the FE fields are used for some of the reports
-## feID will be 99999 to id these cases
-
-## missing WAPO info needs to be set manually if needed (in fixes_wapo2FE.R)
-
-## if instead the WaPo info is delayed the temp fix is implemented before the merge
-## in fixes_postcleaning 
-
-if (dim(aaa)[1] > 0) {
-  
-  initialmerge[is.na(initialmerge$feID),] <- initialmerge[is.na(initialmerge$feID),] %>% 
-    mutate(feID = ifelse(is.na(feID), 99999, feID),
-           name.fe = name.wapo,
-           fname.fe = fname.wapo,
-           lname.fe = lname.wapo,
-           age.fe = age.wapo,
-           city.fe = city.wapo,
-           county.fe = county.wapo,
-           latitude.fe = latitude.wapo,
-           longitude.fe = longitude.wapo,
-           date.fe = date.wapo,
-           month.fe = month.wapo,
-           day.fe = day.wapo,
-           year.fe = year.wapo,
-           cod.fe = "Gunshot",
-           gender.fe = gender.wapo,
-           race.fe = race.wapo,
-           circumstances = "Deadly force",
-           homicide = 1,
-           suicide = 0,
-           not.kbp = 0,
-           armed.fe = armed.wapo,
-           weapon.fe = weapon.wapo)
-  
-  
-  # And recheck for unmatched wapoIDs
-  aaa <- initialmerge %>% 
-    filter(is.na(feID)) %>% 
-    select("wapoID", "fname.wapo", "lname.wapo")
-  if(nrow(aaa) > 0){
-    cat("\n *** Unmatched WAPO records (expect none):")
-    print(aaa)
-    errors <- errors+1
-  } else {
-    cat("\n *** No unmatched WAPO records after info transfer \n\n")
-  }
-  
-}
-
-### END TEMPORARY FIXES FOR UNMATCHED WAPO RECORDS #############
-
-## Checks for bad matches from the merge ----
-## These are relatively stable, and need to be fixed manually
+## Stop and fix manually
 ## Most should be fixed by modifying incorrect info in the
 ## pre or post cleaning fix files.  But if that is not enough to
 ## prevent the match, then as a last resort the match is reversed by hand in
 ## the fixes_postmerge file
 
-## Duplicate feIDs
-aaa <- table(initialmerge$feID)
-if(any(aaa>1)){
-  names(aaa[aaa>1])
-  sort(unique(aaa))
-  cat("\n *** Duplicate FE IDs, #times, 99999 means unmatched WaPo case \n\n")
-  print(aaa[aaa>1])
-  errors <- errors+1
-} else {
-  cat("\n *** No duplicate FE IDs \n\n")
+## Stop if found, and fix by inspection 
+
+## A. If due to bad or missing info, fix in pre-cleaning
+
+## B. If resistant, fix manually in fix_(fe/wapo)dupes.R (last resort).
+
+## Note: this can't be automated; instead need to
+##  modify the script in fix_(fe/wapo)dupes.R with the relevant IDs
+##  set resistant to 1 below to source the script
+
+## 
+
+#### a. Duplicate feIDs ----
+
+dupe.fe <- table(initialmerge$feID)
+resistant <- 1
+if(resistant==1) {
+  resistant.message <- "resistant duplicate match set to 1, review and change if needed"
 }
 
-## Duplicate wapoIDs
-aaa <- table(initialmerge$wapoID)
-if(any(aaa>1)){
-  names(aaa[aaa>1])
-  sort(unique(aaa))
-  cat("\n *** Duplicate WaPo IDs, #times \n\n")
-  print(aaa[aaa>1])
-  errors <- errors+1
+if(any(dupe.fe>1)){
+  
+  names(dupe.fe[dupe.fe>1])
+  sort(unique(dupe.fe))
+  message("\n *** Duplicate FE IDs, #times, 99999 means unmatched WaPo case")
+  print(dupe.fe[dupe.fe>1])
+  
+  if(resistant==0) {
+    stop("\n\n Stopping to fix duplicate FE IDs \n\n")
+  } else {
+    message("\n\n Fixing FE dupes by script \n\n")
+    source(here("Construction", "fix_fe_dupes.R"))
+  }
+  
 } else {
-  cat("\n *** No duplicate WaPo IDs \n\n")
+  message("\n *** No duplicate FE IDs **** \n\n")
+}
+
+#### b. Duplicate wapoIDs ----
+
+dupe.wapo <- table(initialmerge$wapoID)
+resistant <- 0
+if(resistant==1) {
+  resistant.message <- "resistant duplicate match set to 1, review and change if needed"
+}
+
+if(any(dupe.wapo>1)){
+  
+  names(dupe.wapo[dupe.wapo>1])
+  sort(unique(dupe.wapo))
+  message("\n *** Duplicate WaPo IDs, #times \n\n")
+  print(dupe.wapo[dupe.wapo>1])
+  
+  if(resistant==0) {
+    stop("\n\n Stopping to fix duplicate WaPo IDs \n\n")
+  } else {
+    message("\n\n Fixing WaPo dupes by script \n\n")
+    source(here("Construction", "fix_wapo_dupes.R"))
+  }
+  
+} else {
+  message("\n *** No duplicate WaPo IDs **** \n\n")
 }
 
 
-## City/date mismatch
+### 3. Inconsistencies in merged info ----
 
-aaa <- initialmerge %>%
-  filter(city.wapo != city.fe & date.fe != date.wapo) %>%
-  select(feID, wapoID, city.fe, city.wapo, date.fe, date.wapo)
-if(nrow(aaa)>1){
-  cat("\n *** City & date mismatches: ")
-  print(aaa)
-  errors <- errors+1
+## Not necessary to stop, but should be reviewed
+## Fuzzy string matching allows for some errors in key variables
+## Fix by inspection as time permits (and ideally report)
+## Make corrections as needed in pre-cleaning fixes or fe_newnames
+
+attribute.mismatch <- initialmerge %>%
+  filter(!is.na(feID) & !is.na(wapoID)) %>%
+  mutate(flname.wapo = paste(fname.wapo, lname.wapo),
+         flname.fe = paste(fname.fe, lname.fe)) %>%
+  filter(flname.wapo != flname.fe |
+           date.fe != date.wapo |
+           gender.wapo != gender.fe | 
+           age.wapo != age.fe |  
+           city.wapo != city.fe) %>%
+  select(feID, wapoID, flname.fe, flname.wapo, date.fe, date.wapo,
+         gender.fe, gender.wapo, age.fe, age.wapo, city.fe, city.wapo)
+
+if(nrow(attribute.mismatch)>1){
+  message("\n *** Attribute mismatches for review: ")
+  head(attribute.mismatch)
+
 } else {
-  cat("\n *** No city & date mismatches \n\n")
+  message("\n *** No attribute mismatches \n\n")
 }
 
 
-# County mismatch (lots missing or empty county in wapo, we ignore those) 
-aaa <- initialmerge %>%
+#### d. County mismatch (lots of missing or empty county in wapo, we ignore those) 
+county.mismatch <- initialmerge %>%
   filter(county.wapo != county.fe & !is.na(wapoID) & county.wapo != "") %>%
   select(feID, wapoID, city.fe, city.wapo, county.fe, county.wapo, st.fe, st.wapo)
-if(nrow(aaa)>1){
-  cat("\n *** County mismatches:")
-  print(aaa)
-  errors <- errors+1
+
+if(nrow(county.mismatch)>0){
+  cat("\n *** County mismatches for review: \n\n")
+  print(county.mismatch)
+
 } else {
   cat("\n *** No county mismatches \n\n")
 }
-
-# Check for errors in final dataset ----
-if(errors > 0){
-  msg <- paste("\n\n ***", errors, "cleaning errors found.  Stopping *** \n\n")
-  stop(msg)
-} else {
-  cleaning.error.message <- "\n\n *** No errors during cleaning!! *** \n\n"
-}
-
-# Only if bad merges identified above that can't be fixed by cleaning (very rare)
-# The cases are unmerged and remerged as needed
-# source("fixes_postmerge.R") 
 
 
 # Final merged dataset prep for 2015+ WA data ----
@@ -495,8 +488,8 @@ save(list = c("fe_data", "wapo_data", "merged_data",
 
 
 # Print summary of run
-message(matching.message)
-message(cleaning.error.message)
+
+message(resistant.message)
 
 message(newname.update.message)
 message(wapo.update.message)

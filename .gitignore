@@ -25,7 +25,9 @@ Construction/*
 
 !Construction/fixes_postcleaning.R
 
-!Construction/fixes_postmerge.R
+!Construction/fix_fe_dupes.R
+!Construction/fix_wapo_dupes.R
+
 !Construction/pursuit_coding.R
 
 
