@@ -131,7 +131,7 @@ mutate(cod = `Cause of death`,
 ) %>%
   
   ## Description ----
-mutate(description = `Media description of the circumstances surrounding the death`) %>%
+mutate(description = `A brief description of the circumstances surrounding the death`) %>%
   
   ## Case disposition  ----
 

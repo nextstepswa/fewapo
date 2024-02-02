@@ -215,6 +215,7 @@ wapo_temp$state[wapo_temp$wapoID==6469] <- "ID"
 wapo_temp$county[wapo_temp$wapoID==1145] <- "Thurston"
 wapo_temp$county[wapo_temp$wapoID==3026] <- "Thurston"
 wapo_temp$county[wapo_temp$wapoID==8313] <- "Yakima"
+wapo_temp$county[wapo_temp$wapoID==9332] <- "Adams"
 
 
 # City fixes ----
