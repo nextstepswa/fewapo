@@ -16,10 +16,17 @@ library(lubridate)
 # 3. Merges the data from FE and WaPo - for WA state only
 #
 # Resulting cleaned data is saved as an output
-# Note: some cleaning is done via sourcing external files
 #
-# The code is designed to stop with a warning if it finds errors or updates are needed (for pursuit coding)
-# These need to be manually fixed/updated, and then this file can be re-run (repeatedly, if needed
+# The code is designed to stop with an informative message if it finds errors
+# that need to be manually addressed
+
+# The typical reasons for this will be:
+##  for new pursuit review/coding
+##  for changes in source file formats (common for MPV)
+##  for duplicate cases resulting from the FE-WaPo merge
+
+# If it stops, the errors need to be manually fixed/updated
+# and then this file can be re-run (repeatedly, if needed
 # until no more errors/updates are flagged)
 
 ###########################################################################################
@@ -231,9 +238,22 @@ if(nrow(unmatched.wapo) > 0){
 #### a. Duplicate feIDs ----
 
 dupe.fe <- table(initialmerge$feID)
+
+# This should normally be set to 0, unless there has been a new resistant
+# duplicate match.  Then leave at 1 until no longer needed.
+
 resistant <- 1
+
+# Check if resistant should be reset
 if(resistant==1) {
-  resistant.message <- "resistant duplicate match set to 1, review and change if needed"
+  if(!any(dupe.fe>1)){ 
+    resistant <- 0
+    resistant.message <- "reset resistant duplicate match to 0 for FE"
+    message(resistant.message)
+  } else {
+    resistant.message <- "resistant duplicate match left at 1 for FE"
+    message(resistant.message)
+  }
 }
 
 if(any(dupe.fe>1)){
@@ -257,9 +277,22 @@ if(any(dupe.fe>1)){
 #### b. Duplicate wapoIDs ----
 
 dupe.wapo <- table(initialmerge$wapoID)
+
+# This should normally be set to 0, unless there has been a new resistant
+# duplicate match.  Then leave at 1 until no longer needed.
+
 resistant <- 0
+
+# Check if resistant should be reset
 if(resistant==1) {
-  resistant.message <- "resistant duplicate match set to 1, review and change if needed"
+  if(!any(dupe.fe>1)){ 
+    resistant <- 0
+    resistant.message <- "reset resistant duplicate match to 0 for WaPo"
+    message(resistant.message)
+  } else {
+    resistant.message <- "resistant duplicate match left at 1 for WaPo"
+    message(resistant.message)
+  }
 }
 
 if(any(dupe.wapo>1)){
@@ -490,12 +523,10 @@ save(list = c("fe_data", "wapo_data", "merged_data",
 # Print summary of run
 
 message(resistant.message)
-
 message(newname.update.message)
 message(wapo.update.message)
 message(mpv.update.message)
 message(last.name.message)
-
 message(pursuit.coding.message)
 message(wtsc.update.message)
 
