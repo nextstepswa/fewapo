@@ -115,6 +115,7 @@ wapo_agency <- scrape_data_fn(wapo, wapo_agency_url, wapo_agency_save_file) %>%
 
 wapo_agency_xwalk <- wapo_agency %>% 
   select(agencyid = agency_ids, agency_name, agency_type = type)
+
 wapo_agencyXcase <- data.frame(id = wapo_cases$id, str_split_fixed(wapo_cases$agency_ids, ";", 5)) %>%
   mutate(across(X1:X5, ~ as.numeric(.x))) %>%
   rename_with(~gsub("X", "agencyid", .x, fixed=TRUE)) %>%
