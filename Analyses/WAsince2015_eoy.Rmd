@@ -46,14 +46,14 @@ library(htmlwidgets)
 
 
 # get cleaned, merged data for WA
-load(file = here("data-outputs", params$rdafile))
+load(file = here("Data", "Clean", params$rdafile))
 
 # Data prep (common)
 source(here("Analyses", "Common", "waAnalysesPrep.R"))
 
 # for geocoded LDs
 with(homicides, write.csv(cbind(feID,latitude,longitude),
-                          here("data-outputs",
+                          here("Data", "Clean",
                                "geocodes2015.csv")))
 
 # restrict to end of current year: 2023"
