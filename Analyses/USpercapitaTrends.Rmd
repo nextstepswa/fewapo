@@ -26,10 +26,9 @@ library(sp)
 
 
 load(file = here("Data", "Clean", "CleanData.rda"))
-load(file = here("Data", "Clean", "StatePop2000-2021.rda"))
+load(file = here("Data", "Clean", "AllStatePops2000-2021.rda"))
 
 homicides <- fe_clean %>%
-  filter(year < 2022) %>% # restrict to last complete yr 
   filter(cod != "suicide") %>%
   mutate(age = ifelse(age < 999, age, NA_real_))
 
@@ -42,11 +41,12 @@ fe.st.yr <- homicides %>%
 
 # Introduction
 
-This report examines the changes in the risk of being killed by police from 2000-2021, by state.  The data on persons killed by police comes from the [Fatal Encounters Project](https://fatalencounters.org) (we filter out the cases labeled "suicide").  The data on state population comes from the US Census intercensal projections for [2000-2009](https://www.census.gov/data/datasets/time-series/demo/popest/intercensal-2000-2010-state.html) and [2010-2019](https://www.census.gov/data/datasets/time-series/demo/popest/2010s-state-detail.html).
+This report examines the changes in the risk of being killed by police from 2000-2021, by state.  The data on persons killed by police comes from the [Fatal Encounters Project](https://fatalencounters.org) (we filter out the cases labeled "suicide").  The data on state population comes from the US Census intercensal projections for [2000-2009](https://www.census.gov/data/datasets/time-series/demo/popest/intercensal-2000-2010-state.html) [2010-2019](https://www.census.gov/data/datasets/time-series/demo/popest/2010s-state-detail.html) and 
+[2020-2021](https://www.census.gov/data/datasets/time-series/demo/popest/2020s-state-detail.html)
 
 We measure risk in term of a standardized per capita rate, constructed by taking the ratio of persons killed to population size in each year, and multiplied by 1 million to get the annual risk per 1M residents for each state.
 
-Since we are working with annual summary metrics, our last full year of data from the Fatal Encounters Project is 2021 (they stopped updating that year.  For the census population data, we extrapolate the growth rate from 2018-2019 (by age, race, sex and state) to estimate the 2021 population.
+Our last full year of data from the Fatal Encounters Project is 2021 (they stopped updating that year).
 
 ____
 
@@ -99,7 +99,7 @@ ggplot() +
            aes(x=age, y=pct, fill=age.grp),
            stat="identity", alpha=0.5) +
    
-  geom_point(data = popdata$pop.agedist.2010s %>% 
+  geom_point(data = popdata$pop.agedist.2010_2021 %>% 
                 mutate(age.grp= case_when(age<15 ~ "0-14", 
                                           age>64 ~ "65+",
                                           TRUE ~ "15-64")),

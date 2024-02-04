@@ -41,6 +41,8 @@ Construction/*
 
 !Construction/pursuit_coding.R
 
+!Construction/StateCensusData.R
+
 
 # Key data analysis scripts
 !/Analyses/
