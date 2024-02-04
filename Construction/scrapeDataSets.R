@@ -39,11 +39,13 @@ fe_newnames <- readxl::read_xlsx(here::here("Data", "Raw", "fe_newnames.xlsx")) 
   rename("age" = "Age") %>%
   select(-`Date of injury resulting in death (month/day/year)`)
 
-# Clean up a couple of things so the post 2021 names can be added, 
-# date is persnickety, and the name needs to be changed for fixes later
-# Latitude reads as character bc there is stray comma for fe ID 28891
-# Age is a mess bc it has some ranges, and case_when doesn't like "-"
-# Add newnames
+# Add new names to FE orig
+
+## Clean up a couple of things in FE orig first: 
+## date is persnickety, and the name needs to be changed for fixes later
+## Latitude reads as character bc there is stray comma for fe ID 28891
+## Age is a mess bc it has some ranges, and case_when doesn't like "-"
+## Then add newnames and rename ID
 
 fe_temp <- fe_raw[!is.na(fe_raw$`Unique ID`),] %>% # delete the end row of text
   mutate(date = mdy(`Date of injury resulting in death (month/day/year)`),
