@@ -553,6 +553,8 @@ If you flip back and forth between the start and end tabs, you can get a visual 
 
 ```{r mapprep, message=F, warning=F}
 
+# json file from: https://www.census.gov/geographies/mapping-files/2010/geo/carto-boundary-file.html
+
 states <- geojsonio::geojson_read(
   here::here("Data", "Raw","gz_2010_us_040_00_20m.json"), what = "sp") %>%
   subset(NAME != "Puerto Rico") %>%
