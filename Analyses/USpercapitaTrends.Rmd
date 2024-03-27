@@ -12,7 +12,7 @@ output:
        in_header: gtag.uspercapita.html
 ---
 
-<base target="_top"/>
+<base target="_blank"/>
 
 
 ```{r prelims, message=F, warning=F}
@@ -22,7 +22,10 @@ library(ggplot2)
 library(plotly)
 library(scales)
 library(leaflet)
+
+options("sp_evolution_status"=2)
 library(sp)
+#library(sf)
 
 
 load(file = here("Data", "Clean", "CleanData.rda"))
