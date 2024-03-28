@@ -10,7 +10,7 @@ output:
     code_folding: hide
 ---
 
-<base target="_top"/>
+<base target="_blank"/>
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message=FALSE)
@@ -113,7 +113,7 @@ After winning over 60% of the statewide vote, Initiative 940 was passed into WA 
     `r ifelse(last.name == "(Name not released)", "This", last.name)` is the `r paste0(tot.this.yr, num.suffix)` person killed by police in `r as.numeric(names(tot.by.yr[length(tot.by.yr)]))`.  The cause of death is reported as `r last.cod`.
 
 One out of every 5 persons killed in Washington state is killed by a law enforcement officer.  (Roughly 250 homicide deaths are recorded each year in WA State.  You can find the state's death data
-<a href="https://www.doh.wa.gov/DataandStatisticalReports/HealthDataVisualization/MortalityDashboards/ACHInjuryDeathsDashboards" target="_top">here</a>).
+<a href="https://www.doh.wa.gov/DataandStatisticalReports/HealthDataVisualization/MortalityDashboards/ACHInjuryDeathsDashboards" target="_blank">here</a>).
 
 ___
 

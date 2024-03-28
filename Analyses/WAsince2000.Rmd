@@ -12,7 +12,7 @@ output:
        in_header: gtag.2000.html
 ---
 
-<base target="_top"/>
+<base target="_blank"/>
 
 
 ```{r setup, include=FALSE}
@@ -132,7 +132,7 @@ Tracking the trends in persons killed by police, before and after the legal refo
     `r ifelse(last.name == "(Name not released)", "This", last.name)` is the `r paste0(tot.this.yr, num.suffix)` person killed by police in `r as.numeric(names(tot.by.yr[length(tot.by.yr)]))`.  The cause of death is reported as `r last.cod`.
 
 From 2010-20 roughly one out of every 5 persons killed in Washington state was killed by a law enforcement officer.  (About 250 homicide deaths are recorded each year in WA State.  You can find the state's death data
-<a href="https://www.doh.wa.gov/DataandStatisticalReports/HealthDataVisualization/MortalityDashboards/ACHInjuryDeathsDashboards" target="_top">here</a>).
+<a href="https://www.doh.wa.gov/DataandStatisticalReports/HealthDataVisualization/MortalityDashboards/ACHInjuryDeathsDashboards" target="_blank">here</a>).
 
 ___
 

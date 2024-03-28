@@ -19,7 +19,7 @@ params:
   smooth_span: [0.8]
 ---
 
-<base target="_top"/>
+<base target="_blank"/>
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message=FALSE, fig.height = 4)
@@ -81,7 +81,7 @@ This is the end of year report for 2023
 
 Before the 2021 legislative reforms, one out of every 6 homicides in Washington state was a person killed during an encounter with law enforcement.  On average,
 about 250 homicide deaths were recorded each year in WA State from 2015-2020, with about 40 killed during encounters with police.  You can view and download the state's official death data
-<a href="https://doh.wa.gov/data-statistical-reports/washington-tracking-network-wtn/death/ach-injury-deaths-dashboard" target="_top">here</a>.  
+<a href="https://doh.wa.gov/data-statistical-reports/washington-tracking-network-wtn/death/ach-injury-deaths-dashboard" target="_blank">here</a>.  
 
 ____
 
@@ -1312,9 +1312,9 @@ ____
 Police accountability and reform has been an active topic in the Washington state legislature since 2018.  Changes have been achieved via both citizen initiative and traditional bills.
 
 One of the first major legislative reforms was Initiative 940. I-940 established de-escalation training requirements, independent investigations of all homicides by police and changed the criminal accountability standard from malice to reasonable officer. It passed with over 60% of the statewide vote in the 2018 November general election, becoming WA state law on December 6, 2018.  Certain provisions took effect later: amendments by 
-<a href="https://lawfilesext.leg.wa.gov/biennium/2019-20/Pdf/Bills/Session%20Laws/House/1064-S.SL.pdf?q=20221121125434" target="_top">HB 1064</a>
+<a href="https://lawfilesext.leg.wa.gov/biennium/2019-20/Pdf/Bills/Session%20Laws/House/1064-S.SL.pdf?q=20221121125434" target="_blank">HB 1064</a>
 took effect February 4, 2019, and the first
-<a href="https://apps.leg.wa.gov/wac/default.aspx?cite=139-12&full=true&pdf=true" target="_top">Washington Administrative Code (WAC)</a>
+<a href="https://apps.leg.wa.gov/wac/default.aspx?cite=139-12&full=true&pdf=true" target="_blank">Washington Administrative Code (WAC)</a>
 requirements took effect January 6, 2020.  The WAC is reviewed and updated annually.
 
 In the 2021 legislative session (Jan - April) several bills were passed on a range of issues relating to police reform.

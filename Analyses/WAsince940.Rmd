@@ -10,7 +10,7 @@ output:
       in_header: gtag.940.html
 ---
 
-<base target="_top"/>
+<base target="_blank"/>
 
 
 
