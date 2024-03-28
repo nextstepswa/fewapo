@@ -84,7 +84,9 @@ fe_draft <- fe_temp %>%
   ) %>%
   
   # For agency(s) we don't currently split up the multiples for FE like we do for WaPo
-  mutate(agency = `Agency or agencies involved`
+  # fix double spaces for splitting in other analyses
+  mutate(agency = `Agency or agencies involved`,
+         agency = gsub("  ", " ", agency)
   ) %>%
   # agency.type classifies only for single agency incidents
   # otherwise it is coded "Multiple agencies"
@@ -147,6 +149,7 @@ fe_draft <- fe_temp %>%
          weapon =case_when(
            grepl("Edged", weapon)  ~ "Alleged edged weapon",
            grepl("Firearm", weapon)  ~ "Alleged firearm",
+           grepl("Gun", weapon)  ~ "Alleged firearm",
            grepl("Rifle", weapon)  ~ "Alleged firearm",
            weapon == "None" ~ "No weapon",
            weapon == "" | is.na(weapon) ~ "Unknown",

@@ -132,6 +132,9 @@ wapo_agencyXcase <- data.frame(id = wapo_cases$id, str_split_fixed(wapo_cases$ag
   unite(col = "agency", contains("name"), sep = ", ", remove = F, na.rm=T)
 
 ## join cases and agencies
+## NB: there is no "wapo_raw" file because the data are read in 2 parts
+## and merged here into wapo_temp.  But wapo_cases is the closest equivalent
+
 wapo_temp <- left_join(wapo_cases, wapo_agencyXcase) %>%
   rename("wapoID" = "id")
 

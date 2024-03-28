@@ -3,14 +3,11 @@
 ## input: wapo_temp
 ## output wapo_temp
 
-# The cleaning script creates new variables based on these fields
-# so the fixes need to be made before the cleaning
+# The cleaning script creates new variables based on the raw data
+# so these fixes need to be made before the cleaning
 
-# These create merge errors if not fixed, 
+# The variables fixed here create merge errors if not fixed, 
 # and merging is typically where these problems are first identified
-
-# Many errors were reported to the dataset maintainers,
-# but WaPo does not fix
 
 # Errors for all cases (most identified during 2021 EOY merge) fixed first
 # Some errors for WA 2015- fixed at end

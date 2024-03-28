@@ -17,10 +17,12 @@ start <- as.numeric(row.names(indices)[indices=="wapoID"])
 end <- ncol(initialmerge)
 len <- end-start+1
 
-# Remove wapo info from badmatch id -- needs to be selected and changed each time
+# Remove wapo info from FE badmatch id -- needs to be carefully identified each time
+# WaPo info is left on the good match
+# Don't forget to set resistant match to 1 in MakeData.R
 
-badmatchid <- <wapoID>
-message(paste("Fixing duplicate match for", badmatchid, "by script"))
+badmatchid <- 90100
+message(paste("Fixing duplicate match for feID =", 90100, "by script"))
 
 initialmerge[initialmerge$feID==badmatchid,start:end] <- rep(NA, len) 
 

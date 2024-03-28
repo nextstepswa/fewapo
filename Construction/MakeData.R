@@ -1,13 +1,5 @@
 rm(list=ls())
 
-#library(devtools)
-library(tidyverse)
-library(readxl)
-library(maps)
-library(here)
-library(fuzzyjoin)
-library(lubridate)
-
 ##### What this file does ################################################################
 #
 # This script runs 3 main tasks:
@@ -21,15 +13,23 @@ library(lubridate)
 # that need to be manually addressed
 
 # The typical reasons for this will be:
-##  for new pursuit review/coding
-##  for changes in source file formats (common for MPV)
-##  for duplicate cases resulting from the FE-WaPo merge
+## new pursuit review/coding
+## changes in source file formats (common for MPV)
+## duplicate cases resulting from the FE-WaPo merge
 
 # If it stops, the errors need to be manually fixed/updated
 # and then this file can be re-run (repeatedly, if needed
 # until no more errors/updates are flagged)
 
 ###########################################################################################
+
+#library(devtools)
+library(tidyverse)
+library(readxl)
+library(maps)
+library(here)
+library(fuzzyjoin)
+library(lubridate)
 
 # Functions ----
 
@@ -240,9 +240,9 @@ if(nrow(unmatched.wapo) > 0){
 dupe.fe <- table(initialmerge$feID)
 
 # This should normally be set to 0, unless there has been a new resistant
-# duplicate match.  Then leave at 1 until no longer needed.
+# duplicate match.  Then set at 1 and leave until no longer needed.
 
-resistant <- 1
+resistant <- 0
 
 # Check if resistant should be reset
 if(resistant==1) {
@@ -278,14 +278,14 @@ if(any(dupe.fe>1)){
 
 dupe.wapo <- table(initialmerge$wapoID)
 
-# This should normally be set to 0, unless there has been a new resistant
-# duplicate match.  Then leave at 1 until no longer needed.
+# This should normally be set to 0, unless there is a new resistant
+# duplicate match.  Then set at 1 and leave until no longer needed.
 
 resistant <- 0
 
 # Check if resistant should be reset
 if(resistant==1) {
-  if(!any(dupe.fe>1)){ 
+  if(!any(dupe.wapo>1)){ 
     resistant <- 0
     resistant.message <- "reset resistant duplicate match to 0 for WaPo"
     message(resistant.message)
@@ -489,6 +489,12 @@ fe_2015$url_click <- sapply(fe_2015$url_info, make_url_fn)
 
 
 # Join leg.info ----
+# This is a premade dataset, read in via scrapeDataSets.R above
+# Uses geocodio created file, with all FE incidents thru 90094
+# Merge is by cityname, so will match all new cases from cities
+# included thru 90094.  If a new city crops up (rare), this needs to
+# be added to the geocodio csv file manually, and the make_leg_info
+# file rerun to rebuild the leg info file.
 
 finalmerge <- left_join(finalmerge, wa_LDxCity)
 
@@ -522,7 +528,7 @@ save(list = c("fe_data", "wapo_data", "merged_data",
 
 # Print summary of run
 
-message(resistant.message)
+if(exists("resistant.message")){message(resistant.message)}
 message(newname.update.message)
 message(wapo.update.message)
 message(mpv.update.message)

@@ -12,6 +12,7 @@
 
 # ### Template for one duplicate fe match: 
 # ### Identify the right match by hand, then delete the dupe record 
+# ### Don't forget to set FE resistant match to 1 in MakeData.R
 # 
 # initialmerge %>%
 #   mutate(dupe.record = case_when(
@@ -31,6 +32,7 @@
 # ### Template for two duplicate fe matches: 
 # ### Identify the bad matches
 # ### Delete the dupe records
+# ### Don't forget to set FE resistant match to 1 in MakeData.R
 
 initialmerge <- initialmerge %>%
   mutate(dupe.record = case_when(
