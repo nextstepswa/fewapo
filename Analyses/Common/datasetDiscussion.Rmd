@@ -69,11 +69,13 @@ tab %>%
                notation = "symbol")
 ```
   
-### Suicides and "Medical Emergencies" excluded
+### Exclusions
 
-The Fatal Encounters data includes some cases classified as "suicides" that occur during an encounter with police.  These are not cases of "suicide by cop", where the victim appears to have provoked the police in order to be shot by police.  They are cases where the victim shoots or otherwise kills themself.  **We have excluded these from the analyses in this report, because the report focuses on persons killed by police.**  
+Cases officially reported as suicides and "Medical Emergencies" are excluded from the analyses in this report.
 
-However, we acknowledge that these cases warrant further assessment.  The classification as "suicide" is not definitive, it is typically based on the narrative provided by law enforcement.  And even if these are suicides, it is possible that the outcome might have been different if the case had been handled differently, for example, by calling in a crisis intervention team.
+The Fatal Encounters data (and our extension of their data for WA State) includes some cases classified as "suicides" that occur during an encounter with police.  These are not cases of "suicide by cop", where the victim appears to have provoked the police in order to be killed.  They are cases where the victim shoots or otherwise kills themself.  **We have excluded these from the analyses in this report, because the report focuses on persons killed by police.**  
+
+However, we acknowledge that these cases warrant further assessment.  The classification as "suicide" is not definitive, it is typically based on the narrative provided by law enforcement and some level of investigation by the local coroner or medical examiner.  But even if these are suicides, it is possible that the outcome might have been different if the case had been handled differently, for example, by calling in a crisis intervention team and deescalating effectively.
 
 The excluded case counts and fraction of total cases by year is shown in the table below.
 
