@@ -500,7 +500,10 @@ finalmerge <- left_join(finalmerge, wa_LDxCity)
 
 ## check for missing cases, if so stop and fix
 
-if(any(is.na(finalmerge$WA_District))) { stop("Missing LegDists") }
+if(any(is.na(finalmerge$WA_District))) 
+  {
+  stop(paste("Missing LegDists for feID", finalmerge$feID[(is.na(finalmerge$WA_District))])) 
+       }
   
 # Save WA clean and merged datasets as Rdata files ----
 ## Note that the fe and wapo data include all cases, not just WA.
