@@ -1035,177 +1035,243 @@ ggplotly(p, tooltip = "text")
 
 ```
 
-## WA vs. other states
+# WA vs. other states
 
-### Annual totals and change {.tabset}
+Here we report the annual totals up through the last complete year --  `r last_complete_yr` -- with data from the Washington Post data only, since the Fatal Encounters project stopped updating at the end of 2021.  Recall that Washington Post data only include persons shot and killed by police, while Fatal Encounters included all persons who are killed by police (including deaths due to asphyxiation, tasers, vehicle chases, etc).
 
-Cumulative annual totals up to the last complete year,
-`r last_complete_yr`, with percentage change from
-`r last_complete_yr - 1` to `r last_complete_yr`.
+## Compared to all other states {.tabset}
 
-<!-- Here we report the results from the Fatal Encounters project and the Washington Post data separately.   -->
+In this section we compare number shot in WA state to the total in all other states combined.
 
-Here we report the results for the Washington Post data only.  Recall that Washington Post data only include persons shot and killed by police, while Fatal Encounters includes all persons who are killed by police (including deaths due to asphyxiation, tasers, vehicle chases, etc).
 
 ```{r wavsus, warning=F, include=F}
-# Here we need the full FE and WaPo datasets, not just WA state
+# Here we need the complete datasets, not just WA state
 
-fe_tab <- fe_data %>% 
-  filter(homicide==1 & year >= start_yr & year <= last_complete_yr) %>% 
-  #filter(match(month, month.abb) <= last_fe_date - 1) %>%
-  mutate(wa = ifelse(st == "WA", 1, 0)) %>%
-  group_by(year, wa) %>%
-  count() %>%
-  pivot_wider(names_from = wa,
-              values_from = n)
-fe_tab <- rbind(fe_tab, 
-                100*round(fe_tab[nrow(fe_tab),]/fe_tab[nrow(fe_tab)-1,]-1, 2)) %>%
-  mutate(year = as.character(year))
-fe_tab[nrow(fe_tab), 1] <- paste("Pct change", 
-                                 last_complete_yr - 1,
-                                 "to", last_complete_yr)
+# fe_tab <- fe_data %>% 
+#   filter(homicide==1 & year >= start_yr & year <= last_complete_yr) %>% 
+#   #filter(match(month, month.abb) <= last_fe_date - 1) %>%
+#   mutate(wa = ifelse(st == "WA", 1, 0)) %>%
+#   group_by(year, wa) %>%
+#   count() %>%
+#   pivot_wider(names_from = wa,
+#               values_from = n)
+# fe_tab <- rbind(fe_tab, 
+#                 100*round(fe_tab[nrow(fe_tab),]/fe_tab[nrow(fe_tab)-1,]-1, 2)) %>%
+#   mutate(year = as.character(year))
+# fe_tab[nrow(fe_tab), 1] <- paste("Pct change", 
+#                                  last_complete_yr - 1,
+#                                  "to", last_complete_yr)
 
 wapo_tab <- wapo_data %>% 
     filter(year >= start_yr & year <= last_complete_yr) %>%
   #filter(match(month, month.abb) <= last_wapo_date - 1) %>%
-  mutate(wa = ifelse(st == "WA", 1, 0)) %>%
+  mutate(wa = ifelse(st == "WA", "WA", "All other states")) %>%
   group_by(year, wa) %>%
   count() %>%
   pivot_wider(names_from = wa,
-              values_from = n)
-wapo_tab <- rbind(wapo_tab, 
-                100*round(wapo_tab[nrow(wapo_tab),]/wapo_tab[nrow(wapo_tab)-1,]-1, 2)) %>%
-  mutate(year = as.character(year))
-wapo_tab[nrow(wapo_tab), 1] <- paste("Pct change", 
-                                     last_complete_yr - 1,
-                                     "to", last_complete_yr)
+              values_from = n) %>%
+  ungroup() %>%
+  mutate(pct.change.other = scales::percent((`All other states`/lag(`All other states`) - 1)),
+         pct.change.wa = scales::percent((WA/lag(WA) - 1)))
+
+
+# Note the number of regions has changed between the decades
+# Also the estimates for 2020 are different, so we take the average
+
+pop2020 <- read_csv("https://www2.census.gov/programs-surveys/popest/datasets/2010-2020/state/totals/nst-est2020-alldata.csv") %>%
+  filter(SUMLEV != "020") %>%
+  select(NAME, contains("POPESTIMATE"))
+  
+pop2023 <- read_csv("https://www2.census.gov/programs-surveys/popest/datasets/2020-2023/state/totals/NST-EST2023-ALLDATA.csv") %>%
+  filter(SUMLEV %in% c("010", "040")) %>%
+  select(NAME, contains("POPESTIMATE"))
+
+pop <- left_join(pop2020, pop2023, by = "NAME") %>%
+  rowwise() %>%
+  mutate(POPESTIMATE2020 = mean(c_across(contains("2020")))) %>%
+  select(NAME, POPESTIMATE2015:POPESTIMATE2019, POPESTIMATE2020, POPESTIMATE2021:POPESTIMATE2023) %>%
+  filter(NAME != "Puerto Rico") %>%
+  rename("state" = "NAME")
+
+
+rates.tmp <- wapo_data %>% 
+  filter(year >= start_yr & year <= last_complete_yr) %>%
+  mutate(wa = ifelse(st == "WA", 1, 0)) %>%
+  group_by(state, year) %>%
+  count() %>%
+  pivot_wider(names_from = year,
+              names_prefix = "shot",
+              values_from = n) %>%
+  mutate(across(everything(), ~replace_na(., 0)))  %>%
+  bind_rows(data.frame(c(pop[1,1], bind_rows(.[,-1] %>% map_dbl(., sum, na.rm=T))))) %>%
+  left_join(pop)
+
+notwa <- data.frame(state="All Other States", 
+                    subset(rates.tmp, state=="United States")[-1] - subset(rates.tmp, state=="Washington")[-1])
+
+# using rates per million
+states.all <- bind_rows(rates.tmp, notwa) %>%
+  # h/t https://stackoverflow.com/questions/69831615/dividing-a-set-of-columns-by-another-set-of-columns-based-on-their-column-names
+  mutate(across(starts_with('shot'), 
+                ~ 1000000 * ./get(str_replace(cur_column(), 'shot', 'POPESTIMATE')), 
+                .names = 'rate{.col}'))
+
+state.rates <- states.all %>%
+  select(state, contains("rate")) %>%
+  pivot_longer(contains("rate"),
+               names_to = "year") %>%
+  mutate(year = as.numeric(sub("rateshot", "", year))) %>%
+  rename("rate" = "value")
+
+
+
 ```
 
-<!-- #### Fatal Encounters data -->
 
-```{r wavsusfe, warning=F, include=F}
-kable(fe_tab,
-      caption = "Persons killed by police in FE: WA vs. all other states",
-      col.names = c("Year", "All Other States", "WA")) %>%
-  kable_styling(bootstrap_options = c("striped","hover"),
-                full_width = F) %>%
-  row_spec(nrow(fe_tab), bold = T) #%>%
-  # add_footnote(label = "YTD counts:  Jan - Sep of each year",
-  #              notation = "symbol")
+### Population adjusted rate
+
+The number of people shot is represented here as a population-adjusted rate per million residents, which makes it possible to compare states with different sized populations.  The raw numbers are given on the next tab.
+
+```{r wavsus-rates, warning=F}
+
+p <- ggplot(state.rates %>% filter(grepl("Washington|Other", state)), 
+       aes(x=factor(year), y=rate, 
+           group=state, fill=state,
+           text =paste("rate: ", round(rate, 1)))) + 
+  geom_col() + #coord_flip() +
+  facet_wrap(~state) +
+  
+  theme(axis.text.x = element_text(size = 6),
+        axis.text.y = element_text(size = 8)) +
+  
+  labs(title = "Rate of persons shot by police: WaPo data",
+       x="Year", y="Rate per million")
+
+ggplotly(p, tooltip = "text")
 ```
 
-#### Washington Post data
+### Number shot and annual percent change
 
-```{r wavsuswapo, warning=F}
+```{r wavsus-totals, warning=F}
 kable(wapo_tab,
-      caption = "Persons shot by police in WaPo: WA vs. all other states",
-      col.names = c("Year", "All Other States", "WA")) %>%
+      caption = "Persons shot by police: WaPo data",
+      col.names = c("Year", rep(c("All other states", "WA"), 2)),
+      digits = c(0,0,0,1,1),
+      align = c("l",rep("r", 4))) %>%
+  
   kable_styling(bootstrap_options = c("striped","hover"),
                 full_width = F) %>%
-  row_spec(nrow(fe_tab), bold = T)  #%>%
-  # add_footnote(label = "YTD counts:  Jan - Nov of each year",
-  #              notation = "symbol")
+  add_header_above(c("", "Number" = 2, "Percent Change" = 2 ))
+
+
 ```
 
-### State rankings {.tabset}
 
-Here we report the results from the Fatal Encounters project (through 2021, when it stopped reporting) and the Washington Post data (through the most recent complete year) separately.  Recall that Washington Post data only include persons shot and killed by police, while Fatal Encounters includes all persons who are killed by police (including deaths due to asphyxiation, tasers, vehicle chases, etc).
+## State rankings `r last_complete_yr` {.tabset}
 
-* States are ranked by the percent change in persons killed from `r last_complete_yr-1` to `r last_complete_yr`.
+Here we report the WaPo data by state for the most recent complete year: `r last_complete_yr`.
+
+
+### Number shot
+
+* States are ranked by the the number of persons shot in `r last_complete_yr`.
 
 * The bar for WA State is highlighted with a black border.
 
-* Since percentage changes in numbers smaller than 10 tend to have high volatility from year to year, we show the plot using both states with average annual counts of 10 or more, and all states.
+* These are interactive plots:  You can hover over bars to get the exact values for the number of persons shot in `r last_complete_yr`.
 
-* These are interactive plots:  You can hover over bars to get the exact values for the percent change and average annual number of persons killed from `r start_yr` - `r last_complete_yr-1`.
+```{r strank-number, warning=F, fig.height=7}
 
-
-```{r seriesfe, warning=F}
-
-# use fe_data (not merged) b/c we need all US cases
-
-fe_dat <- fe_data %>%
-  filter(homicide==1 & year >= start_yr & year <= last_complete_yr) %>%
-  group_by(year, st) %>%
-  summarize(count = n()) %>%
-  pivot_wider(id_cols = st,
-              names_from = year,
-              names_prefix = "cases_",
-              values_from = count) %>%
-  replace(is.na(.), 0)
+p <- ggplot(data = states.all %>% filter(!grepl("United|Other", state)),
+            aes(x=shot2023, y=reorder(state, shot2023), 
+                fill = shot2023,
+                color = factor(ifelse(state=="Washington", 1, 0)),
+                text=paste(state, 
+                           "total:", shot2023))) +
+              
+  geom_col() +
+    
+  scale_color_manual(values = c("grey", "black")) +
+  scale_fill_gradient2(
+    low = "blue", 
+    mid = "white", 
+    high = "red", 
+    midpoint = median(states.all$shot2023)) +
+  #scale_x_continuous(labels = scales::percent) +
   
-  if (params$from == "2015") {
-    fe_dat <- fe_dat %>%
-      rowwise() %>%
-      mutate(
-        average = mean(c_across(cases_2015:cases_2020)),
-        pct.chg_2016 = cases_2016/cases_2015 - 1,
-        pct.chg_2017 = cases_2017/cases_2016 - 1,
-        pct.chg_2018 = cases_2018/cases_2017 - 1,
-        pct.chg_2019 = cases_2019/cases_2018 - 1,
-        pct.chg_2020 = cases_2020/cases_2019 - 1,
-        pct.chg_2021 = cases_2021/cases_2020 - 1)
-  } else {
-    fe_dat <- fe_dat %>%
-      rowwise() %>%
-      mutate(
-        average = mean(c_across(cases_2019:cases_2020)),
-        pct.chg_2020 = cases_2020/cases_2019 - 1,
-        pct.chg_2021 = cases_2021/cases_2020 - 1)
-  }
+  theme(axis.text.y=element_text(size=rel(.7)), legend.position = "none") +
+  labs(title = paste("State ranking: Number of persons shot by police"),
+       x="Number shot",
+       y="State")
 
-wapo_dat <- wapo_data %>%
-  filter(year >= start_yr & year <= last_complete_yr) %>%
-  group_by(year, st) %>%
-  summarize(count = n()) %>%
-  pivot_wider(id_cols = st,
-              names_from = year,
-              names_prefix = "cases_",
-              values_from = count) %>%
-  replace(is.na(.), 0) 
-
-  
-  if (params$from == "2015") {
-    wapo_dat <- wapo_dat %>%
-      rowwise() %>%
-      mutate(average = mean(c_across(cases_2015:cases_2020)),
-             pct.chg_2016 = cases_2016/cases_2015 - 1,
-             pct.chg_2017 = cases_2017/cases_2016 - 1,
-             pct.chg_2018 = cases_2018/cases_2017 - 1,
-             pct.chg_2019 = cases_2019/cases_2018 - 1,
-             pct.chg_2020 = cases_2020/cases_2019 - 1,
-             pct.chg_2021 = cases_2021/cases_2020 - 1)
-  } else {
-    wapo_dat <- wapo_dat %>%
-      rowwise() %>%
-      mutate(average = mean(c_across(cases_2019:cases_2020)),
-             pct.chg_2020 = cases_2020/cases_2019 - 1,
-             pct.chg_2021 = cases_2021/cases_2020 - 1)
-  }
-
+ggplotly(p, tooltip = "text")
 
 ```
 
-#### FE Data {.tabset .tabset-pills}
+### Population-adjusted rate
 
-Reminder that FE stopped reporting in 2021, so this comparison is for the last 2 years of reporting:  2021 vs. 2020.
+* States are ranked by the population adjusted rate of persons shot in `r last_complete_yr`:  the rate per million state residents.
 
-##### States with 10+ cases
+* The bar for WA State is highlighted with a black border.
 
-```{r barplotfe, warning = F}
+* These are interactive plots:  You can hover over bars to get the exact values for the rate of persons shot in `r last_complete_yr`.
 
-# For now, just through 2021
 
-p <- ggplot(data = fe_dat %>% 
-              filter(average >= 10 & !is.infinite(pct.chg_2021)),
-            aes(x=pct.chg_2021, y=reorder(st, pct.chg_2021), 
-                fill = pct.chg_2021,
-                col=factor(ifelse(st=="WA", 1, 0)),
-                text=paste(st, 
-                           "change:", scales::percent(pct.chg_2021, acc=1),
-                           "avg:", round(average)))) +
+```{r strank-rate, warning=F, fig.height=7}
+
+p <- ggplot(data = states.all %>% filter(!grepl("United|Other", state)),
+            aes(x=rateshot2023, y=reorder(state, rateshot2023), 
+                fill = rateshot2023,
+                color = factor(ifelse(state=="Washington", 1, 0)),
+                text=paste(state, 
+                           "total:", round(rateshot2023, 1)))
+            ) +
               
-  geom_bar(stat="identity") +
+  geom_col() +
+    
+  scale_color_manual(values = c("grey", "black")) +
+  scale_fill_gradient2(
+    low = "blue", 
+    mid = "white", 
+    high = "red", 
+    midpoint = median(states.all$rateshot2023)) +
+  #scale_x_continuous(labels = scales::percent) +
+  
+  theme(axis.text.y=element_text(size=rel(.7)), legend.position = "none") +
+  labs(title = paste("State ranking: Population adjusted rate of persons shot by police"),
+       x="Rate per million residents",
+       y="State")
+
+ggplotly(p, tooltip = "text")
+
+```
+
+
+### Change from previous year
+
+
+* States are ranked by the percent change in the number of persons shot from `r last_complete_yr-1` to `r last_complete_yr`.
+
+* The bar for WA State is highlighted with a black border.
+
+* These are interactive plots:  You can hover over bars to get the exact values for the number of persons shot in `r last_complete_yr` year, and the percent change from the previous year.
+
+```{r strank-change, warning=F, fig.height=7}
+df <- states.all %>% 
+  filter(!grepl("United|Other", state)) %>%
+  select(state, shot2022:shot2023) %>%
+  mutate(pct.chg = shot2023/shot2022 -1)
+
+p <- ggplot(data = df,
+            aes(x=pct.chg, y=reorder(state, pct.chg), 
+                fill = pct.chg,
+                color = factor(ifelse(state=="Washington", 1, 0)),
+                text=paste0(state, 
+                           paste("<br>", "number shot in ", last_complete_yr, ": ", shot2023),
+                           paste("<br>", "change from last year: ", scales::percent(pct.chg, acc = 1))))
+            ) +
+              
+  geom_col() +
     
   scale_color_manual(values = c("grey", "black")) +
   scale_fill_gradient2(
@@ -1215,148 +1281,17 @@ p <- ggplot(data = fe_dat %>%
     midpoint = 0) +
   scale_x_continuous(labels = scales::percent) +
   
-  theme(axis.text.y=element_text(size=rel(0.6)), legend.position = "none") +
-  labs(title = paste("State ranking: % Change from 2020 to 2021 in persons killed by police"),
-       x="Percent change in persons killed",
+  theme(axis.text.y=element_text(size=rel(.7)), legend.position = "none") +
+  labs(title = paste("State ranking: Percent change in number of persons shot by police from previous year"),
+       x="Percent change",
        y="State")
 
 ggplotly(p, tooltip = "text")
 
-  
 ```
 
-##### All states
 
-```{r barplotallfe, warning = F}
 
-p <- ggplot(data = fe_dat %>% filter(!is.infinite(pct.chg_2021)),
-            aes(x=pct.chg_2021, y=reorder(st, pct.chg_2021), 
-                fill = pct.chg_2021,
-                col=factor(ifelse(st=="WA", 1, 0)),
-                text=paste(st, 
-                           "change:", scales::percent(pct.chg_2021, acc=1),
-                           "avg:", round(average)))) +
-              
-  geom_bar(stat="identity") +
-    
-  scale_color_manual(values = c("grey", "black")) +
-  scale_fill_gradient2(
-    low = "blue", 
-    mid = "white", 
-    high = "red", 
-    midpoint = 0) +
-  scale_x_continuous(labels = scales::percent) +
-  
-  theme(axis.text.y=element_text(size=rel(.5)), legend.position = "none") +
-  labs(title = paste("State ranking: % Change from 2020 to 2021 in persons killed by police"),
-       x="Percent change in persons killed",
-       y="State")
-
-ggplotly(p, tooltip = "text")
-
-  
-```
-
-##### Table
-
-The table includes all states.  Here you can clearly see the impact of small case numbers on the percentage change measure.
-
-```{r fe_change_tab, message=F, warning=F}
-
-fe_dat %>%
-  select(st, cases_2020, cases_2021, pct.chg_2021) %>%
-  arrange(desc(pct.chg_2021)) %>%
-  DT::datatable(rownames = F,
-                caption = "Fatal Encounters data: People killed by police in 2020 & 2021",
-                colnames = c("State", "2020 cases", "2021 cases", "Percentage change"),
-                filter = 'top') %>%
-  DT::formatPercentage("pct.chg_2021", 1)
-```
-
-#### WaPo Data {.tabset .tabset-pills}
-
-##### States with 10+ cases
-
-```{r barplotwapo, warning = F}
-
-p <- ggplot(data = wapo_dat %>% 
-              filter(average >= 10 & !is.infinite(pct.chg_2021)),
-            aes(x=pct.chg_2021, y=reorder(st, pct.chg_2021), 
-                fill = pct.chg_2021,
-                col=factor(ifelse(st=="WA", 1, 0)),
-                text=paste(st, 
-                           "change:", scales::percent(pct.chg_2021, acc=1),
-                           "avg:", round(average)))) +
-              
-  geom_bar(stat="identity") +
-    
-  scale_color_manual(values = c("grey", "black")) +
-  scale_fill_gradient2(
-    low = "blue", 
-    mid = "white", 
-    high = "red", 
-    midpoint = 0) +
-  scale_x_continuous(labels = scales::percent) +
-  
-  theme(axis.text.y=element_text(size=rel(.6)), legend.position = "none") +
-  labs(title = paste("State ranking: % Change from",
-                     last_complete_yr-1, "to", last_complete_yr, "in persons killed by police"),
-       x="Percent change in persons killed",
-       y="State")
-
-ggplotly(p, tooltip = "text")
-
-  
-```
-
-##### All states
-
-```{r barplotallwapo, warning = F}
-
-p <- ggplot(data = wapo_dat %>% filter(!is.infinite(pct.chg_2021)),
-            aes(x=pct.chg_2021, y=reorder(st, pct.chg_2021), 
-                fill = pct.chg_2021,
-                col=factor(ifelse(st=="WA", 1, 0)),
-                text=paste(st, 
-                           "change:", scales::percent(pct.chg_2021, acc=1),
-                           "avg:", round(average)))) +
-              
-  geom_bar(stat="identity") +
-    
-  scale_color_manual(values = c("grey", "black")) +
-  scale_fill_gradient2(
-    low = "blue", 
-    mid = "white", 
-    high = "red", 
-    midpoint = 0) +
-  scale_x_continuous(labels = scales::percent) +
-  
-  theme(axis.text.y=element_text(size=rel(.5)), legend.position = "none") +
-  labs(title = paste("State ranking: % Change from",
-                     last_complete_yr-1, "to", last_complete_yr, "in persons killed by police"),
-       x="Percent change in persons killed",
-       y="State")
-
-ggplotly(p, tooltip = "text")
-
-  
-```
-
-##### Table
-
-The table includes all states.  Here you can clearly see the impact of small case numbers on the percentage change measure.
-
-```{r wapo_change_tab, message=F, warning=F}
-
-wapo_dat %>%
-  select(st, cases_2020, cases_2021, pct.chg_2021) %>%
-  arrange(desc(pct.chg_2021)) %>%
-  DT::datatable(rownames = F,
-                caption = "WaPo data: People shot by police in 2020 & 2021",
-                colnames = c("State", "2020 cases", "2021 cases", "Percentage change"),
-                filter = 'top') %>%
-  DT::formatPercentage("pct.chg_2021", 1)
-```
 
 # Say their names {.tabset}
 
@@ -1372,7 +1307,7 @@ NOTE:  There are 2 tabs above, one for the names we do know, the other for the n
 
 homicides %>%
   filter(name != "Unknown") %>%
-  select(name, date, age=age, county, `WA-LD`=WA_District, 
+  select(name, date, age=age, race, county, `WA-LD`=WA_District, 
          agency, link = url_click) %>%
   arrange(desc(date)) %>%
   DT::datatable(rownames = F,
@@ -1397,7 +1332,7 @@ of the victim's names are not known at this time.  In the table below "WA-LD" re
 ```{r namesUnk}
 homicides %>%
   filter(name == "Unknown") %>%
-  select(name, date, age=age, county, `WA-LD`=WA_District, 
+  select(name, date, age=age, race, county, `WA-LD`=WA_District, 
          agency, link = url_click) %>%
   arrange(desc(date)) %>%
   DT::datatable(rownames = F,
@@ -1448,7 +1383,7 @@ Some changes have been made to the 2021 reforms in subsequent sessions:
 
 * In 2022 [HB 2037](https://app.leg.wa.gov/billsummary?BillNumber=2037&Year=2021) modified the [policy on use of force during Terry Stops](https://app.leg.wa.gov/RCW/default.aspx?cite=10.120.020) allowing force to be used to prevent a person from fleeing.
 
-* In 2023 [SB 5352](https://lawfilesext.leg.wa.gov/biennium/2023-24/Pdf/Bills/Session%20Laws/Senate/5352.SL.pdf?q=20231220183138) modified the [policy on vehicular pursuits](https://app.leg.wa.gov/RCW/default.aspx?cite=10.116.060) was modified, reducing the standard of evidence from probable cause to reasonable suspicion, adding some offenses to the list of pursuit-eligible offenses, and relaxing the supervisory authorization requirements.
+* In 2023 [SB 5352](https://lawfilesext.leg.wa.gov/biennium/2023-24/Pdf/Bills/Session%20Laws/Senate/5352.SL.pdf?q=20231220183138) modified the [policy on vehicular pursuits](https://app.leg.wa.gov/RCW/default.aspx?cite=10.116.060), reducing the standard of evidence from probable cause to reasonable suspicion, adding some offenses to the list of pursuit-eligible offenses, and relaxing the supervisory authorization requirements.
 
 Additional bills and initiatives are in process for the 2024 session.
 
