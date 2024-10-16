@@ -4,26 +4,29 @@
 # All of these are currently for WA state, for temp info lags
 # should be kept up to date and deleted when no longer relevant
 
+# NB: wapo_clean gender var is capitalized (raw was not)
+
 # ---------------------------------------------------------------------
 
-# Lopeti Aiolupotea-Magalei
-if (wapo_clean$name[wapo_clean$wapoID == 10248] == "Unknown"){
-  wapo_clean$name[wapo_clean$wapoID == 10248] <- "Lopeti Aiolupotea Magalei"
-  wapo_clean$race[wapo_clean$wapoID == 10248] <- "A"
-  message("Lopeti Aiolupotea-Magalei fix for WaPo")
+# # Vadim V. Sashchenko
+# 
+# if (wapo_clean$name[wapo_clean$wapoID == 10553] == "Unknown"){
+#   wapo_clean$name[wapo_clean$wapoID == 10553] <- "Vadim V. Sashchenko"
+#   wapo_clean$age[wapo_clean$wapoID == 10553] <- 43
+#   wapo_clean$gender[wapo_clean$wapoID == 10553] <- "Male"
+#   message("Vadim V. Sashchenko fix for WaPo")
+# } else {
+#   message("\n\n WaPo Vadim V. Sashchenko fix not needed anymore\n\n")
+# }
+
+# Jeffrey Kiner (age)
+
+if (wapo_clean$age[wapo_clean$wapoID == 10823] == 999){
+  wapo_clean$age[wapo_clean$wapoID == 10823] <- 57
+  message("J Kiner age fix for WaPo")
 } else {
-  message("\n\n WaPo Lopeti Aiolupotea-Magalei fix not needed anymore\n\n")
+  message("\n\n WaPo J Kiner age fix not needed anymore\n\n")
 }
-
-
-# Franklin Ross
-if (wapo_clean$name[wapo_clean$wapoID == 9831] == "Unknown"){
-  wapo_clean$name[wapo_clean$wapoID == 9831] <- "Franklin O Ross"
-  message("Franklin Ross fix for WaPo")
-} else {
-  message("\n\n WaPo Ross fix not needed anymore\n\n")
-}
-
 
 # Sorin Ardelean 12/27/2021
 if (fe_clean$name[fe_clean$feID == 31462] == "Unknown"){

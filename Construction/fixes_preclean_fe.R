@@ -98,8 +98,6 @@ fe_temp$Name[fe_temp$feID==23531] <- "Joshua Spottedhorse"
 fe_temp$Name[fe_temp$feID==16382] <- "Samuel Toshiro Smith"
 
 # after wapo changes 6/2023
-fe_temp$Name[fe_temp$feID==16382] <- "Samuel Toshiro Smith"
-
 fe_temp$Name[fe_temp$feID == 12617] <- "Stacey Stout"
 fe_temp$Name[fe_temp$feID == 15664] <- "Jessica Hernandez"
 fe_temp$Name[fe_temp$feID == 28476] <- "Matthew Blake Dixon"
@@ -107,6 +105,8 @@ fe_temp$Name[fe_temp$feID == 29577] <- "Eric Kessler"
 fe_temp$Name[fe_temp$feID == 29808] <- "Charles Ray Phillips"
 fe_temp$Name[fe_temp$feID == 30741] <- "Michael Adams"
 fe_temp$Name[fe_temp$feID == 25568] <- "Joshua Rembert Williams"
+
+fe_temp$Name[fe_temp$feID==27067] <- "Shawn Wilcox"
 
 # KCME info
 fe_temp$Name[fe_temp$feID==18537] <- "George Alexander"

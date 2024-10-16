@@ -111,10 +111,10 @@ wapo_temp$race[wapo_temp$wapoID==8403] <- "H" # Vince Torres
 
 
 # Gender corrections ----
-# note orig wapo v2 gender varname is not capitalized
+# note orig wapo v2 gender var is not capitalized
 
 wapo_temp$gender[wapo_temp$wapoID %in% 
-              c(9904, 8208, 8119)] <- "Female"
+              c(9904, 8208, 8119)] <- "female"
 
 wapo_temp$gender[wapo_temp$wapoID %in% 
               c(7007, 7107, 7299, 7249,
@@ -125,15 +125,15 @@ wapo_temp$gender[wapo_temp$wapoID %in%
                 8343, 8459, 8494, 8503, 
                 8629, 8712, 8746, 8769, 
                 8801, 8881, 9148, 9363,
-                9725)] <- "Male"
+                9725)] <- "male"
 
-wapo_temp$gender[wapo_temp$wapoID == 2956] <- "Nonbinary"
-
-wapo_temp$gender[wapo_temp$wapoID %in% 
-              c(9057, 6887, 8202, 1236, 2197, 5843)] <- "Transgender man"
+wapo_temp$gender[wapo_temp$wapoID == 2956] <- "non-binary"
 
 wapo_temp$gender[wapo_temp$wapoID %in% 
-              c(5798, 4453, 2887, 263, 4608, 8042)] <- "Transgender woman"
+              c(9057, 6887, 8202, 1236, 2197, 5843)] <- "transgender man"
+
+wapo_temp$gender[wapo_temp$wapoID %in% 
+              c(5798, 4453, 2887, 263, 4608, 8042)] <- "transgender woman"
 
 
 # Name corrections ----
