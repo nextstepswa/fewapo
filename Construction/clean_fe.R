@@ -260,8 +260,13 @@ mutate(vpursuit.draft = case_when(
   
   # New variable:  not.kbp
   # When civilian/subject, not police, kills this person in the context of a police encounter
-  # DOES NOT APPLY TO PURSUITS: vehicular homicides by fleeing subject id'd by pursuit variables
   # We only have this info for WA for now
+  
+  # DOES NOT APPLY TO PURSUITS: vehicular homicides/homicides by fleeing subject id'd by pursuit variables
+  #    These fatalities are part of the collateral damage of pursuits that we seek to count
+  #    So not.kbp is set to 0 for these cases
+  
+  # Only 2 WA cases in FE are not kbp
   # feID 25805 Robert Hassan shot by suspect in Lake City; we leave the pursuit related vehicle crash 25804
   # feID 18751 Pamela Parker shot by subject, who then shot himself; we leave the suicide 18750
   

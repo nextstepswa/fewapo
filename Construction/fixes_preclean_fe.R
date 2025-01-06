@@ -148,6 +148,14 @@ fe_temp$`Location of death (city)`[fe_temp$feID==31114] <- "Geary" # Unknown
 
 fe_temp$`Location of death (city)`[fe_temp$feID==28439] <- "Bothell"
 
+# zipcode
+fe_temp$`Location of death (zipcode)`[fe_temp$feID==25761] <- 98934
+
+# address
+fe_temp$`Location of injury (address)`[fe_temp$feID==25761] <- "600 N Pierce St"
+
+
+
 # Highest level of force (becomes cod) ----
 fe_temp$`Highest level of force`[fe_temp$feID==22065] <- "Asphyxiated/Restrained" # ketamine
 fe_temp$`Highest level of force`[fe_temp$feID==30613] <- "Asphyxiated/Restrained" # ketamine

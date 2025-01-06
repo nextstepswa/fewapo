@@ -8,16 +8,16 @@
 
 # ---------------------------------------------------------------------
 
-# # Vadim V. Sashchenko
-# 
-# if (wapo_clean$name[wapo_clean$wapoID == 10553] == "Unknown"){
-#   wapo_clean$name[wapo_clean$wapoID == 10553] <- "Vadim V. Sashchenko"
-#   wapo_clean$age[wapo_clean$wapoID == 10553] <- 43
-#   wapo_clean$gender[wapo_clean$wapoID == 10553] <- "Male"
-#   message("Vadim V. Sashchenko fix for WaPo")
-# } else {
-#   message("\n\n WaPo Vadim V. Sashchenko fix not needed anymore\n\n")
-# }
+# Daniel H Kerr
+
+if (wapo_clean$name[wapo_clean$wapoID == 11224] == "Unknown"){
+  wapo_clean$name[wapo_clean$wapoID == 11224] <- "Daniel H. Kerr"
+  # wapo_clean$age[wapo_clean$wapoID == 11224] <- 43
+  # wapo_clean$gender[wapo_clean$wapoID == 11224] <- "Male"
+  message("Daniel H Kerr fix for WaPo")
+} else {
+  message("\n\n WaPo Daniel H Kerr fix not needed anymore\n\n")
+}
 
 # Jeffrey Kiner (age)
 

@@ -470,7 +470,10 @@ source(here::here("Construction", "pursuit_coding.R"))
 ## Add vpursuit codes to both finalmerge & fe_2015
 ## Since the cod, url_info and description may have been improved during pursuit
 ##   review, we use final versions in the coded.pursuits df.
+## Will also use the new coded vars vpursuit, victim, injury
 ## pursuit.type merges Active and Terminated pursuits into "Pursuit"
+
+
 
 finalmerge <- left_join(finalmerge %>% select(-c("cod", "description", "url_info")), 
                         coded.pursuits %>% select(-c("name", "date")),
