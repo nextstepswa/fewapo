@@ -362,9 +362,11 @@ homicides %>%
 
 ## Agency involved  {.tabset}
 
-We use the information from Fatal Encounters.  Given the number of agencies, for legibility we only plot those with more than two fatalities since 2015.  Incidents with more than one agency involved are grouped together and labeled "Multiple Agencies".
+We use the agency information from Fatal Encounters.  
 
-The table includes all agencies, all fatalities, and identifies the full list of agencies when there is more than one involved in the incident(s).
+* The plot only shows agencies with more than two fatalities since 2015.  Since there are more than 100 agencies with fatalities, the plot text would become impossible to read if all of them were included.  Incidents with more than one agency involved are grouped together and labeled "Multiple Agencies".
+
+* The table includes all agencies, all fatalities, and identifies the full list of agencies when there is more than one involved in the incident(s).
 
 ### Plot
 
@@ -1037,7 +1039,7 @@ ggplotly(p, tooltip = "text")
 
 # WA vs. other states
 
-Here we report the annual totals up through the last complete year --  `r last_complete_yr` -- with data from the Washington Post data only, since the Fatal Encounters project stopped updating at the end of 2021.  Recall that Washington Post data only include persons shot and killed by police, while Fatal Encounters included all persons who are killed by police (including deaths due to asphyxiation, tasers, vehicle chases, etc).
+Here we report the annual totals up through the last complete year --  `r last_complete_yr` -- with data from the Washington Post data only, since the Fatal Encounters project stopped updating at the end of 2021.  While we have updated data for WA state using the Fatal Encounters inclusion criteria (Fatal Encounters included all persons who are killed by police -- including deaths due to asphyxiation, tasers, vehicle chases, etc -- while Washington Post data only include persons shot and killed by police), there are no comparable data available for other states.
 
 ## Compared to all other states {.tabset}
 
@@ -1047,6 +1049,9 @@ In this section we compare number shot in WA state to the total in all other sta
 ```{r wavsus, warning=F, include=F}
 # Here we need the complete datasets, not just WA state
 
+# Note: current year values are hardcoded here and need to be updated on Jan 1 of each year.
+
+# Can't use FE b/c we don't have national data after 2021
 # fe_tab <- fe_data %>% 
 #   filter(homicide==1 & year >= start_yr & year <= last_complete_yr) %>% 
 #   #filter(match(month, month.abb) <= last_fe_date - 1) %>%
@@ -1082,14 +1087,14 @@ pop2020 <- read_csv("https://www2.census.gov/programs-surveys/popest/datasets/20
   filter(SUMLEV != "020") %>%
   select(NAME, contains("POPESTIMATE"))
   
-pop2023 <- read_csv("https://www2.census.gov/programs-surveys/popest/datasets/2020-2023/state/totals/NST-EST2023-ALLDATA.csv") %>%
+pop2024 <- read_csv("https://www2.census.gov/programs-surveys/popest/datasets/2020-2024/state/totals/NST-EST2024-ALLDATA.csv") %>%
   filter(SUMLEV %in% c("010", "040")) %>%
   select(NAME, contains("POPESTIMATE"))
 
-pop <- left_join(pop2020, pop2023, by = "NAME") %>%
+pop <- left_join(pop2020, pop2024, by = "NAME") %>%
   rowwise() %>%
   mutate(POPESTIMATE2020 = mean(c_across(contains("2020")))) %>%
-  select(NAME, POPESTIMATE2015:POPESTIMATE2019, POPESTIMATE2020, POPESTIMATE2021:POPESTIMATE2023) %>%
+  select(NAME, POPESTIMATE2015:POPESTIMATE2019, POPESTIMATE2020, POPESTIMATE2021:POPESTIMATE2024) %>%
   filter(NAME != "Puerto Rico") %>%
   rename("state" = "NAME")
 
@@ -1183,11 +1188,11 @@ Here we report the WaPo data by state for the most recent complete year: `r last
 ```{r strank-number, warning=F, fig.height=7}
 
 p <- ggplot(data = states.all %>% filter(!grepl("United|Other", state)),
-            aes(x=shot2023, y=reorder(state, shot2023), 
-                fill = shot2023,
+            aes(x=shot2024, y=reorder(state, shot2024), 
+                fill = shot2024,
                 color = factor(ifelse(state=="Washington", 1, 0)),
                 text=paste(state, 
-                           "total:", shot2023))) +
+                           "total:", shot2024))) +
               
   geom_col() +
     
@@ -1196,11 +1201,11 @@ p <- ggplot(data = states.all %>% filter(!grepl("United|Other", state)),
     low = "blue", 
     mid = "white", 
     high = "red", 
-    midpoint = median(states.all$shot2023)) +
+    midpoint = median(states.all$shot2024)) +
   #scale_x_continuous(labels = scales::percent) +
   
   theme(axis.text.y=element_text(size=rel(.7)), legend.position = "none") +
-  labs(title = paste("State ranking: Number of persons shot by police"),
+  labs(title = paste("State ranking: Number of persons shot by police in", last_complete_yr),
        x="Number shot",
        y="State")
 
@@ -1220,11 +1225,11 @@ ggplotly(p, tooltip = "text")
 ```{r strank-rate, warning=F, fig.height=7}
 
 p <- ggplot(data = states.all %>% filter(!grepl("United|Other", state)),
-            aes(x=rateshot2023, y=reorder(state, rateshot2023), 
-                fill = rateshot2023,
+            aes(x=rateshot2024, y=reorder(state, rateshot2024), 
+                fill = rateshot2024,
                 color = factor(ifelse(state=="Washington", 1, 0)),
                 text=paste(state, 
-                           "total:", round(rateshot2023, 1)))
+                           "total:", round(rateshot2024, 1)))
             ) +
               
   geom_col() +
@@ -1234,11 +1239,11 @@ p <- ggplot(data = states.all %>% filter(!grepl("United|Other", state)),
     low = "blue", 
     mid = "white", 
     high = "red", 
-    midpoint = median(states.all$rateshot2023)) +
+    midpoint = median(states.all$rateshot2024)) +
   #scale_x_continuous(labels = scales::percent) +
   
   theme(axis.text.y=element_text(size=rel(.7)), legend.position = "none") +
-  labs(title = paste("State ranking: Population adjusted rate of persons shot by police"),
+  labs(title = paste("State ranking: Population adjusted rate of persons shot by police in", last_complete_yr),
        x="Rate per million residents",
        y="State")
 
@@ -1259,15 +1264,15 @@ ggplotly(p, tooltip = "text")
 ```{r strank-change, warning=F, fig.height=7}
 df <- states.all %>% 
   filter(!grepl("United|Other", state)) %>%
-  select(state, shot2022:shot2023) %>%
-  mutate(pct.chg = shot2023/shot2022 -1)
+  select(state, shot2023:shot2024) %>%
+  mutate(pct.chg = shot2024/shot2023 -1)
 
 p <- ggplot(data = df,
             aes(x=pct.chg, y=reorder(state, pct.chg), 
                 fill = pct.chg,
                 color = factor(ifelse(state=="Washington", 1, 0)),
                 text=paste0(state, 
-                           paste("<br>", "number shot in ", last_complete_yr, ": ", shot2023),
+                           paste("<br>", "number shot in ", last_complete_yr, ": ", shot2024),
                            paste("<br>", "change from last year: ", scales::percent(pct.chg, acc = 1))))
             ) +
               
@@ -1282,7 +1287,8 @@ p <- ggplot(data = df,
   scale_x_continuous(labels = scales::percent) +
   
   theme(axis.text.y=element_text(size=rel(.7)), legend.position = "none") +
-  labs(title = paste("State ranking: Percent change in number of persons shot by police from previous year"),
+  labs(title = paste("State ranking: Percent change in number of persons shot by police",
+                     last_complete_yr-1, "-", last_complete_yr),
        x="Percent change",
        y="State")
 
