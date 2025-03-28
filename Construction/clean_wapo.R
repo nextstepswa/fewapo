@@ -14,7 +14,7 @@ wapo_draft <- wapo_temp %>%
          flee = flee_status,
          bodycam = body_camera
   ) %>%
-  mutate(name = ifelse(name == "", "Unknown", name),
+  mutate(name = ifelse(name == "" | grepl("Notknown", name), "Unknown", name),
          name = str_remove(name, " Jr.*$"),
          name = str_remove(name, ", Jr.$"),
          name = str_remove(name, " Jr$"),

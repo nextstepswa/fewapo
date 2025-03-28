@@ -7,9 +7,13 @@
 # output files: csv files with cases from finalmerge to review; WTSC RDA file
 # return df: coded.pursuits, with WTSC matched case indicators, for merging onto data
 
+# NOTE: When FE stopped updating (12/31/2021) this type of pursuit data was no longer 
+# being recorded by any group.  We have continued updating pursuit related fatality incidents
+# for WA only, using FE google search methods and other notifications
+
 #############################################################################################
 
-# Outline of pursuit and vehicle fatality coding process: ----
+# Outline of pursuit and vehicle fatality coding process for Fatal Encounters data (thru 2021): ----
 
 ##  A. In FE cleaning loop of ScrapeMerge.R:
 ##     use cleaned "circumstances variable" to create vpursuit.draft (DBB original coding and 2022+)
@@ -20,7 +24,7 @@
 ##        b. but as of Feb 14/2023 *all* cases from 2015+ are reviewed and coded
 ##           so it is left here for historical interest
 ##
-##     2. check if any new active pursuit cases need to be reviewed for vpursuit/victim/injury/incident.num coding
+##     2. check if any new active pursuit cases need to be reviewed and coded for vpursuit/victim/injury/incident.num
 ##
 ##     3. Review/code/merge in WTSC pursuit fatality data
 ##          Data are released annually in May of the following year
@@ -44,7 +48,7 @@
 # Source variable: ----
 
 # Original FE variable: Intended use of force (Developing) ----
-# 2022+ cases use new coding for this field when relevant
+# 2022+ cases use new coding for this field for WA only when relevant
 
 # > fe %>% group_by(`Intended use of force (Developing)`) %>% count()
 # A tibble: 15 x 2

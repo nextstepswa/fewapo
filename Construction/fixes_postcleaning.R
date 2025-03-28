@@ -8,6 +8,15 @@
 
 # ---------------------------------------------------------------------
 
+# Jeffrey Webley (name)
+
+if (wapo_clean$name[wapo_clean$wapoID == 8582] == "Unknown"){
+  wapo_clean$name[wapo_clean$wapoID == 8582] <- "Jeffrey Webley"
+  message("Jeffrey Webley name fix for WaPo")
+} else {
+  message("\n\n WaPo Jeffrey Webley name fix not needed anymore\n\n")
+}
+
 
 # Jeffrey Kiner (age)
 
