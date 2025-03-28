@@ -1,30 +1,41 @@
 ### Where the data come from
 
-This report is updated about once each week, pulling, cleaning and merging data from two online sources:   Fatal Encounters (https://fatalencounters.org/), and the Washington Post (https://www.washingtonpost.com/graphics/investigations/police-shootings-database/).   
+This report is updated about once each week, pulling, cleaning and merging data from three online sources:   Fatal Encounters (https://fatalencounters.org/), the Washington Post (https://www.washingtonpost.com/graphics/investigations/police-shootings-database/) and Mapping Police Violence (https://mappingpoliceviolence.us/).   
 
-* Fatal Encounters includes all deaths during encounters with police.  This open-source project was active through December 31, 2021, includes records going back to 2000, and produced the largest compilation of persons killed during encounters with police that is publicly available.  Updating has been taken over by the [Mapping Police Violence Project](https://mappingpoliceviolence.org/) since 2022.  
+* Fatal Encounters includes all deaths during encounters with police.  This open-source project was active through December 31, 2021, includes records going back to 2000, and produced the largest compilation of persons killed during encounters with police that is publicly available.  It covers deaths by all causes during a police encounter, including suicides and vehicular pursuits.  Updating has been taken over by the [Mapping Police Violence Project](https://mappingpoliceviolence.org/) since 2022, but with somewhat narrower coverage by cause of death.  
 
-* Washington Post only includes fatal *shootings* by police.  It is actively updating.
+* Washington Post (WaPo) only includes fatal *shootings* by on-duty police.  It was actively updating from January 1, 2015 through December 31, 2024.
 
-* Neither dataset includes deaths in custody after booking. 
-
-* Both datasets may be missing incidents.
+* Mapping Police Violence (MPV) covers fatal shootings and includes additional incidents where police kill someone through use of a chokehold, baton, taser or other means, killings by off-duty police, and some pursuit-related deaths. It is the only project that is still actively updating, with data going back to January 1,2013.
 
 * For WA State only: We update fatalities if they are known to us before they appear in the national datasets, and we supplement the Fatal Encounters/Mapping Police Violence data with police vehicular pursuit-related fatalities found through web searches -- replicating the alerts used by Fatal Encounters in the past, and including any additional incidents brought to our attention.
 
-A comparison of the cases found in each dataset is found in the 
+____
+
+> Note: Our project is in the process of updating our code and reports to reflect the end of WaPo updating.  The MPV data are already used for verifying and updating the incidents in Washington covered by this report.  But modifications to the report text and code are still in process.
+
+____
+
+For all of our data sources, it is worth noting that:
+
+* None include deaths in custody after booking. 
+
+* All may be missing incidents.
+
+A comparison of the cases found in each dataset is presented in the 
 [next section](#dataset-differences) of this report.
 
-There is typically a 1-2 week lag in the Fatal Encounters and WaPo datasets, but it can sometimes be longer.  The date shown in the "most recent data update" tab above is an indication of the current lag.  As of this report, the last data updates were:
+There has typically been a 1-2 week lag in the actively updating datasets, but it can sometimes be longer.  The date shown in the "most recent data update" tab above is an indication of the current lag.  As of this report, the last data updates were:
 
 
-* `r format(last_date_fe, format="%B %d %Y")` for Fatal Encounters
+* `r format(last_date_fe, format="%B %d %Y")` for Fatal Encounters (no longer updating)
+* `r format(last_date_wapo, format="%B %d %Y")` for the Washington Post (no longer updating)
 * `r format(last_date_mpv, format="%B %d %Y")` for Mapping Police Violence 
-* `r format(last_date_wapo, format="%B %d %Y")` for the Washington Post
+
 
 For Washington State, the most recent known fatality included in this report was on 
 `r format(last_date_newname, format="%B %d %Y")`.
 
-This report is restricted to the cases that can be classified as homicides by police and vehicular homicides during police pursuits, it excludes cases identified in the Fatal Encounters dataset as suicides and medical emergencies (see the [next section](#dataset-differences) for details).
+This report is restricted to the cases that can be classified as homicides by police and vehicular homicides during police pursuits, it excludes cases where the cause of death during the police encounter is ruled a suicide and other medical emergencies that result in death while in custody (see the [next section](#dataset-differences) for details).
 
 ___

@@ -1391,7 +1391,7 @@ Some changes have been made to the 2021 reforms in subsequent sessions:
 
 * In 2023 [SB 5352](https://lawfilesext.leg.wa.gov/biennium/2023-24/Pdf/Bills/Session%20Laws/Senate/5352.SL.pdf?q=20231220183138) modified the [policy on vehicular pursuits](https://app.leg.wa.gov/RCW/default.aspx?cite=10.116.060), reducing the standard of evidence from probable cause to reasonable suspicion, adding some offenses to the list of pursuit-eligible offenses, and relaxing the supervisory authorization requirements.
 
-Additional bills and initiatives are in process for the 2024 session.
+* In 2024 [Initiative 2113](https://www2.sos.wa.gov/_assets/elections/initiatives/finaltext_3034.pdf) further modified the statewide pursuit policy, eliminating the specific list of offenses that restricted pursuits to violent felonies, and allowing them for any suspected criminal offense.
 
 ____
 

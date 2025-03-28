@@ -1,6 +1,6 @@
 ### Dataset features
 
-Both the Fatal Encounters project and the Washington Post are open-source, "unofficial" datasets.  Their data are not drawn from mandatory government reporting on deaths caused by law enforcement officers because there is no official national data program designed for this purpose.  The datasets are based instead on cases known/discovered by the two project teams, primarily through online searches.  You can find more details about the methodology used by each project on their websites:  [Fatal Encounters](https://fatalencounters.org/methodology/) and [Washington Post](https://www.washingtonpost.com/investigations/2022/12/05/washington-post-fatal-police-shootings-methodology/).  
+All of the data sources we use -- the Fatal Encounters project, the Washington Post and Mapping Police Violence -- are open-source, "unofficial" datasets.  Their data are not drawn from mandatory government reporting on deaths caused by law enforcement officers because there is no official national data program designed for this purpose.  The datasets are based instead on cases known/discovered by the two project teams, primarily through online searches.  You can find more details about the methodology used by each project on their websites:  [Fatal Encounters](https://fatalencounters.org/methodology/), [Washington Post](https://www.washingtonpost.com/investigations/2022/12/05/washington-post-fatal-police-shootings-methodology/), and [Mapping Police Violence](https://mappingpoliceviolence.us/aboutthedata).  
 
 #### Open-source vs. Official
 
@@ -29,11 +29,13 @@ _____
 
 _____
 
-The other key benefit to the Fatal Encounters data in particular is that every case includes a link to documentation that verifies the case and serves as a starting place for additional research.  This allows us to identify the law enforcement agency(ies) involved, provides more context and sometimes reveals conflicting narratives as to the events.  All of this helps to remind us that each case is a person, not just a statistic.
+The other key benefit to the Fatal Encounters / Mapping Police Violence data in particular is that every case includes a link to documentation that verifies the case and serves as a starting place for additional research.  This allows us to identify the law enforcement agency(ies) involved, provides more context and sometimes reveals conflicting narratives as to the events.  All of this helps to remind us that each case is a person, not just a statistic.
 
 That said, it is important to keep in mind that these open-source datasets, too, are not perfect.   They will miss cases that have not generated a digital signature that can be found using their search methodologies.  So it would be accurate to say that our open-source data provide a lower bound estimate of the number of people killed by police; the true value is likely higher, but it can not be lower.
 
 #### Dataset differences
+
+[Note:  This section has not yet been updated to reflect the cessation of updating for the WaPo project data]
 
 Fatal Encounters includes more cases than the Washington Post, because the Post dataset is restricted to fatal shootings.  
 
@@ -75,7 +77,7 @@ Cases officially reported as suicides and "Medical Emergencies" are excluded fro
 
 The Fatal Encounters data (and our extension of their data for WA State) includes some cases classified as "suicides" that occur during an encounter with police.  These are not cases of "suicide by cop", where the victim appears to have provoked the police in order to be killed.  They are cases where the victim shoots or otherwise kills themself.  **We have excluded these from the analyses in this report, because the report focuses on persons killed by police.**  
 
-However, we acknowledge that these cases warrant further assessment.  The classification as "suicide" is not definitive, it is typically based on the narrative provided by law enforcement and some level of investigation by the local coroner or medical examiner.  But even if these are suicides, it is possible that the outcome might have been different if the case had been handled differently, for example, by calling in a crisis intervention team and deescalating effectively.
+However, we acknowledge that these cases warrant further assessment.  In many of these cases, officers did shoot at the suspect, but missed or failed to kill them.  In addition the classification as "suicide" is not definitive, it is typically based on the narrative provided by law enforcement and some level of investigation by the local coroner or medical examiner.  Finally, even if these are suicides, it is possible that the outcome might have been different if the case had been handled differently, for example, by calling in a crisis intervention team and deescalating effectively.
 
 The excluded case counts and fraction of total cases by year is shown in the table below.
 
@@ -114,10 +116,11 @@ ___
 
 Restricting the Fatal Encounters dataset to the homicide cases, it still has 
 `r paste0(round(100*prop.table(table(is.na(homicides$wapoID)))[[2]]), "%")`
-more cases than found in the Post dataset.
+more cases than found in the Post dataset (through 2024, when the Post stopped updating).
 
 ```{r difftab}
 tab <- homicides %>%
+  filter(year < 2025) %>%
   mutate(in.wapo = ifelse(is.na(wapoID), 
                           "In FE only", 
                           "In both FE and WaPo")) %>%
@@ -143,11 +146,13 @@ ___
 
 #### Missing cases in WaPo {.tabset}
 
-##### By cause of death
+Again through the end of 2024, when the Post stopped updating.
 
+##### By cause of death
 
 ```{r datadiff}
 tab <- homicides %>%
+    filter(year < 2025) %>%
   filter(is.na(wapoID)) %>%
   group_by(cod) %>%
   summarize(Number = n()
@@ -176,11 +181,12 @@ ____
 
 ##### By name, for fatal shootings
 
-Below is the list of cases identified as gunshot fatalities in Fatal Encounters that are missing from the Washington Post dataset.
+Below is the list of cases identified as gunshot fatalities in Fatal Encounters that are missing from the Washington Post dataset for 2015-2024.
 
 ```{r casesdiff}
 
 homicides %>%
+  filter(year < 2025) %>%
   filter(is.na(wapoID) & cod == "Gunshot") %>%
   select(name, date, city, county, agency, url_click) %>%
   DT::datatable(rownames = F,
