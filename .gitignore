@@ -1,62 +1,43 @@
-
 # Ignore everything
 /*
-
 # Except:
-
 # Raw data that can't be scraped online
 !/Data
 Data/*
-
 !Data/Raw
 Data/Raw/*
 !Data/Raw/fe_newnames.xlsx
 !Data/Raw/gz_2010_us_040_00_20m.json
-
 # Clean data read as input
 !Data/Clean
 Data/Clean/*
 !Data/Clean/LegInfo_Clean.rda
-
-
 # Key data construction scripts
 !/Construction/
 Construction/*
-
 !Construction/MakeData.R
 !Construction/ScrapeDataSets.R
-
 !Construction/fixes_preclean_fe.R
 !Construction/fixes_preclean_mpv.R
 !Construction/fixes_preclean_wapo.R
-
 !Construction/clean_fe.R
 !Construction/clean_mpv.R
 !Construction/clean_wapo.R
-
 !Construction/fixes_postcleaning.R
-
 !Construction/fix_fe_dupes.R
 !Construction/fix_wapo_dupes.R
-
 !Construction/pursuit_coding.R
-
 !Construction/StateCensusData.R
-
-
 # Key data analysis scripts
 !/Analyses/
 Analyses/*
-
 !Analyses/WAsince2015.Rmd
 !Analyses/USpercapitaTrends.Rmd
 !Analyses/Common/
-
 # Clean Data required inputs
 !/Data/Clean/
 /Data/Clean/*
-
 !Data/Clean/StatePop2000-2021.rda
 !Data/Clean/LegInfo_Clean.rda
-
 .Rproj.user
+fewapo.Rproj
