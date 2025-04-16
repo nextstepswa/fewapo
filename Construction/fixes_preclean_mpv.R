@@ -179,13 +179,13 @@ mpv_temp$name[mpv_temp$mpvID == 13891] <- "Alecandro Castaneda"
 mpv_temp$name[mpv_temp$mpvID == 13895] <- "Michael Edward Harris"
 
 
-if(mpv_temp$State[mpv_temp$mpvID == 13979] == "WA"){
-  mpv_temp$State[mpv_temp$mpvID == 13979] <- "IA"
-  mpv_temp$`ORI Agency Identifier (if available)`[mpv_temp$mpvID == 13979] <- "IA0770300"
-  message("Des Moines city IA fix for MPV")
-} else {
-  message("\n\n MPV Des Moines city IA fix not needed anymore\n\n")
-}
+# if(mpv_temp$State[mpv_temp$mpvID == 13979] == "WA"){
+#   mpv_temp$State[mpv_temp$mpvID == 13979] <- "IA"
+#   mpv_temp$`ORI Agency Identifier (if available)`[mpv_temp$mpvID == 13979] <- "IA0770300"
+#   message("Des Moines city IA fix for MPV")
+# } else {
+#   message("\n\n MPV Des Moines city IA fix not needed anymore\n\n")
+# }
 
 # from MPV extras vs. FE 2013-2021
 mpv_temp$feID[mpv_temp$mpvID == 9853] == 31440 #(MPV: Hebert; FE: UNK)

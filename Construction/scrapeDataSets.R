@@ -9,7 +9,7 @@ if(file.exists(here::here("Data", "Raw", "fe_raw.csv"))) {
   message("Reading in existing FE download")
   
   fe_raw <- rio::import(here::here("Data", "Raw", "fe_raw.csv")) %>%
-    select(-c(V1, V33:`Unique identifier (redundant)`))
+    select(-V1)
   
 } else {
   
