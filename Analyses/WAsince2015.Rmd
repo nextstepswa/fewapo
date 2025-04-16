@@ -1039,7 +1039,7 @@ ggplotly(p, tooltip = "text")
 
 # WA vs. other states
 
-Here we report the annual totals up through the last complete year --  `r last_complete_yr` -- with data from the Washington Post data only, since the Fatal Encounters project stopped updating at the end of 2021.  While we have updated data for WA state using the Fatal Encounters inclusion criteria (Fatal Encounters included all persons who are killed by police -- including deaths due to asphyxiation, tasers, vehicle chases, etc -- while Washington Post data only include persons shot and killed by police), there are no comparable data available for other states.
+Here we report the annual totals up through the last complete year --  `r last_complete_yr` -- with data from the MPV project (since both the Fatal Encounters and WaPo projects stopped updating).  This limits the cases to those included in MPV.  While we have updated data for WA state using the Fatal Encounters inclusion criteria (all persons who are killed by police -- including deaths due to asphyxiation, tasers, vehicle chases, etc), comparable data for other states are not currently available.
 
 ## Compared to all other states {.tabset}
 
@@ -1082,12 +1082,15 @@ wapo_tab <- wapo_data %>%
 
 # Note the number of regions has changed between the decades
 # Also the estimates for 2020 are different, so we take the average
+# As of 4/11/2025 these files can no longer be scraped using https://www2.census.gov/programs-surveys/popest/datasets/ 
+# but can be scraped with "ftp://ftp2..."
+# May still need to download in the future as so much govt data access is uncertain now
 
-pop2020 <- read_csv("https://www2.census.gov/programs-surveys/popest/datasets/2010-2020/state/totals/nst-est2020-alldata.csv") %>%
+pop2020 <- read_csv("ftp://ftp2.census.gov/programs-surveys/popest/datasets/2010-2020/state/totals/nst-est2020-alldata.csv") %>%
   filter(SUMLEV != "020") %>%
   select(NAME, contains("POPESTIMATE"))
   
-pop2024 <- read_csv("https://www2.census.gov/programs-surveys/popest/datasets/2020-2024/state/totals/NST-EST2024-ALLDATA.csv") %>%
+pop2024 <- read_csv("ftp://ftp2.census.gov/programs-surveys/popest/datasets/2020-2024/state/totals/NST-EST2024-ALLDATA.csv") %>%
   filter(SUMLEV %in% c("010", "040")) %>%
   select(NAME, contains("POPESTIMATE"))
 
