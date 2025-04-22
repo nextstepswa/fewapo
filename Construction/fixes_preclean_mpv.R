@@ -163,20 +163,20 @@ mpv_temp$`Victim's gender`[mpv_temp$mpvID == 5092] <- "Nonbinary"
 # 2025 cleaning
 
 ## 3/27/25 - sent to SS
-mpv_temp$name[mpv_temp$mpvID == 11293] <- "Rigoberto Brambila-Pelayo"
-mpv_temp$date[mpv_temp$mpvID == 9995] <- as.Date("2022-01-16")
-mpv_temp$date[mpv_temp$mpvID == 10185] <- as.Date("2022-03-15")
-mpv_temp$date[mpv_temp$mpvID == 10512] <- as.Date("2022-06-01")
-mpv_temp$name[mpv_temp$mpvID == 10807] <- "Timothy Green"
-mpv_temp$name[mpv_temp$mpvID == 10859] <- "Vince Torres"
-mpv_temp$name[mpv_temp$mpvID == 11098] <- "Jeffrey Webley"
-mpv_temp$date[mpv_temp$mpvID == 11254] <- as.Date("2022-11-15")
-mpv_temp$date[mpv_temp$mpvID == 11445] <- as.Date("2022-12-17")
-mpv_temp$date[mpv_temp$mpvID == 11518] <- as.Date("2023-03-11")
-mpv_temp$name[mpv_temp$mpvID == 12355] <- "Franklin Ross"
-mpv_temp$date[mpv_temp$mpvID == 13079] <- as.Date("2024-05-23")
-mpv_temp$name[mpv_temp$mpvID == 13891] <- "Alecandro Castaneda"
-mpv_temp$name[mpv_temp$mpvID == 13895] <- "Michael Edward Harris"
+# mpv_temp$name[mpv_temp$mpvID == 11293] <- "Rigoberto Brambila-Pelayo"
+# mpv_temp$date[mpv_temp$mpvID == 9995] <- as.Date("2022-01-16")
+# mpv_temp$date[mpv_temp$mpvID == 10185] <- as.Date("2022-03-15")
+# mpv_temp$date[mpv_temp$mpvID == 10512] <- as.Date("2022-06-01")
+# mpv_temp$name[mpv_temp$mpvID == 10807] <- "Timothy Green"
+# mpv_temp$name[mpv_temp$mpvID == 10859] <- "Vince Torres"
+# mpv_temp$name[mpv_temp$mpvID == 11098] <- "Jeffrey Webley"
+# mpv_temp$date[mpv_temp$mpvID == 11254] <- as.Date("2022-11-15")
+# mpv_temp$date[mpv_temp$mpvID == 11445] <- as.Date("2022-12-17")
+# mpv_temp$date[mpv_temp$mpvID == 11518] <- as.Date("2023-03-11")
+# mpv_temp$name[mpv_temp$mpvID == 12355] <- "Franklin Ross"
+# mpv_temp$date[mpv_temp$mpvID == 13079] <- as.Date("2024-05-23")
+# mpv_temp$name[mpv_temp$mpvID == 13891] <- "Alecandro Castaneda"
+# mpv_temp$name[mpv_temp$mpvID == 13895] <- "Michael Edward Harris"
 
 
 # if(mpv_temp$State[mpv_temp$mpvID == 13979] == "WA"){
@@ -188,4 +188,4 @@ mpv_temp$name[mpv_temp$mpvID == 13895] <- "Michael Edward Harris"
 # }
 
 # from MPV extras vs. FE 2013-2021
-mpv_temp$feID[mpv_temp$mpvID == 9853] == 31440 #(MPV: Hebert; FE: UNK)
+mpv_temp$feID[mpv_temp$mpvID == 9853] == 31440 #(MPV: Hebert; FE: UNK, updated in preclean)

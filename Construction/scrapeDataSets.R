@@ -32,12 +32,13 @@ if(file.exists(here::here("Data", "Raw", "fe_raw.csv"))) {
 
 ## Modify age and date to match to orig FE below
 
-message("Reading in new names for WA")
+message("Reading in new names for WA through 12/31/2024")
 
 fe_newnames <- readxl::read_xlsx(here::here("Data", "Raw", "fe_newnames.xlsx")) %>%
   mutate(date = as.Date(`Date of injury resulting in death (month/day/year)`)) %>%
   rename("age" = "Age") %>%
-  select(-`Date of injury resulting in death (month/day/year)`)
+  select(-`Date of injury resulting in death (month/day/year)`) %>%
+  filter(date < as.Date("2025-01-01"))
 
 # Add new names to FE orig
 

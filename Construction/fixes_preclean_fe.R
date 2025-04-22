@@ -96,6 +96,7 @@ fe_temp$Name[fe_temp$feID==29557] <- "Steven Emmet Crosby"
 fe_temp$Name[fe_temp$feID==29605] <- "Jenoah Donald"
 fe_temp$Name[fe_temp$feID==23531] <- "Joshua Spottedhorse"
 fe_temp$Name[fe_temp$feID==16382] <- "Samuel Toshiro Smith"
+fe_temp$Name[fe_temp$feID==31440] <- "David Samuel Herbet"
 
 # after wapo changes 6/2023
 fe_temp$Name[fe_temp$feID == 12617] <- "Stacey Stout"
