@@ -1,5 +1,9 @@
 rm(list=ls())
 
+# This file is now obsolete because both FE (12/31/2021) and WaPo (12/31/2024) have stopped updating
+# We keep this working version for historical purposes
+# It updates FE for WA state only thru 12/31/2024
+
 ##### What this file does ################################################################
 #
 # This script runs 3 main tasks:
